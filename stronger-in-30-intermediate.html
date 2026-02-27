@@ -624,12 +624,15 @@ td.day-td {
 td.day-td.weekend { background: #fafafa; }
 
 td.day-td.week-completed {
-  background: linear-gradient(135deg, #ecfeff 0%, #cffafe 100%);
   position: relative;
 }
 
 td.day-td.week-completed.weekend {
-  background: linear-gradient(135deg, #ecfeff 0%, #cffafe 100%);
+  background: #fafafa;
+}
+
+td.day-td.week-completed .sticker-slot.has-sticker {
+  border: 1.5px solid rgba(8,145,178,0.65);
 }
 
 /* The sticker slot */
@@ -667,13 +670,7 @@ td.day-td.week-completed.weekend {
   transform: scale(1.1) rotate(3deg);
 }
 
-/* Qualifying sticker highlight */
-.sticker-slot.has-sticker.qualifying {
-  box-shadow: 0 0 0 1.5px rgba(8,145,178,0.45);
-}
-.sticker-slot.has-sticker.qualifying:hover {
-  transform: scale(1.1) rotate(3deg);
-}
+/* Qualifying sticker highlight removed — highlight shows only on week completion */
 
 /* Shared JS tooltip */
 #cell-tooltip {
@@ -984,7 +981,7 @@ tr.location-group-header:first-child td.location-header-cell { border-top: none;
   <div class="masthead-right">
     <div class="date-range"><strong>23 Feb</strong> — <strong>24 Mar 2026</strong></div>
     <div class="member-count" id="member-count-display">25 <span>Members</span></div>
-    <div id="data-status" class="data-status">—</div>
+    <div id="data-status" class="data-status"></div>
     <button onclick="fetchAndSeedCheckins()" id="refresh-btn" class="refresh-btn">↻ Refresh</button>
   </div>
 </div>
@@ -1684,7 +1681,7 @@ async function fetchAndSeedCheckins() {
     refreshBoard();
     const now     = new Date();
     const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
-    if (statusEl) statusEl.textContent = `\u2713 ${matched} check-in(s) loaded \u00B7 ${timeStr}`;
+    if (statusEl) statusEl.textContent = '';
   } catch (err) {
     console.error(err);
     if (statusEl) {

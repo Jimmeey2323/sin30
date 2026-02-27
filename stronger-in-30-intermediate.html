@@ -320,6 +320,21 @@ th.week-h.bonus-week .week-tag {
   padding: 3px 8px;
 }
 
+/* Week header completion highlighting */
+th.week-h.week-goals-met {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  border-color: #10b981;
+}
+th.week-h.week-goals-met .week-tag {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.4);
+}
+th.week-h.week-goals-met .week-dates {
+  color: #059669;
+  font-weight: 600;
+}
+
 th.week-h.bonus-week .week-dates {
   color: #aaa;
 }
@@ -1331,6 +1346,12 @@ function refreshBoard() {
     weekTh.className = 'week-h';
     weekTh.colSpan = chunk.length;
     weekTh.style.setProperty('--wk-color', wColor);
+    let anyMemberCompletedWeek = false;
+    for (let mi = 0; mi < MEMBERS.length; mi++) {
+      const { completed } = getWeekScore(mi, wi + 1);
+      if (completed) { anyMemberCompletedWeek = true; break; }
+    }
+    if (anyMemberCompletedWeek) weekTh.classList.add('week-goals-met');
     weekTh.innerHTML = `
       <div class="week-group-header">
         <div class="week-tag">Week ${wi + 1}</div>
@@ -1619,7 +1640,7 @@ async function fetchSheetRows(accessToken) {
 async function fetchAndSeedCheckins() {
   const statusEl = document.getElementById('data-status');
   const btn      = document.getElementById('refresh-btn');
-  if (statusEl) statusEl.textContent = 'Fetching data…';
+  if (statusEl) statusEl.textContent = '';
   if (btn)      btn.disabled = true;
 
   try {

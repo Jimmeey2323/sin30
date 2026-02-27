@@ -1507,7 +1507,7 @@ function refreshBoard() {
       
       // Update the button with status class and indicator after creation
       const button = goalTd.querySelector('.loc-goal-badge');
-      button.classList.add(statusClass);
+      if (statusClass) button.classList.add(statusClass);
       const detail = button.querySelector('.loc-badge-detail');
       const statusIndicator = allCompleted ? '✓ All Complete' : 
                              someCompleted ? `${completedCount}/${totalMembers} Complete` : 
@@ -1699,7 +1699,7 @@ async function fetchSheetRows(accessToken) {
 async function fetchAndSeedCheckins() {
   const statusEl = document.getElementById('data-status');
   const btn      = document.getElementById('refresh-btn');
-  if (statusEl) statusEl.textContent = 'Loading...';
+  if (statusEl) statusEl.textContent = '';
   if (btn)      btn.disabled = true;
 
   try {

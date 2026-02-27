@@ -197,11 +197,7 @@
   <div class="container">
     <div class="dashboard-header">
       <div class="dashboard-title">Stronger in 30</div>
-      <div class="dashboard-subtitle">Select a difficulty level to view the challenge board • Auto-refreshes every 5 minutes</div>
-      <div class="refresh-indicator" id="refreshIndicator">
-        <div class="refresh-spinner"></div>
-        <span>Refreshing...</span>
-      </div>
+      <div class="dashboard-subtitle">Select a difficulty level to view the challenge board</div>
     </div>
 
     <div class="tab-bar">
@@ -226,167 +222,27 @@
   <script>
     const tabButtons = document.querySelectorAll('.tab-button');
     const tabContents = document.querySelectorAll('.tab-content');
-    const iframes = document.querySelectorAll('.tab-iframe');
 
-    // Auto-refresh interval (5 minutes)
-    const AUTO_REFRESH_INTERVAL = 5 * 60 * 1000;
-    let refreshInterval;
-
-    // Preload all iframes for better performance
-    function preloadIframes() {
-      iframes.forEach((iframe, index) => {
-        iframe.onload = function() {
-          // Iframe loaded successfully
-          console.log('Loaded:', iframe.src);
-          iframe.setAttribute('data-loaded', 'true');
-          
-          // Ensure iframe content is properly sized
-          try {
-            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-            if (iframeDoc) {
-              // Apply full screen styles to iframe content
-              const style = iframeDoc.createElement('style');
-              style.textContent = `
-                body { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: auto; }
-                html { height: 100%; margin: 0; padding: 0; }
-              `;
-              iframeDoc.head.appendChild(style);
-            }
-          } catch (e) {
-            console.log('Cross-origin iframe, cannot modify content');
-          }
-        };
-        
-        iframe.onerror = function() {
-          // Handle iframe load error
-          console.warn('Failed to load:', iframe.src);
-          iframe.setAttribute('data-loaded', 'false');
-        };
-        
-        // Force reload to ensure proper loading
-        const originalSrc = iframe.src;
-        iframe.src = 'about:blank';
-        setTimeout(() => {
-          iframe.src = originalSrc;
-        }, 100 * index); // Stagger loading
-      });
-    }
-
-    // Auto-refresh active tab
-    function startAutoRefresh() {
-      refreshInterval = setInterval(() => {
-        const activeContent = document.querySelector('.tab-content.active');
-        const activeIframe = activeContent.querySelector('.tab-iframe');
-        if (activeIframe) {
-          // Show refresh indicator
-          const indicator = document.getElementById('refreshIndicator');
-          indicator.classList.add('show');
-          
-          // Store scroll position if needed
-          const currentSrc = activeIframe.src;
-          activeIframe.src = currentSrc;
-          console.log('Auto-refreshed:', currentSrc);
-          
-          // Hide refresh indicator after 2 seconds
-          setTimeout(() => {
-            indicator.classList.remove('show');
-          }, 2000);
-        }
-      }, AUTO_REFRESH_INTERVAL);
-    }
-
-    // Stop auto refresh when page becomes hidden
-    function handleVisibilityChange() {
-      if (document.hidden) {
-        clearInterval(refreshInterval);
-      } else {
-        startAutoRefresh();
-      }
-    }
-
-    // Tab switching functionality
+    // Tab switching — show/hide only, never reload iframes
     tabButtons.forEach(button => {
       button.addEventListener('click', () => {
         const tabName = button.getAttribute('data-tab');
-
-        // Remove active class from all buttons and contents
         tabButtons.forEach(btn => btn.classList.remove('active'));
         tabContents.forEach(content => content.classList.remove('active'));
-
-        // Add active class to clicked button and corresponding content
         button.classList.add('active');
-        const targetContent = document.getElementById(tabName);
-        targetContent.classList.add('active');
-
-        // Refresh the newly active iframe
-        const targetIframe = targetContent.querySelector('.tab-iframe');
-        if (targetIframe) {
-          const indicator = document.getElementById('refreshIndicator');
-          indicator.classList.add('show');
-          
-          const currentSrc = targetIframe.src;
-          targetIframe.src = currentSrc;
-          
-          setTimeout(() => {
-            indicator.classList.remove('show');
-          }, 2000);
-        }
+        document.getElementById(tabName).classList.add('active');
       });
     });
 
-    // Keyboard navigation (optional)
+    // Keyboard shortcuts (Cmd/Ctrl + 1/2/3)
     document.addEventListener('keydown', (e) => {
       if (e.ctrlKey || e.metaKey) {
-        switch(e.key) {
-          case '1':
-            e.preventDefault();
-            tabButtons[0].click();
-            break;
-          case '2':
-            e.preventDefault();
-            tabButtons[1].click();
-            break;
-          case '3':
-            e.preventDefault();
-            tabButtons[2].click();
-            break;
-          case 'r':
-            e.preventDefault();
-            // Manual refresh current tab
-            const activeContent = document.querySelector('.tab-content.active');
-            const activeIframe = activeContent.querySelector('.tab-iframe');
-            if (activeIframe) {
-              const indicator = document.getElementById('refreshIndicator');
-              indicator.classList.add('show');
-              
-              activeIframe.src = activeIframe.src;
-              
-              setTimeout(() => {
-                indicator.classList.remove('show');
-              }, 2000);
-            }
-            break;
+        switch (e.key) {
+          case '1': e.preventDefault(); tabButtons[0].click(); break;
+          case '2': e.preventDefault(); tabButtons[1].click(); break;
+          case '3': e.preventDefault(); tabButtons[2].click(); break;
         }
       }
-    });
-
-    // Initialize
-    document.addEventListener('DOMContentLoaded', () => {
-      preloadIframes();
-      startAutoRefresh();
-      
-      // Handle page visibility changes
-      document.addEventListener('visibilitychange', handleVisibilityChange);
-      
-      // Handle window focus/blur for better performance
-      window.addEventListener('focus', () => {
-        if (!refreshInterval) startAutoRefresh();
-      });
-      
-      window.addEventListener('blur', () => {
-        clearInterval(refreshInterval);
-        refreshInterval = null;
-      });
     });
   </script>
 </body>

@@ -980,19 +980,27 @@ tr.location-group-header:first-child td.location-header-cell { border-top: none;
 </style>
 </head>
 <body>
-  <!-- Load external configuration -->
-  <script src="config.live.js"></script>
+  <!-- Dynamic configuration loading -->
   <script>
-    // Fallback if config file is missing
-    if (typeof window.GOOGLE_SHEETS_CONFIG === 'undefined') {
-      window.GOOGLE_SHEETS_CONFIG = {
-        SPREADSHEET_ID: 'YOUR_SPREADSHEET_ID_HERE',
-        SHEET_NAME: 'Checkins',
-        CLIENT_ID: 'YOUR_CLIENT_ID_HERE',
-        CLIENT_SECRET: 'YOUR_CLIENT_SECRET_HERE',
-        REFRESH_TOKEN: 'YOUR_REFRESH_TOKEN_HERE'
-      };
-    }
+    // Initialize default config first
+    window.GOOGLE_SHEETS_CONFIG = {
+      SPREADSHEET_ID: 'YOUR_SPREADSHEET_ID_HERE',
+      SHEET_NAME: 'Checkins',
+      CLIENT_ID: 'YOUR_CLIENT_ID_HERE',
+      CLIENT_SECRET: 'YOUR_CLIENT_SECRET_HERE',
+      REFRESH_TOKEN: 'YOUR_REFRESH_TOKEN_HERE'
+    };
+    
+    // Try to load config.live.js if it exists (no 404 errors)
+    const configScript = document.createElement('script');
+    configScript.src = 'config.live.js';
+    configScript.onerror = function() { 
+      console.log('📝 Using default config - create config.live.js for custom credentials');
+    };
+    configScript.onload = function() {
+      console.log('✅ Loaded custom configuration from config.live.js');
+    };
+    document.head.appendChild(configScript);
   </script>
 
 <!-- STICKER PICKER (shared, repositioned via JS) -->

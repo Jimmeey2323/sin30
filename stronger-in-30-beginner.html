@@ -1683,9 +1683,7 @@ async function fetchAndSeedCheckins() {
     console.error(err);
     if (statusEl) {
       if (err.message.includes('not configured') || err.message.includes('not found')) {
-        statusEl.textContent = '⚠ Google Sheets not configured · Using manual mode';
-        // Load sample data for demonstration
-        loadSampleData();
+        statusEl.textContent = '⚠ Google Sheets not configured · Please set up credentials';
       } else {
         statusEl.textContent = '✗ ' + err.message;
       }
@@ -1694,49 +1692,6 @@ async function fetchAndSeedCheckins() {
     if (btn) btn.disabled = false;
   }
 }
-
-// Load sample data when Google Sheets is not configured
-function loadSampleData() {
-  // Clear existing state
-  MEMBERS.forEach((_, mi) => {
-    Object.keys(state[mi]).forEach(k => delete state[mi][k]);
-  });
-
-  // Sample check-ins for demonstration (Beginner level activities)
-  const sampleData = [
-    // Week 1 samples
-    { memberIndex: 0, day: 0, emoji: '💙' },   // Member 1 - Barre 57
-    { memberIndex: 0, day: 2, emoji: '🧘🏻‍♀️' }, // Member 1 - Mat 57
-    { memberIndex: 1, day: 1, emoji: '💙' },   // Member 2 - Barre 57
-    { memberIndex: 1, day: 3, emoji: '🚴🏻‍♀️' }, // Member 2 - PowerCycle
-    { memberIndex: 2, day: 0, emoji: '🧘🏻‍♀️' }, // Member 3 - Mat 57
-    { memberIndex: 2, day: 4, emoji: '💙' },   // Member 3 - Barre 57
-    { memberIndex: 3, day: 1, emoji: '❤️‍🩹' },  // Member 4 - Recovery
-    { memberIndex: 4, day: 2, emoji: '💙' },   // Member 5 - Barre 57
-    
-    // Week 2 samples
-    { memberIndex: 0, day: 7, emoji: '💙' },   // Member 1 - Barre 57
-    { memberIndex: 0, day: 9, emoji: '🧘🏻‍♀️' }, // Member 1 - Mat 57
-    { memberIndex: 1, day: 8, emoji: '🚴🏻‍♀️' }, // Member 2 - PowerCycle
-    { memberIndex: 1, day: 10, emoji: '💙' },  // Member 2 - Barre 57
-    { memberIndex: 2, day: 7, emoji: '❤️‍🩹' },  // Member 3 - Recovery
-    { memberIndex: 2, day: 11, emoji: '🧘🏻‍♀️' }, // Member 3 - Mat 57
-    { memberIndex: 3, day: 8, emoji: '💙' },   // Member 4 - Barre 57
-    { memberIndex: 4, day: 9, emoji: '🚴🏻‍♀️' }, // Member 5 - PowerCycle
-  ];
-
-  // Apply sample data
-  sampleData.forEach(({ memberIndex, day, emoji }) => {
-    if (days[day] && MEMBERS[memberIndex]) {
-      state[memberIndex][days[day].key] = emoji;
-    }
-  });
-
-  // Refresh the board to show sample data
-  refreshBoard();
-  console.log('Loaded sample data for demonstration');
-}
-
 // ── INIT ──
 renderLegend();
 refreshBoard();

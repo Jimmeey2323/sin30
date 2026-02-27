@@ -1745,9 +1745,7 @@ async function fetchAndSeedCheckins() {
     console.error(err);
     if (statusEl) {
       if (err.message.includes('not configured') || err.message.includes('not found')) {
-        statusEl.textContent = '⚠ Google Sheets not configured · Using manual mode';
-        // Load sample data for demonstration
-        loadSampleData();
+        statusEl.textContent = '⚠ Google Sheets not configured · Please set up credentials';
       } else {
         statusEl.textContent = '✗ ' + err.message;
       }
@@ -1755,57 +1753,6 @@ async function fetchAndSeedCheckins() {
   } finally {
     if (btn) btn.disabled = false;
   }
-}
-
-// Load sample data when Google Sheets is not configured
-function loadSampleData() {
-  // Clear existing state
-  MEMBERS.forEach((_, mi) => {
-    Object.keys(state[mi]).forEach(k => delete state[mi][k]);
-  });
-
-  // Sample check-ins for demonstration (Advanced level activities)
-  const sampleData = [
-    // Week 1 samples
-    { memberIndex: 0, day: 0, emoji: '🫀' },   // Ayesha - Cardio Barre
-    { memberIndex: 0, day: 1, emoji: '🏋️' },   // Ayesha - Strength Lab
-    { memberIndex: 1, day: 0, emoji: '🚴🏻‍♀️' }, // Ishita - PowerCycle 
-    { memberIndex: 1, day: 2, emoji: '🫀' },   // Ishita - Cardio Barre
-    { memberIndex: 2, day: 1, emoji: '🏋️' },   // Jilly - Strength Lab
-    { memberIndex: 2, day: 3, emoji: '🫀' },   // Jilly - Cardio Barre
-    { memberIndex: 3, day: 0, emoji: '💪🏻' },  // Latisha - FIT
-    { memberIndex: 4, day: 1, emoji: '🫀' },   // Mahika - Cardio Barre
-    { memberIndex: 4, day: 2, emoji: '🚴🏻‍♀️' }, // Mahika - PowerCycle
-    
-    // Week 2 samples  
-    { memberIndex: 0, day: 7, emoji: '🫀' },   // Ayesha - Cardio Barre
-    { memberIndex: 0, day: 9, emoji: '🏋️' },   // Ayesha - Strength Lab
-    { memberIndex: 1, day: 8, emoji: '🏋️' },   // Ishita - Strength Lab
-    { memberIndex: 1, day: 10, emoji: '🫀' },  // Ishita - Cardio Barre
-    { memberIndex: 2, day: 7, emoji: '🚴🏻‍♀️' }, // Jilly - PowerCycle
-    { memberIndex: 2, day: 11, emoji: '🏋️' },  // Jilly - Strength Lab
-    { memberIndex: 3, day: 8, emoji: '🫀' },   // Latisha - Cardio Barre
-    { memberIndex: 4, day: 9, emoji: '🏋️' },   // Mahika - Strength Lab
-    
-    // Week 3 samples
-    { memberIndex: 0, day: 14, emoji: '🫀' },  // Ayesha - Cardio Barre
-    { memberIndex: 0, day: 16, emoji: '🚴🏻‍♀️' }, // Ayesha - PowerCycle
-    { memberIndex: 1, day: 15, emoji: '🏋️' },  // Ishita - Strength Lab
-    { memberIndex: 1, day: 17, emoji: '🫀' },  // Ishita - Cardio Barre
-    { memberIndex: 2, day: 14, emoji: '🚴🏻‍♀️' }, // Jilly - PowerCycle
-    { memberIndex: 2, day: 18, emoji: '🏋️' },  // Jilly - Strength Lab
-  ];
-
-  // Apply sample data
-  sampleData.forEach(({ memberIndex, day, emoji }) => {
-    if (days[day] && MEMBERS[memberIndex]) {
-      state[memberIndex][days[day].key] = emoji;
-    }
-  });
-
-  // Refresh the board to show sample data
-  refreshBoard();
-  console.log('Loaded sample data for demonstration');
 }
 
 // ── INIT ──

@@ -1,0 +1,19 @@
+{
+  "name": "stronger-in-30-dashboard",
+  "version": "1.0.0",
+  "description": "Multi-level fitness challenge tracking dashboard with Google Sheets integration",
+  "main": "index.html",
+  "scripts": {
+    "dev": "python -m http.server 8000",
+    "start": "python -m http.server 8000"
+  },
+  "keywords": [
+    "fitness",
+    "challenge",
+    "tracking",
+    "dashboard",
+    "physique57"
+  ],
+  "author": "Development Team",
+  "license": "MIT"
+}

@@ -1,0 +1,16 @@
+node_modules/
+.DS_Store
+*.log
+.env
+.env.local
+.env.production
+.env.development
+.vercel
+dist/
+build/
+.next/
+.vscode/settings.json
+**/credentials.json
+**/oauth_tokens.json
+config.live.js
+config.js

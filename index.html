@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stronger in 30 — Dashboard</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --white: #ffffff;
+      --bg: #fafaf8;
+      --ink: #1a1a1a;
+      --border: #e8e6e0;
+      --accent-red: #ef4444;
+      --accent-purple: #7c3aed;
+      --accent-cyan: #0891b2;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    .tab-bar {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+      padding: 0 24px;
+      min-height: 60px;
+    }
+
+    .tab-button {
+      padding: 16px 28px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 500;
+      color: #8a8a8a;
+      border-bottom: 3px solid transparent;
+      transition: all 0.25s ease;
+      white-space: nowrap;
+      position: relative;
+    }
+
+    .tab-button:hover {
+      color: var(--ink);
+    }
+
+    .tab-button.active {
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    .tab-button.active.red {
+      border-bottom-color: var(--accent-red);
+    }
+
+    .tab-button.active.purple {
+      border-bottom-color: var(--accent-purple);
+    }
+
+    .tab-button.active.cyan {
+      border-bottom-color: var(--accent-cyan);
+    }
+
+    .tab-content {
+      flex: 1;
+      overflow: hidden;
+      display: none;
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .tab-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: var(--white);
+      overflow: hidden;
+      display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+    }
+
+    .dashboard-header {
+      text-align: center;
+      padding: 16px 24px;
+      background: linear-gradient(135deg, #f9f9f7 0%, #fafaf8 100%);
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+
+    .dashboard-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 6px;
+    }
+
+    .dashboard-subtitle {
+      font-size: 12px;
+      color: #8a8a8a;
+      letter-spacing: 0.05em;
+    }
+
+    .refresh-indicator {
+      position: absolute;
+      top: 50%;
+      right: 24px;
+      transform: translateY(-50%);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: #8a8a8a;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .refresh-indicator.show {
+      opacity: 1;
+    }
+
+    .refresh-spinner {
+      width: 12px;
+      height: 12px;
+      border: 2px solid #e8e6e0;
+      border-top: 2px solid var(--accent-cyan);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 768px) {
+      .tab-button {
+        padding: 16px 16px;
+        font-size: 13px;
+      }
+
+      .dashboard-title {
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="dashboard-header">
+      <div class="dashboard-title">Stronger in 30</div>
+      <div class="dashboard-subtitle">Select a difficulty level to view the challenge board • Auto-refreshes every 5 minutes</div>
+      <div class="refresh-indicator" id="refreshIndicator">
+        <div class="refresh-spinner"></div>
+        <span>Refreshing...</span>
+      </div>
+    </div>
+
+    <div class="tab-bar">
+      <button class="tab-button active red" data-tab="beginner">⭐ Beginner</button>
+      <button class="tab-button purple" data-tab="intermediate">⭐⭐ Intermediate</button>
+      <button class="tab-button cyan" data-tab="advanced">⭐⭐⭐ Advanced</button>
+    </button>
+
+    <div class="tab-content active" id="beginner">
+      <iframe class="tab-iframe" src="./stronger-in-30-beginner.html" loading="eager" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
+    </div>
+
+    <div class="tab-content" id="intermediate">
+      <iframe class="tab-iframe" src="./stronger-in-30-intermediate.html" loading="eager" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
+    </div>
+
+    <div class="tab-content" id="advanced">
+      <iframe class="tab-iframe" src="./stronger-in-30-advanced.html" loading="eager" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
+    </div>
+  </div>
+
+  <script>
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
+    const iframes = document.querySelectorAll('.tab-iframe');
+
+    // Auto-refresh interval (5 minutes)
+    const AUTO_REFRESH_INTERVAL = 5 * 60 * 1000;
+    let refreshInterval;
+
+    // Preload all iframes for better performance
+    function preloadIframes() {
+      iframes.forEach(iframe => {
+        iframe.onload = function() {
+          // Iframe loaded successfully
+          console.log('Loaded:', iframe.src);
+        };
+        iframe.onerror = function() {
+          // Handle iframe load error
+          console.warn('Failed to load:', iframe.src);
+        };
+      });
+    }
+
+    // Auto-refresh active tab
+    function startAutoRefresh() {
+      refreshInterval = setInterval(() => {
+        const activeContent = document.querySelector('.tab-content.active');
+        const activeIframe = activeContent.querySelector('.tab-iframe');
+        if (activeIframe) {
+          // Show refresh indicator
+          const indicator = document.getElementById('refreshIndicator');
+          indicator.classList.add('show');
+          
+          // Store scroll position if needed
+          const currentSrc = activeIframe.src;
+          activeIframe.src = currentSrc;
+          console.log('Auto-refreshed:', currentSrc);
+          
+          // Hide refresh indicator after 2 seconds
+          setTimeout(() => {
+            indicator.classList.remove('show');
+          }, 2000);
+        }
+      }, AUTO_REFRESH_INTERVAL);
+    }
+
+    // Stop auto refresh when page becomes hidden
+    function handleVisibilityChange() {
+      if (document.hidden) {
+        clearInterval(refreshInterval);
+      } else {
+        startAutoRefresh();
+      }
+    }
+
+    // Tab switching functionality
+    tabButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const tabName = button.getAttribute('data-tab');
+
+        // Remove active class from all buttons and contents
+        tabButtons.forEach(btn => btn.classList.remove('active'));
+        tabContents.forEach(content => content.classList.remove('active'));
+
+        // Add active class to clicked button and corresponding content
+        button.classList.add('active');
+        const targetContent = document.getElementById(tabName);
+        targetContent.classList.add('active');
+
+        // Refresh the newly active iframe
+        const targetIframe = targetContent.querySelector('.tab-iframe');
+        if (targetIframe) {
+          const indicator = document.getElementById('refreshIndicator');
+          indicator.classList.add('show');
+          
+          const currentSrc = targetIframe.src;
+          targetIframe.src = currentSrc;
+          
+          setTimeout(() => {
+            indicator.classList.remove('show');
+          }, 2000);
+        }
+      });
+    });
+
+    // Keyboard navigation (optional)
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey || e.metaKey) {
+        switch(e.key) {
+          case '1':
+            e.preventDefault();
+            tabButtons[0].click();
+            break;
+          case '2':
+            e.preventDefault();
+            tabButtons[1].click();
+            break;
+          case '3':
+            e.preventDefault();
+            tabButtons[2].click();
+            break;
+          case 'r':
+            e.preventDefault();
+            // Manual refresh current tab
+            const activeContent = document.querySelector('.tab-content.active');
+            const activeIframe = activeContent.querySelector('.tab-iframe');
+            if (activeIframe) {
+              const indicator = document.getElementById('refreshIndicator');
+              indicator.classList.add('show');
+              
+              activeIframe.src = activeIframe.src;
+              
+              setTimeout(() => {
+                indicator.classList.remove('show');
+              }, 2000);
+            }
+            break;
+        }
+      }
+    });
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      preloadIframes();
+      startAutoRefresh();
+      
+      // Handle page visibility changes
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      
+      // Handle window focus/blur for better performance
+      window.addEventListener('focus', () => {
+        if (!refreshInterval) startAutoRefresh();
+      });
+      
+      window.addEventListener('blur', () => {
+        clearInterval(refreshInterval);
+        refreshInterval = null;
+      });
+    });
+  </script>
+</body>
+</html>

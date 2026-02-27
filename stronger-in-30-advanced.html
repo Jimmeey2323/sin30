@@ -1,0 +1,1756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stronger in 30 — Advanced Board</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --white: #ffffff;
+  --off: #f7f6f3;
+  --bg: #fafaf8;
+  --ink: #1a1a1a;
+  --ink-muted: #8a8a8a;
+  --ink-light: #c8c8c8;
+  --accent: #ef4444;
+  --accent-light: #fef2f2;
+  --accent-mid: #f87171;
+  --border: #e8e6e0;
+  --border-strong: #d0cec8;
+  --gold: #b8960c;
+  --gold-bg: #fdf8e8;
+  --purple-soft: #ede9fe;
+  --week-colors: #ef4444, #1a4d6e, #a05c2d, #6b3fa0, #c0392b;
+  --radius: 10px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Syne', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  padding: 0;
+}
+
+/* ── TOP HEADER BAND ── */
+.masthead {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  padding: 36px 48px 28px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.masthead-left {}
+
+.studio-tag {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.studio-tag::before {
+  content: '';
+  display: inline-block;
+  width: 18px;
+  height: 1px;
+  background: var(--ink-muted);
+}
+
+.title-group {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+}
+
+.main-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 56px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--ink);
+}
+
+.main-title em {
+  font-style: italic;
+  color: var(--accent);
+}
+
+.level-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--accent-light);
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 5px 12px;
+  border-radius: 100px;
+  border: 1px solid rgba(239,68,68,0.15);
+  margin-bottom: 6px;
+}
+
+.masthead-right {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.date-range {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin-bottom: 6px;
+}
+
+.date-range strong {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.member-count {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--ink);
+  line-height: 1;
+}
+
+.member-count span {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+/* ── STICKER LEGEND ── */
+.sticker-legend {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 48px;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  overflow-x: auto;
+}
+
+.legend-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.legend-items {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.sticker-preview {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  border-radius: 8px;
+  background: var(--off);
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+/* ── CHALLENGE INFO ── */
+.challenge-info {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border-bottom: 1px solid #fecaca;
+  padding: 20px 48px;
+}
+
+.challenge-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #ef4444;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.challenge-title::before {
+  content: '🎯';
+  font-size: 14px;
+}
+
+.challenge-weeks {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.challenge-week {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  background: white;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #fecaca;
+  box-shadow: 0 1px 3px rgba(239,68,68,0.08);
+  transition: all 0.18s ease;
+}
+
+.challenge-week:hover {
+  border-color: #fca5a5;
+  box-shadow: 0 3px 10px rgba(239,68,68,0.15);
+  transform: translateY(-1px);
+}
+
+.cw-label {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: white;
+  background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+  padding: 3px 9px;
+  border-radius: 5px;
+  display: inline-block;
+  width: fit-content;
+  box-shadow: 0 2px 4px rgba(239,68,68,0.25);
+}
+
+.cw-goal {
+  font-size: 12px;
+  font-weight: 600;
+  font-family: 'DM Mono', monospace;
+  color: var(--ink);
+  line-height: 1.4;
+  padding-left: 1px;
+}
+
+.challenge-note {
+  font-size: 10px;
+  font-weight: 500;
+  color: #ef4444;
+  background: rgba(239,68,68,0.06);
+  padding: 6px 12px;
+  border-radius: 5px;
+  display: inline-block;
+  width: fit-content;
+}
+
+/* ── MAIN TABLE AREA ── */
+.board-wrap {
+  padding: 32px 48px 48px;
+}
+
+.table-scroll {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow-md);
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: max-content;
+  table-layout: fixed;
+}
+
+/* ── WEEK GROUP HEADERS ── */
+th.week-h {
+  background: linear-gradient(to bottom, var(--off) 0%, var(--white) 100%);
+  border-bottom: 2px solid var(--border-strong);
+  border-left: 2px solid var(--border-strong);
+  padding: 0;
+  text-align: center;
+  vertical-align: middle;
+}
+
+th.week-h:first-of-type {
+  border-left: none;
+}
+
+th.week-h.bonus-week {
+  background: linear-gradient(to bottom, #fafafa 0%, var(--white) 100%);
+}
+
+th.week-h.bonus-week .week-tag {
+  background: #888;
+  font-size: 7px;
+  padding: 3px 8px;
+}
+
+th.week-h.bonus-week .week-dates {
+  color: #aaa;
+}
+
+.week-header-row th {
+  padding: 0;
+}
+
+.week-group-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: 44px;
+  padding: 8px 6px;
+}
+
+.location-label-cell {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.location-goal-cell {
+  padding: 6px 2px !important;
+  vertical-align: middle;
+  text-align: center;
+}
+.loc-goal-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  width: 100%;
+}
+.loc-span-arrow {
+  font-size: 7px;
+  color: var(--accent);
+  opacity: 0.4;
+  flex-shrink: 0;
+  pointer-events: none;
+  line-height: 1;
+}
+.loc-goal-badge {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 4px 12px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-radius 0.15s, padding 0.15s, box-shadow 0.15s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.14);
+  white-space: nowrap;
+}
+.loc-goal-badge:hover { filter: brightness(1.1); }
+.loc-goal-badge.open {
+  border-radius: 8px;
+  padding: 7px 12px;
+}
+.loc-badge-label {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+.loc-badge-detail {
+  display: none;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  margin-top: 6px;
+  width: 100%;
+}
+.loc-goal-badge.open .loc-badge-detail { display: flex; }
+.loc-req-pill {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.loc-req-count {
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 800;
+  font-family: 'DM Mono', monospace;
+  color: rgba(255,255,255,0.75);
+  min-width: 16px;
+  text-align: right;
+}
+.loc-req-icon { font-size: 13px; line-height: 1; }
+.loc-req-name {
+  font-size: 10px;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: 0.01em;
+}
+
+.week-tag {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: white;
+  background: var(--wk-color, #2d5a27);
+  padding: 3px 10px;
+  border-radius: 100px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  white-space: nowrap;
+}
+
+.week-dates {
+  font-size: 8px;
+  font-weight: 500;
+  color: var(--ink-muted);
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+/* ── COLUMN HEADERS ── */
+thead th {
+  background: var(--white);
+  border-bottom: 2px solid var(--border-strong);
+  padding: 5px;
+  font-weight: 600;
+  vertical-align: bottom;
+}
+
+th.rank-h {
+  width: 40px;
+  min-width: 40px;
+}
+
+th.name-h {
+  min-width: 175px;
+  width: 175px;
+  text-align: left;
+  padding-left: 8px;
+  padding-bottom: 10px;
+}
+
+th.name-h .col-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+th.day-h {
+  width: 42px;
+  min-width: 42px;
+  text-align: center;
+  padding-bottom: 8px;
+  position: relative;
+}
+
+th.day-h.weekend .day-num { color: var(--ink-light); }
+
+.day-num {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1;
+}
+
+.day-name {
+  display: block;
+  font-size: 8px;
+  font-weight: 500;
+  color: var(--ink-muted);
+  letter-spacing: 0.05em;
+  margin-top: 2px;
+}
+
+th.score-h {
+  width: 64px;
+  min-width: 64px;
+  text-align: center;
+  padding-bottom: 10px;
+}
+
+th.score-h .col-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+/* ── DATA ROWS ── */
+tbody tr.data-row {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.12s;
+}
+
+tbody tr.data-row:hover { background: #f9f9f7; }
+tbody tr.data-row:last-of-type { border-bottom: none; }
+
+/* Week header completion highlighting */
+th.week-h.week-goals-met {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  border-color: #10b981;
+}
+
+th.week-h.week-goals-met .week-tag {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.4);
+}
+
+th.week-h.week-goals-met .week-dates {
+  color: #059669;
+  font-weight: 600;
+}
+
+/* Location goal badge completion styles */
+.loc-goal-badge.all-completed {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+}
+
+.loc-goal-badge.some-completed {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+}
+
+.loc-goal-badge.all-completed,
+.loc-goal-badge.some-completed {
+  animation: pulse-glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-glow {
+  from { 
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  to { 
+    transform: scale(1.02);
+    filter: brightness(1.1);
+  }
+}
+
+/* Update existing week-completed to be less prominent on individual cells */
+td.day-td.week-completed {
+  background: rgba(16, 185, 129, 0.05);
+  position: relative;
+}
+
+td.day-td.week-completed.weekend {
+  background: rgba(16, 185, 129, 0.08);
+}
+
+/* rank */
+td.rank-td {
+  text-align: center;
+  width: 40px;
+  padding: 0 4px;
+  vertical-align: middle;
+}
+
+.rank-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 700;
+  margin: 0 auto;
+  color: var(--ink-muted);
+  background: transparent;
+}
+
+.rank-inner.r1 {
+  font-size: 18px;
+}
+.rank-inner.r2 {
+  font-size: 18px;
+}
+.rank-inner.r3 {
+  font-size: 18px;
+}
+
+/* name */
+td.name-td {
+  padding: 0 16px 0 8px;
+  vertical-align: middle;
+  height: 52px;
+}
+
+.member-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+.member-sub {
+  font-size: 10px;
+  color: var(--ink-muted);
+  font-weight: 400;
+  margin-top: 1px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.streak-flame {
+  display: none;
+  align-items: center;
+  gap: 2px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #e55b2d;
+}
+.streak-flame.show { display: flex; }
+
+/* sticker cell */
+td.day-td {
+  text-align: center;
+  vertical-align: middle;
+  width: 42px;
+  height: 52px;
+  padding: 0 2px;
+  position: relative;
+}
+
+td.day-td.weekend { background: #fafafa; }
+
+td.day-td.week-completed {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  position: relative;
+}
+
+td.day-td.week-completed.weekend {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+}
+
+/* The sticker slot */
+.sticker-slot {
+  width: 34px;
+  height: 34px;
+  margin: 0 auto;
+  border-radius: 8px;
+  border: 1.5px dashed var(--border-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+  font-size: 20px;
+  background: transparent;
+  user-select: none;
+}
+
+.sticker-slot:hover {
+  border-color: var(--accent-mid);
+  background: var(--accent-light);
+  transform: scale(1.08);
+}
+
+.sticker-slot.has-sticker {
+  border: none;
+  background: var(--off);
+  transform: none;
+}
+
+.sticker-slot.has-sticker:hover {
+  background: #f0ede6;
+  transform: scale(1.1) rotate(3deg);
+}
+
+/* Qualifying sticker highlight */
+.sticker-slot.has-sticker.qualifying {
+  box-shadow: 0 0 0 1.5px rgba(239,68,68,0.45);
+}
+.sticker-slot.has-sticker.qualifying:hover {
+  transform: scale(1.1) rotate(3deg);
+}
+
+/* Shared JS tooltip */
+#cell-tooltip {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  background: var(--ink);
+  color: #fff;
+  font-family: 'Syne', sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  padding: 4px 9px;
+  border-radius: 6px;
+  pointer-events: none;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.22);
+  transform: translateX(-50%);
+}
+
+/* Sticker picker popup */
+.picker-popup {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  background: white;
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.14);
+  padding: 10px;
+  gap: 6px;
+  flex-wrap: wrap;
+  width: 186px;
+}
+
+.picker-popup.open {
+  display: flex;
+}
+
+.picker-sticker {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1.5px solid transparent;
+  transition: all 0.12s;
+  background: var(--off);
+}
+
+.picker-sticker:hover {
+  border-color: var(--accent);
+  background: var(--accent-light);
+  transform: scale(1.18);
+}
+
+.picker-clear {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #e55;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1.5px dashed #e55;
+  background: #fff5f5;
+  transition: all 0.12s;
+}
+.picker-clear:hover { background: #ffe8e8; transform: scale(1.1); }
+
+/* score */
+td.score-td {
+  text-align: center;
+  vertical-align: middle;
+  width: 64px;
+  padding: 0 8px;
+  position: relative;
+}
+
+.score-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 24px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'DM Mono', monospace;
+  color: var(--ink-muted);
+  background: var(--off);
+  cursor: help;
+  position: relative;
+}
+
+.score-pill.lit {
+  background: var(--accent-light);
+  color: var(--accent);
+}
+
+.score-pill.maxed {
+  background: linear-gradient(135deg, #fdf4ff 0%, #fae8ff 100%);
+  color: #a855f7;
+  border: 1px solid #e9d5ff;
+}
+
+.score-tooltip {
+  display: none;
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 8px;
+  background: var(--ink);
+  color: white;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 500;
+  white-space: nowrap;
+  z-index: 100;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+}
+
+.score-pill:hover .score-tooltip {
+  display: block;
+}
+
+.score-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--ink);
+}
+
+.weekly-status {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.week-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 5px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.6);
+  min-width: 42px;
+  text-align: center;
+}
+
+.week-badge.complete {
+  background: var(--accent-light);
+  color: var(--accent);
+  border-color: var(--accent);
+  font-weight: 800;
+}
+
+/* ── FOOTER ── */
+.board-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 48px 40px;
+  gap: 20px;
+}
+
+.footer-note {
+  font-size: 10px;
+  color: var(--ink-muted);
+  letter-spacing: 0.08em;
+}
+
+.footer-logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 16px;
+  font-style: italic;
+  color: var(--ink-light);
+  letter-spacing: 0.05em;
+}
+
+/* Scrollbar */
+.table-scroll::-webkit-scrollbar { height: 4px; }
+.table-scroll::-webkit-scrollbar-track { background: var(--off); }
+.table-scroll::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .challenge-weeks {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .challenge-weeks {
+    grid-template-columns: 1fr;
+  }
+
+  .masthead {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .masthead-right {
+    text-align: left;
+  }
+}
+
+/* Animate rows in */
+tbody tr.data-row {
+  animation: rowIn 0.35s ease both;
+}
+
+@keyframes rowIn {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* ── LOCATION GROUP SEPARATOR ── */
+tr.location-group-header { animation: none; }
+td.location-header-cell {
+  padding: 10px 18px 12px;
+  background: var(--accent-light);
+  border-top: 2px solid var(--border-strong);
+  border-bottom: 1px solid var(--border-strong);
+}
+tr.location-group-header:first-child td.location-header-cell { border-top: none; }
+
+/* ── DATA STATUS & REFRESH BUTTON ── */
+.data-status {
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--ink-muted);
+  letter-spacing: 0.06em;
+  margin-top: 6px;
+  min-height: 14px;
+}
+.refresh-btn {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  background: var(--off);
+  border: 1px solid var(--border-strong);
+  border-radius: 5px;
+  padding: 3px 10px;
+  cursor: pointer;
+  color: var(--ink);
+  margin-top: 4px;
+  transition: background 0.15s;
+  font-family: 'Syne', sans-serif;
+}
+.refresh-btn:hover { background: var(--border); }
+.refresh-btn:disabled { opacity: 0.45; cursor: default; }
+</style>
+</head>
+<body>
+  <!-- Load external configuration -->
+  <script src="config.live.js"></script>
+  <script>
+    // Fallback if config file is missing
+    if (typeof window.GOOGLE_SHEETS_CONFIG === 'undefined') {
+      window.GOOGLE_SHEETS_CONFIG = {
+        SPREADSHEET_ID: 'YOUR_SPREADSHEET_ID_HERE',
+        SHEET_NAME: 'Checkins',
+        CLIENT_ID: 'YOUR_CLIENT_ID_HERE',
+        CLIENT_SECRET: 'YOUR_CLIENT_SECRET_HERE',
+        REFRESH_TOKEN: 'YOUR_REFRESH_TOKEN_HERE'
+      };
+    }
+  </script>
+
+<!-- STICKER PICKER (shared, repositioned via JS) -->
+<div class="picker-popup" id="picker">
+  <div class="picker-clear" id="picker-clear" title="Remove sticker">✕</div>
+</div>
+
+<!-- CELL TOOLTIP -->
+<div id="cell-tooltip"></div>
+
+<!-- MASTHEAD -->
+<div class="masthead">
+  <div class="masthead-left">
+    <div class="level-chip">⭐⭐⭐ Advanced Board</div>
+    <div class="title-group">
+      <h1 class="main-title">Stronger <em>in 30</em></h1>
+    </div>
+  </div>
+  <div class="masthead-right">
+    <div class="date-range"><strong>23 Feb</strong> — <strong>24 Mar 2026</strong></div>
+    <div class="member-count" id="member-count-display">9 <span>Members</span></div>
+    <div id="data-status" class="data-status">—</div>
+    <button onclick="fetchAndSeedCheckins()" id="refresh-btn" class="refresh-btn">↻ Refresh</button>
+  </div>
+</div>
+
+<!-- STICKER LEGEND -->
+<div class="sticker-legend">
+  <div class="legend-label">Class Format</div>
+  <div class="legend-items" id="legend-items"></div>
+</div>
+
+<!-- BOARD -->
+<div class="board-wrap">
+  <div class="table-scroll">
+    <table id="main-table">
+      <thead id="thead"></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="board-footer">
+  <div class="footer-note">Stickers auto-populated from Google Sheets check-ins · Click any cell to manually place or override a sticker</div>
+  <div class="footer-logo">Physique 57</div>
+</div>
+
+<script>
+// ── DATA ──
+const MEMBERS = [
+  // ── Kemps Corner ──
+  { first: "Ayesha",     last: "Mansukhani",    loc: "KC" },
+  { first: "Ishita",     last: "Jain",           loc: "KC" },
+  { first: "Jilly",      last: "Parmar",         loc: "KC" },
+  { first: "Latisha",    last: "Shah",           loc: "KC" },
+  { first: "Mahika",     last: "Thakur",         loc: "KC" },
+  { first: "Nandini",    last: "Kothari",        loc: "KC" },
+  { first: "Niyanta",    last: "Datta",          loc: "KC" },
+  { first: "Raman",      last: "Lamba",          loc: "KC" },
+  { first: "Sabiha",     last: "Ghiasi",         loc: "KC" },
+  { first: "Sanjana",    last: "Kochhar",        loc: "KC" },
+  { first: "Sharon",     last: "Mittal",         loc: "KC" },
+  { first: "Shikhar",    last: "Garodia",        loc: "KC" },
+  { first: "Surabhi",    last: "Agrawal",        loc: "KC" },
+  { first: "Thea",       last: "Turner",         loc: "KC" },
+  { first: "Tina",       last: "Mistry",         loc: "KC" },
+  // ── Bandra ──
+  { first: "Aili",       last: "S",              loc: "Bandra" },
+  { first: "Aniruddha",  last: "Menon",          loc: "Bandra" },
+  { first: "Anisha",     last: "Pestonji Goel",  loc: "Bandra" },
+  { first: "Bikramjit",  last: "Chaudhury",      loc: "Bandra" },
+  { first: "Dalreen",    last: "Patrao",         loc: "Bandra" },
+  { first: "Husna",      last: "Bootwalla",      loc: "Bandra" },
+  { first: "Lavanya",    last: "Gulati",         loc: "Bandra" },
+  { first: "Leena",      last: "Chaudhari",      loc: "Bandra" },
+  { first: "Mallika",    last: "Mhatre",         loc: "Bandra" },
+  { first: "Nitika",     last: "Gupta",          loc: "Bandra" },
+  { first: "Sachin",     last: "Kotre",          loc: "Bandra" },
+  { first: "Sanjam",     last: "Kini",           loc: "Bandra" },
+  { first: "Shona",      last: "Barua",          loc: "Bandra" },
+  { first: "Sohini",     last: "Bera",           loc: "Bandra" },
+  { first: "Tania",      last: "Chourasia",      loc: "Bandra" },
+];
+
+// ── STICKER DEFINITIONS ──
+const STICKERS = [
+  { emoji: '💙', label: 'Barre 57', abbr: 'B57', color: '#ff6b35' },
+  { emoji: '🚴🏻‍♀️', label: 'powerCycle', abbr: 'PC', color: '#e63946' },
+  { emoji: '🧘🏻‍♀️', label: 'Mat 57', abbr: 'Mat', color: '#457b9d' },
+  { emoji: '🫀', label: 'Cardio Barre', abbr: 'CB', color: '#f4a261' },
+  { emoji: '🏋️', label: 'Strength Lab', abbr: 'LAB', color: '#6d6875' },
+  { emoji: '🔙', label: 'Back Body Blaze', abbr: 'BBB', color: '#2a9d8f' },
+  { emoji: '🔥', label: 'Amped Up', abbr: 'AMP', color: '#e9c46a' },
+  { emoji: '💪🏻', label: 'FIT', abbr: 'FIT', color: '#264653' },
+  { emoji: '❤️‍🔥', label: 'HIIT', abbr: 'HIIT', color: '#d62828' },
+  { emoji: '❤️‍🩹', label: 'Recovery', abbr: 'REC', color: '#9b72cf' },
+];
+const STICKER_LABEL = Object.fromEntries(STICKERS.map(s => [s.abbr, { emoji: s.emoji, label: s.label }]));
+
+// ── WEEKLY REQUIREMENTS (Advanced) — Kemps Corner ──
+const WEEKLY_REQUIREMENTS_KC = {
+  1: { 'CB': 2, 'FIT': 1, 'PC': 1, 'LAB': 1 },
+  2: { 'CB': 2, 'LAB': 2, 'PC': 1 },
+  3: { 'CB': 2, 'LAB': 2, 'PC': 2 },
+  4: { 'CB': 2, 'LAB': 2, 'PC': 1 }
+};
+// ── WEEKLY REQUIREMENTS (Advanced) — Bandra ──
+const WEEKLY_REQUIREMENTS_BANDRA = {
+  1: { 'CB': 2, 'BBB': 1, 'FIT': 1, 'PC': 1 },
+  2: { 'CB': 2, 'FIT': 2, 'PC': 1 },
+  3: { 'CB': 1, 'BBB': 1, 'FIT': 2, 'PC': 1 },
+  4: { 'CB': 2, 'FIT': 2, 'PC': 2 }
+};
+
+// ── DAY GENERATION ──
+const days = [];
+const DAYS_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const start = new Date(2026, 1, 23); // Feb 23 2026
+for (let i = 0; i < 30; i++) {
+  const d = new Date(start);
+  d.setDate(start.getDate() + i);
+  const dow = d.getDay();
+  days.push({
+    num: d.getDate(),
+    mon: d.toLocaleString('default', { month: 'short' }),
+    dayName: DAYS_SHORT[dow],
+    isWeekend: dow === 0 || dow === 6,
+    key: `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`,
+    fullDate: d
+  });
+}
+
+// Group into weeks
+const weeks = [];
+let wk = [];
+days.forEach((d, i) => {
+  wk.push({ ...d, dayIdx: i });
+  if (d.isWeekend && d.dayName === 'Sun') { weeks.push(wk); wk = []; }
+});
+// Group Mon-Sun chunks of 7
+const weekChunks = [];
+for (let i = 0; i < days.length; i += 7) {
+  weekChunks.push(days.slice(i, i + 7));
+}
+// Adjust: group by natural weeks (Mon-Sun or just every 7)
+const WEEK_COLORS = ['#2d5a27','#1a4d6e','#a05c2d','#6b3fa0','#c0392b'];
+
+// ── STATE ──
+// state[memberIdx][dayKey] = stickerEmoji or null
+const state = MEMBERS.map(() => ({}));
+
+// ── PICKER LOGIC ──
+const picker = document.getElementById('picker');
+let activeSlot = null;
+
+// Build picker buttons
+STICKERS.forEach(s => {
+  const btn = document.createElement('div');
+  btn.className = 'picker-sticker';
+  btn.textContent = s.emoji;
+  btn.title = s.label;
+  btn.addEventListener('click', () => {
+    if (activeSlot) {
+      const { mi, dk } = activeSlot;
+      state[mi][dk] = s.emoji;
+      refreshBoard();
+    }
+    closePicker();
+  });
+  picker.appendChild(btn);
+});
+
+document.getElementById('picker-clear').addEventListener('click', () => {
+  if (activeSlot) {
+    const { mi, dk } = activeSlot;
+    delete state[mi][dk];
+    refreshBoard();
+  }
+  closePicker();
+});
+
+function openPicker(slot, mi, dk, rect) {
+  activeSlot = { mi, dk };
+  picker.classList.add('open');
+  // Position
+  const pw = 186, ph = 140;
+  let left = rect.left + rect.width / 2 - pw / 2;
+  let top = rect.bottom + 6;
+  if (left + pw > window.innerWidth - 8) left = window.innerWidth - pw - 8;
+  if (left < 8) left = 8;
+  if (top + ph > window.innerHeight - 8) top = rect.top - ph - 6;
+  picker.style.left = left + 'px';
+  picker.style.top = top + 'px';
+}
+
+function closePicker() {
+  picker.classList.remove('open');
+  activeSlot = null;
+}
+
+document.addEventListener('click', (e) => {
+  if (!picker.contains(e.target) && !e.target.closest('.sticker-slot')) closePicker();
+});
+
+// ── CELL TOOLTIP ──
+const cellTooltip = document.getElementById('cell-tooltip');
+function showCellTooltip(text, anchorEl) {
+  if (!text) return;
+  cellTooltip.textContent = text;
+  cellTooltip.style.display = 'block';
+  const r = anchorEl.getBoundingClientRect();
+  cellTooltip.style.left = (r.left + r.width / 2) + 'px';
+  cellTooltip.style.top  = (r.top - 28) + 'px';
+}
+function hideCellTooltip() {
+  cellTooltip.style.display = 'none';
+}
+
+// ── RENDER LEGEND ──
+function renderLegend() {
+  const el = document.getElementById('legend-items');
+  el.innerHTML = '';
+  STICKERS.forEach(s => {
+    const item = document.createElement('div');
+    item.className = 'legend-item';
+    item.innerHTML = `<div class="sticker-preview">${s.emoji}</div>${s.label}`;
+    el.appendChild(item);
+  });
+}
+
+// ── SCORE & SORT ──
+function getStickerAbbr(emoji) {
+  const sticker = STICKERS.find(s => s.emoji === emoji);
+  return sticker ? sticker.abbr : null;
+}
+
+// ── CLASS EQUIVALENCY GROUPS ──
+const EQUIV_GROUPS = [
+  new Set(['FIT', 'LAB']),
+  new Set(['CB',  'BBB', 'CBP', 'HIIT', 'PC']),
+];
+
+function getEquivCount(counts, abbr) {
+  const group = EQUIV_GROUPS.find(g => g.has(abbr));
+  if (!group) return counts[abbr] || 0;
+  let total = 0;
+  group.forEach(a => { total += (counts[a] || 0); });
+  return total;
+}
+
+// Returns true if the given sticker abbr counts toward any requirement in weekNum for a given location
+function isStickerQualifying(abbr, weekNum, loc) {
+  const reqs = (loc === 'Bandra') ? WEEKLY_REQUIREMENTS_BANDRA : WEEKLY_REQUIREMENTS_KC;
+  const requirements = reqs[weekNum];
+  if (!requirements || !abbr) return false;
+  return Object.keys(requirements).some(reqAbbr => {
+    if (reqAbbr === abbr) return true;
+    return EQUIV_GROUPS.some(g => g.has(reqAbbr) && g.has(abbr));
+  });
+}
+
+function getWeekScore(mi, weekNum) {
+  const weekIdx = weekNum - 1;
+  const weekDays = weekChunks[weekIdx];
+  if (!weekDays) return { completed: false, counts: {} };
+
+  const loc = MEMBERS[mi] ? MEMBERS[mi].loc : 'KC';
+  const reqs = (loc === 'Bandra') ? WEEKLY_REQUIREMENTS_BANDRA : WEEKLY_REQUIREMENTS_KC;
+  const requirements = reqs[weekNum];
+  if (!requirements) return { completed: false, counts: {} };
+
+  // Count stickers for this week
+  const counts = {};
+  weekDays.forEach(day => {
+    const emoji = state[mi][day.key];
+    if (emoji) {
+      const abbr = getStickerAbbr(emoji);
+      if (abbr) {
+        counts[abbr] = (counts[abbr] || 0) + 1;
+      }
+    }
+  });
+
+  // Check if requirements met (respecting equivalency groups)
+  let completed = true;
+  for (const [classType, required] of Object.entries(requirements)) {
+    if (getEquivCount(counts, classType) < required) {
+      completed = false;
+      break;
+    }
+  }
+
+  return { completed, counts, requirements };
+}
+
+function getScore(mi) {
+  let score = 0;
+  for (let week = 1; week <= 4; week++) {
+    const { completed } = getWeekScore(mi, week);
+    if (completed) score++;
+  }
+  return score;
+}
+
+function getStreak(mi) {
+  let streak = 0;
+  for (let i = days.length - 1; i >= 0; i--) {
+    if (state[mi][days[i].key]) streak++;
+    else break;
+  }
+  return streak;
+}
+
+function getTotalClasses(mi) {
+  return days.reduce((sum, d) => sum + (state[mi][d.key] ? 1 : 0), 0);
+}
+
+function reqToStr(req) {
+  return Object.entries(req).map(([cls, n]) => `${n}×${cls}`).join(' · ');
+}
+
+// ── BUILD / REFRESH TABLE ──
+function refreshBoard() {
+  // Update member count dynamically
+  const countEl = document.getElementById('member-count-display');
+  if (countEl) countEl.innerHTML = `${MEMBERS.length} <span>Members</span>`;
+
+  // Group by location, sort by completed weeks desc, then total classes desc
+  const allWithScores = MEMBERS.map((m, i) => ({ ...m, mi: i, score: getScore(i), streak: getStreak(i), total: getTotalClasses(i) }));
+  const kcSorted     = allWithScores.filter(m => m.loc === 'KC').sort((a, b) => b.score - a.score || b.total - a.total || a.first.localeCompare(b.first));
+  const bandraSorted = allWithScores.filter(m => m.loc === 'Bandra').sort((a, b) => b.score - a.score || b.total - a.total || a.first.localeCompare(b.first));
+
+  const thead = document.getElementById('thead');
+  const tbody = document.getElementById('tbody');
+
+  // ── THEAD ──
+  thead.innerHTML = '';
+
+  // Week header row
+  const weekRow = document.createElement('tr');
+  weekRow.className = 'week-header-row';
+
+  // Empty cells for rank and name columns
+  const weekRankTh = document.createElement('th');
+  weekRankTh.className = 'rank-h';
+  weekRow.appendChild(weekRankTh);
+
+  const weekNameTh = document.createElement('th');
+  weekNameTh.className = 'name-h';
+  weekRow.appendChild(weekNameTh);
+
+  // Week headers spanning their days
+  weekChunks.slice(0, 4).forEach((chunk, wi) => {
+    const wColor = WEEK_COLORS[wi % WEEK_COLORS.length];
+    const wFirst = chunk[0];
+    const wLast = chunk[chunk.length - 1];
+    const wDateStr = `${wFirst.mon} ${wFirst.num} – ${wLast.mon} ${wLast.num}`;
+
+    const weekTh = document.createElement('th');
+    weekTh.className = 'week-h';
+    weekTh.colSpan = chunk.length;
+    weekTh.style.setProperty('--wk-color', wColor);
+
+    // Check if ANY member has completed this week to highlight the header
+    let anyMemberCompletedWeek = false;
+    for (let mi = 0; mi < MEMBERS.length; mi++) {
+      const { completed } = getWeekScore(mi, wi + 1);
+      if (completed) {
+        anyMemberCompletedWeek = true;
+        break;
+      }
+    }
+
+    // Add completion class if any member completed the week
+    if (anyMemberCompletedWeek) {
+      weekTh.classList.add('week-goals-met');
+    }
+
+    weekTh.innerHTML = `
+      <div class="week-group-header">
+        <div class="week-tag">Week ${wi + 1}</div>
+        <div class="week-dates">${wDateStr}</div>
+      </div>
+    `;
+    weekRow.appendChild(weekTh);
+  });
+
+  // Bonus days header (if there are more than 28 days)
+  if (days.length > 28) {
+    const bonusDays = days.slice(28);
+    const bonusFirst = bonusDays[0];
+    const bonusLast = bonusDays[bonusDays.length - 1];
+    const bonusDateStr = `${bonusFirst.mon} ${bonusFirst.num} – ${bonusLast.mon} ${bonusLast.num}`;
+
+    const bonusTh = document.createElement('th');
+    bonusTh.className = 'week-h bonus-week';
+    bonusTh.colSpan = bonusDays.length;
+    bonusTh.style.setProperty('--wk-color', '#888');
+    bonusTh.innerHTML = `
+      <div class="week-group-header">
+        <div class="week-tag">Bonus</div>
+        <div class="week-dates">${bonusDateStr}</div>
+      </div>
+    `;
+    weekRow.appendChild(bonusTh);
+  }
+
+  // Empty cell for score column
+  const weekScoreTh = document.createElement('th');
+  weekScoreTh.className = 'score-h';
+  weekRow.appendChild(weekScoreTh);
+
+  thead.appendChild(weekRow);
+
+  // Day header row
+  const headRow = document.createElement('tr');
+
+  // Rank
+  const rankTh = document.createElement('th');
+  rankTh.className = 'rank-h';
+  headRow.appendChild(rankTh);
+
+  // Name
+  const nameTh = document.createElement('th');
+  nameTh.className = 'name-h';
+  nameTh.innerHTML = `<span class="col-label">Member</span>`;
+  headRow.appendChild(nameTh);
+
+  // Days
+  days.forEach((d, di) => {
+    const th = document.createElement('th');
+    th.className = 'day-h' + (d.isWeekend ? ' weekend' : '');
+    th.innerHTML = `<span class="day-num">${d.num}</span><span class="day-name">${d.dayName}</span>`;
+
+    // Add week separator border
+    const weekIdx = Math.floor(di / 7);
+    if (di > 0 && di % 7 === 0) {
+      th.style.borderLeft = '2px solid var(--border-strong)';
+    }
+
+    headRow.appendChild(th);
+  });
+
+  // Score
+  const scoreTh = document.createElement('th');
+  scoreTh.className = 'score-h';
+  scoreTh.innerHTML = `<span class="col-label">Weeks</span>`;
+  headRow.appendChild(scoreTh);
+
+  thead.appendChild(headRow);
+
+  // ── TBODY ──
+  tbody.innerHTML = '';
+
+  function renderGroupRows(groupList, groupLabel, loc) {
+    // Location separator row — one td per week column for alignment
+    const sepRow = document.createElement('tr');
+    sepRow.className = 'location-group-header';
+
+    // Label spans rank + name columns
+    const labelTd = document.createElement('td');
+    labelTd.colSpan = 2;
+    labelTd.className = 'location-header-cell location-label-cell';
+    labelTd.textContent = groupLabel;
+    sepRow.appendChild(labelTd);
+
+    const locReqs = (loc === 'Bandra') ? WEEKLY_REQUIREMENTS_BANDRA : WEEKLY_REQUIREMENTS_KC;
+
+    // One td per week chunk (W1–W4), aligned to the day columns
+    weekChunks.slice(0, 4).forEach((chunk, wi) => {
+      const goalTd = document.createElement('td');
+      goalTd.colSpan = chunk.length;
+      goalTd.className = 'location-header-cell location-goal-cell';
+      
+      // Check completion status for this week
+      const wn = wi + 1;
+      const completedCount = groupList.filter(m => {
+        const { completed } = getWeekScore(m.mi, wn);
+        return completed;
+      }).length;
+      
+      const totalMembers = groupList.length;
+      const allCompleted = completedCount === totalMembers;
+      const someCompleted = completedCount > 0;
+      
+      // Add completion styling
+      let statusClass = '';
+      if (allCompleted) {
+        statusClass = 'all-completed';
+        goalTd.style.background = 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)';
+      } else if (someCompleted) {
+        statusClass = 'some-completed';
+        goalTd.style.background = 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)';
+      }
+      
+      const pills = Object.entries(locReqs[wn]).map(([cls, n]) => {
+        const info = STICKER_LABEL[cls] || { emoji: '', label: cls };
+        return `<span class="loc-req-pill"><em class="loc-req-count">${n}×</em><span class="loc-req-icon">${info.emoji}</span><span class="loc-req-name">${info.label}</span></span>`;
+      }).join('');
+      goalTd.innerHTML = `<div class="loc-goal-wrap"><span class="loc-span-arrow loc-arrow-l">◄</span><button class="loc-goal-badge" onclick="this.classList.toggle('open')"><span class="loc-badge-label">Week ${wn}</span><div class="loc-badge-detail">${pills}</div></button><span class="loc-span-arrow loc-arrow-r">►</span></div>`;
+      sepRow.appendChild(goalTd);
+      
+      // Update the button with status class and indicator after creation
+      const button = goalTd.querySelector('.loc-goal-badge');
+      button.classList.add(statusClass);
+      const detail = button.querySelector('.loc-badge-detail');
+      const statusIndicator = allCompleted ? '✓ All Complete' : 
+                             someCompleted ? `${completedCount}/${totalMembers} Complete` : 
+                             'Not Started';
+      detail.innerHTML += `<div style="margin-top: 6px; font-size: 9px; opacity: 0.8; color: rgba(255,255,255,0.9);">${statusIndicator}</div>`;
+    });
+
+    // Bonus days td (if applicable)
+    if (days.length > 28) {
+      const bonusTd = document.createElement('td');
+      bonusTd.colSpan = days.length - 28;
+      bonusTd.className = 'location-header-cell';
+      sepRow.appendChild(bonusTd);
+    }
+
+    // Score column td
+    const scoreTd = document.createElement('td');
+    scoreTd.className = 'location-header-cell';
+    sepRow.appendChild(scoreTd);
+
+    tbody.appendChild(sepRow);
+
+    groupList.forEach((m, rank) => {
+      const animDelay = rank * 0.04;
+      const row = document.createElement('tr');
+      row.className = 'data-row';
+      row.style.animationDelay = animDelay + 's';
+
+      // Rank cell
+      const rankTd = document.createElement('td');
+      rankTd.className = 'rank-td';
+      const rankClass = '';
+      const rankDisplay = rank + 1;
+      rankTd.innerHTML = `<div class="rank-inner ${rankClass}">${rankDisplay}</div>`;
+      row.appendChild(rankTd);
+
+      // Name cell
+      const nameTd = document.createElement('td');
+      nameTd.className = 'name-td';
+      const streakHtml = m.streak >= 3
+        ? `<span class="streak-flame show">🔥 ${m.streak}</span>`
+        : `<span class="streak-flame"></span>`;
+      nameTd.innerHTML = `
+        <div class="member-name">${m.first} ${m.last}</div>
+        <div class="member-sub">${streakHtml}</div>
+      `;
+      row.appendChild(nameTd);
+
+      // Day cells
+      days.forEach((d, di) => {
+        const td = document.createElement('td');
+
+        // Determine which week this day belongs to (1-4)
+        const weekNum = Math.floor(di / 7) + 1;
+        const isCompletedWeek = weekNum <= 4 && getWeekScore(m.mi, weekNum).completed;
+
+        td.className = 'day-td' + (d.isWeekend ? ' weekend' : '') + (isCompletedWeek ? ' week-completed' : '');
+
+        // Add week separator border
+        if (di > 0 && di % 7 === 0) {
+          td.style.borderLeft = '2px solid var(--border-strong)';
+        }
+
+        const stickerVal  = state[m.mi][d.key];
+        const stickerAbbr  = stickerVal ? getStickerAbbr(stickerVal) : null;
+        const stickerLabel = stickerVal ? (STICKERS.find(s => s.emoji === stickerVal)?.label || '') : '';
+        const qualifying   = !!stickerAbbr && weekNum >= 1 && weekNum <= 4 && isStickerQualifying(stickerAbbr, weekNum, m.loc);
+        const slot = document.createElement('div');
+        slot.className = 'sticker-slot' + (stickerVal ? ' has-sticker' : '') + (qualifying ? ' qualifying' : '');
+        slot.textContent = stickerVal || '';
+        slot.dataset.mi = m.mi;
+        slot.dataset.dk = d.key;
+        if (stickerLabel) slot.dataset.label = stickerLabel;
+
+        slot.addEventListener('mouseenter', () => { if (stickerLabel) showCellTooltip(stickerLabel, slot); });
+        slot.addEventListener('mouseleave', hideCellTooltip);
+
+        slot.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const rect = slot.getBoundingClientRect();
+          openPicker(slot, m.mi, d.key, rect);
+        });
+
+        td.appendChild(slot);
+        row.appendChild(td);
+      });
+
+      // Score cell
+      const scoreTd = document.createElement('td');
+      scoreTd.className = 'score-td';
+      const sc = m.score;
+      const pillClass = sc === 0 ? '' : sc >= 4 ? ' maxed' : ' lit';
+
+      // Build weekly status for tooltip
+      let tooltipHTML = '<div class="weekly-status">';
+      for (let week = 1; week <= 4; week++) {
+        const { completed } = getWeekScore(m.mi, week);
+        const badgeClass = completed ? ' complete' : '';
+        const icon = completed ? '✓' : '○';
+        tooltipHTML += `<div class="week-badge${badgeClass}">W${week} ${icon}</div>`;
+      }
+      tooltipHTML += '</div>';
+
+      scoreTd.innerHTML = `
+        <div class="score-pill${pillClass}">
+          ${sc}/4
+          <div class="score-tooltip">${tooltipHTML}</div>
+        </div>
+      `;
+      row.appendChild(scoreTd);
+
+      tbody.appendChild(row);
+    });
+  }
+
+  renderGroupRows(kcSorted, '📍  Kemps Corner', 'KC');
+  renderGroupRows(bandraSorted, '📍  Supreme HQ, Bandra', 'Bandra');
+}
+
+// ── GOOGLE SHEETS CONFIG ──
+// Configuration loaded from external config.live.js file
+const GSHEET_SPREADSHEET_ID = window.GOOGLE_SHEETS_CONFIG.SPREADSHEET_ID;
+const GSHEET_SHEET_NAME     = window.GOOGLE_SHEETS_CONFIG.SHEET_NAME;
+const OAUTH_CLIENT_ID       = window.GOOGLE_SHEETS_CONFIG.CLIENT_ID;
+const OAUTH_CLIENT_SECRET   = window.GOOGLE_SHEETS_CONFIG.CLIENT_SECRET;
+const OAUTH_REFRESH_TOKEN   = window.GOOGLE_SHEETS_CONFIG.REFRESH_TOKEN;
+
+const CHALLENGE_START = new Date(2026, 1, 23);
+
+function cleanedClassToEmoji(cleanedClass) {
+  const c = (cleanedClass || '').toLowerCase();
+  if (/barre 57|studio barre/.test(c))           return '\u{1F499}';
+  if (/powercycle|power cycle|cycle/.test(c))    return '\u{1F6B4}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}';
+  if (/mat 57|mat57/.test(c))                    return '\u{1F9D8}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}';
+  if (/cardio barre/.test(c))                    return '\u{1FAC0}';
+  if (/strength lab|studio lab/.test(c))         return '\u{1F3CB}\u{FE0F}';
+  if (/back body blaze/.test(c))                 return '\u{1F519}';
+  if (/amped up/.test(c))                        return '\u{1F525}';
+  if (/\bfit\b/.test(c))                         return '\u{1F4AA}\u{1F3FB}';
+  if (/hiit/.test(c))                            return '\u{2764}\u{FE0F}\u{200D}\u{1F525}';
+  if (/recovery/.test(c))                        return '\u{2764}\u{FE0F}\u{200D}\u{1FA79}';
+  return null;
+}
+
+function normalizeName(s) {
+  return (s || '').trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+async function getAccessToken() {
+  // Check if credentials are properly configured
+  if (!OAUTH_CLIENT_ID || OAUTH_CLIENT_ID === 'YOUR_CLIENT_ID_HERE' ||
+      !OAUTH_CLIENT_SECRET || OAUTH_CLIENT_SECRET === 'YOUR_CLIENT_SECRET_HERE' ||
+      !OAUTH_REFRESH_TOKEN || OAUTH_REFRESH_TOKEN === 'YOUR_REFRESH_TOKEN_HERE') {
+    throw new Error('Google Sheets integration not configured. Please update GOOGLE_SHEETS_CONFIG with your credentials.');
+  }
+
+  const resp = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id:     OAUTH_CLIENT_ID,
+      client_secret: OAUTH_CLIENT_SECRET,
+      refresh_token: OAUTH_REFRESH_TOKEN,
+      grant_type:    'refresh_token',
+    })
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error('Token refresh failed: ' + (err.error_description || resp.status));
+  }
+  const data = await resp.json();
+  return data.access_token;
+}
+
+async function fetchSheetRows(accessToken) {
+  const range = encodeURIComponent(GSHEET_SHEET_NAME + '!A:Z');
+  const url   = `https://sheets.googleapis.com/v4/spreadsheets/${GSHEET_SPREADSHEET_ID}/values/${range}`;
+  const resp  = await fetch(url, { headers: { Authorization: 'Bearer ' + accessToken } });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error('Sheets fetch failed: ' + ((err.error && err.error.message) || resp.status));
+  }
+  const data = await resp.json();
+  return data.values || [];
+}
+
+async function fetchAndSeedCheckins() {
+  const statusEl = document.getElementById('data-status');
+  const btn      = document.getElementById('refresh-btn');
+  if (statusEl) statusEl.textContent = 'Fetching data…';
+  if (btn)      btn.disabled = true;
+
+  try {
+    const accessToken = await getAccessToken();
+    const rows        = await fetchSheetRows(accessToken);
+
+    if (rows.length < 2) {
+      if (statusEl) statusEl.textContent = 'No data found in sheet.';
+      return;
+    }
+
+    const headers    = rows[0].map(h => h.trim());
+    const col        = name => headers.indexOf(name);
+    const iFirst     = col('First Name');
+    const iLast      = col('Last Name');
+    const iCheckedIn = col('Checked In');
+    const iDate      = col('Date (IST)');
+    const iClass     = col('Cleaned Class');
+
+    MEMBERS.forEach((_, mi) => {
+      Object.keys(state[mi]).forEach(k => delete state[mi][k]);
+    });
+
+    let matched = 0;
+
+    rows.slice(1).forEach(row => {
+      if ((row[iCheckedIn] || '').trim().toUpperCase() !== 'TRUE') return;
+      const dateStr = (row[iDate] || '').trim();
+      const rowDate = new Date(dateStr + 'T00:00:00');
+      if (isNaN(rowDate.getTime()) || rowDate < CHALLENGE_START) return;
+      const emoji = cleanedClassToEmoji((row[iClass] || '').trim());
+      if (!emoji) return;
+      const fullName = normalizeName((row[iFirst] || '') + ' ' + (row[iLast] || ''));
+      const mi       = MEMBERS.findIndex(m => normalizeName(m.first + ' ' + m.last) === fullName);
+      if (mi === -1) return;
+      const dk = `${rowDate.getFullYear()}-${rowDate.getMonth()}-${rowDate.getDate()}`;
+      if (!days.find(d => d.key === dk)) return;
+      if (!state[mi][dk]) { state[mi][dk] = emoji; matched++; }
+    });
+
+    refreshBoard();
+    const now     = new Date();
+    const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+    if (statusEl) statusEl.textContent = `\u2713 ${matched} check-in(s) loaded \u00B7 ${timeStr}`;
+  } catch (err) {
+    console.error(err);
+    if (statusEl) {
+      if (err.message.includes('not configured') || err.message.includes('not found')) {
+        statusEl.textContent = '⚠ Google Sheets not configured · Using manual mode';
+      } else {
+        statusEl.textContent = '✗ ' + err.message;
+      }
+    }
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+// ── INIT ──
+renderLegend();
+refreshBoard();
+fetchAndSeedCheckins();
+</script>
+</body>
+</html>

@@ -991,14 +991,14 @@ tr.location-group-header:first-child td.location-header-cell { border-top: none;
       REFRESH_TOKEN: 'YOUR_REFRESH_TOKEN_HERE'
     };
     
-    // Try to load config.live.js if it exists (no 404 errors)
+    // Try to load config.live.js if it exists (silent loading)
     const configScript = document.createElement('script');
     configScript.src = 'config.live.js';
     configScript.onerror = function() { 
-      console.log('📝 Using default config - create config.live.js for custom credentials');
+      // Silent - no console messages to avoid 404 noise
     };
     configScript.onload = function() {
-      console.log('✅ Loaded custom configuration from config.live.js');
+      console.log('✅ Loaded custom configuration');
     };
     document.head.appendChild(configScript);
   </script>

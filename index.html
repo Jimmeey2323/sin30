@@ -32,6 +32,8 @@
       display: flex;
       flex-direction: column;
       height: 100vh;
+      width: 100vw;
+      overflow: hidden;
     }
 
     .tab-bar {
@@ -85,7 +87,7 @@
       display: none;
       position: relative;
       width: 100%;
-      height: 100%;
+      height: calc(100vh - 120px); /* Full height minus header and tab bar */
     }
 
     .tab-content.active {
@@ -104,6 +106,25 @@
       left: 0;
       right: 0;
       bottom: 0;
+      zoom: 1;
+      transform: scale(1);
+    }
+
+    /* Loading state */
+    .tab-content::before {
+      content: 'Loading...';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #8a8a8a;
+      font-size: 14px;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .tab-iframe[data-loaded="true"] + .tab-content::before {
+      display: none;
     }
 
     .dashboard-header {
@@ -186,7 +207,7 @@
       <button class="tab-button active red" data-tab="beginner">⭐ Beginner</button>
       <button class="tab-button purple" data-tab="intermediate">⭐⭐ Intermediate</button>
       <button class="tab-button cyan" data-tab="advanced">⭐⭐⭐ Advanced</button>
-    </button>
+    </div>
 
     <div class="tab-content active" id="beginner">
       <iframe class="tab-iframe" src="./stronger-in-30-beginner.html" loading="eager" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
@@ -212,15 +233,41 @@
 
     // Preload all iframes for better performance
     function preloadIframes() {
-      iframes.forEach(iframe => {
+      iframes.forEach((iframe, index) => {
         iframe.onload = function() {
           // Iframe loaded successfully
           console.log('Loaded:', iframe.src);
+          iframe.setAttribute('data-loaded', 'true');
+          
+          // Ensure iframe content is properly sized
+          try {
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            if (iframeDoc) {
+              // Apply full screen styles to iframe content
+              const style = iframeDoc.createElement('style');
+              style.textContent = `
+                body { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: auto; }
+                html { height: 100%; margin: 0; padding: 0; }
+              `;
+              iframeDoc.head.appendChild(style);
+            }
+          } catch (e) {
+            console.log('Cross-origin iframe, cannot modify content');
+          }
         };
+        
         iframe.onerror = function() {
           // Handle iframe load error
           console.warn('Failed to load:', iframe.src);
+          iframe.setAttribute('data-loaded', 'false');
         };
+        
+        // Force reload to ensure proper loading
+        const originalSrc = iframe.src;
+        iframe.src = 'about:blank';
+        setTimeout(() => {
+          iframe.src = originalSrc;
+        }, 100 * index); // Stagger loading
       });
     }
 

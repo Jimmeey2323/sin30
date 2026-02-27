@@ -111,22 +111,7 @@
       transform: scale(1);
     }
 
-    /* Loading state */
-    .tab-content::before {
-      content: 'Loading...';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: #8a8a8a;
-      font-size: 14px;
-      z-index: 1;
-      pointer-events: none;
-    }
-
-    .tab-iframe[data-loaded="true"] + .tab-content::before {
-      display: none;
-    }
+    /* Loading state removed */
 
     .dashboard-header {
       text-align: center;

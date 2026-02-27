@@ -935,6 +935,50 @@ tr.location-group-header:first-child td.location-header-cell { border-top: none;
 }
 .refresh-btn:hover { background: var(--border); }
 .refresh-btn:disabled { opacity: 0.45; cursor: default; }
+
+/* ── BOARD LOADER ── */
+#board-loader {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(26,26,26,0.18);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  z-index: 200;
+  transition: opacity 0.25s;
+}
+#board-loader.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+.loader-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  background: var(--white);
+  border-radius: 16px;
+  padding: 32px 40px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.08);
+}
+.loader-text {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+.board-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: loaderSpin 0.7s linear infinite;
+}
+@keyframes loaderSpin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
@@ -952,8 +996,9 @@ tr.location-group-header:first-child td.location-header-cell { border-top: none;
     // Try to load config.live.js if it exists (silent loading)
     const configScript = document.createElement('script');
     configScript.src = 'config.live.js';
-    configScript.onerror = function() { 
-      // Silent - no console messages to avoid 404 noise
+    configScript.onerror = function() {
+      const loader = document.getElementById('board-loader');
+      if (loader) loader.classList.add('hidden');
     };
     configScript.onload = function() {
       console.log('✅ Loaded custom configuration');
@@ -969,6 +1014,14 @@ tr.location-group-header:first-child td.location-header-cell { border-top: none;
 
 <!-- CELL TOOLTIP -->
 <div id="cell-tooltip"></div>
+
+<!-- BOARD LOADER -->
+<div id="board-loader">
+  <div class="loader-card">
+    <div class="board-spinner"></div>
+    <div class="loader-text">Loading check-ins</div>
+  </div>
+</div>
 
 <!-- MASTHEAD -->
 <div class="masthead">
@@ -1639,6 +1692,8 @@ async function fetchAndSeedCheckins() {
   const btn      = document.getElementById('refresh-btn');
   if (statusEl) statusEl.textContent = '';
   if (btn)      btn.disabled = true;
+  const loader = document.getElementById('board-loader');
+  if (loader) loader.classList.remove('hidden');
 
   try {
     const accessToken = await getAccessToken();
@@ -1693,6 +1748,8 @@ async function fetchAndSeedCheckins() {
     }
   } finally {
     if (btn) btn.disabled = false;
+    const loader = document.getElementById('board-loader');
+    if (loader) loader.classList.add('hidden');
   }
 }
 

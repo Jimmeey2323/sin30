@@ -377,12 +377,17 @@ th.week-h.bonus-week .week-dates {
   width: 100%;
 }
 .loc-span-arrow {
-  font-size: 8px;
+  font-size: 16px;
   color: var(--accent);
   opacity: 0.48;
   flex-shrink: 0;
   pointer-events: none;
   line-height: 1;
+  width: 14px;
+  height: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 .loc-goal-badge {
   display: inline-flex;
@@ -639,6 +644,7 @@ td.day-td {
   height: 52px;
   padding: 0 2px;
   position: relative;
+  overflow: visible;
 }
 
 td.day-td.weekend { background: #fafafa; }
@@ -660,7 +666,7 @@ td.day-td.week-completed .sticker-slot.has-sticker {
 .sticker-slot {
   width: 34px;
   height: 34px;
-  margin: 0 auto;
+  margin: 8px auto;
   border-radius: 8px;
   border: 1.5px dashed var(--border-strong);
   display: flex;
@@ -699,20 +705,22 @@ td.day-td.week-completed .sticker-slot.has-sticker {
 .sticker-slot.qualifying::after {
   content: '✓';
   position: absolute;
-  top: -5px;
-  right: -5px;
-  width: 14px;
-  height: 14px;
+  top: -8px;
+  right: -8px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 9px;
-  font-weight: 800;
+  font-size: 11px;
+  font-weight: 900;
   color: #22c55e;
   background: #0a0a0a;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.45);
   pointer-events: none;
+  z-index: 10;
+  line-height: 1;
 }
 
 /* Shared JS tooltip */
@@ -1363,6 +1371,58 @@ function buildSlotTooltip(abbr, label, mi, weekNum, loc) {
   return `${label}\nW${weekNum} · ${perClass} → ${availableInGroup}/${requiredInGroup} combined${availableInGroup >= requiredInGroup ? ' ✓' : ''}`;
 }
 
+// ── STATE PERSISTENCE ──
+function saveStateToLocalStorage() {
+  try {
+    localStorage.setItem('sin30_board_state', JSON.stringify(state));
+  } catch (e) {
+    console.warn('Failed to save state to localStorage:', e);
+  }
+}
+
+function restoreStateFromLocalStorage() {
+  try {
+    const saved = localStorage.getItem('sin30_board_state');
+    if (saved) {
+      const savedState = JSON.parse(saved);
+      MEMBERS.forEach((m, mi) => {
+        if (savedState[mi]) {
+          Object.assign(state[mi], savedState[mi]);
+        }
+      });
+      return true;
+    }
+  } catch (e) {
+    console.warn('Failed to restore state from localStorage:', e);
+  }
+  return false;
+}
+
+// ── COLLAPSE/EXPAND HELPERS ──
+function toggleLocationGroup(btn) {
+  const tbody = document.getElementById('tbody');
+  if (!tbody) return;
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  const header = btn.closest('tr.location-group-header');
+  if (!header) return;
+  
+  // Find the index of this header
+  let headerIndex = rows.indexOf(header);
+  if (headerIndex === -1) return;
+  
+  // Toggle the button state
+  btn.classList.toggle('collapsed');
+  
+  // Toggle all data-row rows until we hit the next location-group-header
+  for (let i = headerIndex + 1; i < rows.length; i++) {
+    const row = rows[i];
+    if (row.classList.contains('location-group-header')) break;  // Stop at next location
+    if (row.classList.contains('data-row')) {
+      row.classList.toggle('hidden');
+    }
+  }
+}
+
 // ── BUILD / REFRESH TABLE ──
 function refreshBoard() {
   // Update member count dynamically
@@ -1493,7 +1553,18 @@ function refreshBoard() {
     const labelTd = document.createElement('td');
     labelTd.colSpan = 2;
     labelTd.className = 'location-header-cell location-label-cell';
-    labelTd.textContent = groupLabel;
+    
+    const btn = document.createElement('button');
+    btn.className = 'location-toggle-btn';
+    btn.type = 'button';
+    btn.innerHTML = `<span class="location-toggle-icon">▼</span><span>${groupLabel}</span>`;
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleLocationGroup(btn);
+    });
+    
+    labelTd.appendChild(btn);
     sepRow.appendChild(labelTd);
 
     const locReqs = (loc === 'Bandra') ? WEEKLY_REQUIREMENTS_BANDRA : WEEKLY_REQUIREMENTS_KC;
@@ -1508,7 +1579,7 @@ function refreshBoard() {
         const info = STICKER_LABEL[cls] || { emoji: '', label: cls };
         return `<span class="loc-req-pill"><em class="loc-req-count">${n}×</em><span class="loc-req-icon">${info.emoji}</span><span class="loc-req-name">${info.label}</span></span>`;
       }).join('');
-      goalTd.innerHTML = `<div class="loc-goal-wrap"><span class="loc-span-arrow loc-arrow-l">◄</span><button class="loc-goal-badge" onclick="this.classList.toggle('open')"><span class="loc-badge-label">Goals</span><div class="loc-badge-detail">${pills}</div></button><span class="loc-span-arrow loc-arrow-r">►</span></div>`;
+      goalTd.innerHTML = `<div class="loc-goal-wrap"><span class="loc-span-arrow loc-arrow-l">‹</span><button class="loc-goal-badge" onclick="this.classList.toggle('open')"><span class="loc-badge-label">Goals</span><div class="loc-badge-detail">${pills}</div></button><span class="loc-span-arrow loc-arrow-r">›</span></div>`;
       sepRow.appendChild(goalTd);
     });
 
@@ -1751,6 +1822,7 @@ async function fetchAndSeedCheckins() {
     });
 
     refreshBoard();
+    saveStateToLocalStorage();
     const now     = new Date();
     const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
     if (statusEl) statusEl.textContent = '';
@@ -1771,8 +1843,15 @@ async function fetchAndSeedCheckins() {
 }
 
 // ── INIT ──
+if (restoreStateFromLocalStorage()) {
+  renderLegend();
+  refreshBoard();
+}
+const loader = document.getElementById('board-loader');
+if (loader) loader.classList.add('hidden');
 renderLegend();
 refreshBoard();
+fetchAndSeedCheckins();
 </script>
 </body>
 </html>

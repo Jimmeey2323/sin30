@@ -20,8 +20,8 @@
   --border-strong: #d0cec8;
   --gold: #b8960c;
   --gold-bg: #fdf8e8;
-  --purple-soft: #ede9fe;
-  --week-colors: #7c3aed, #1a4d6e, #a05c2d, #6b3fa0, #c0392b;
+/* Use a single subtle accent for week highlights to avoid too many conflicting colors */
+  --wk-accent: #7c3aed;
   --radius: 10px;
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
   --shadow-md: 0 4px 16px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04);
@@ -30,7 +30,7 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  background: var(--bg);
+  background: var(--white);
   color: var(--ink);
   font-family: 'Syne', sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -320,18 +320,18 @@ th.week-h.bonus-week .week-tag {
   padding: 3px 8px;
 }
 
-/* Week header completion highlighting */
+/* Subtle, single-accent week header when goals are met */
 th.week-h.week-goals-met {
-  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-  border-color: #10b981;
+  background: rgba(124,58,237,0.06);
+  border-color: rgba(124,58,237,0.18);
 }
 th.week-h.week-goals-met .week-tag {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: var(--wk-accent);
   color: white;
-  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.4);
+  box-shadow: 0 1px 3px rgba(124,58,237,0.15);
 }
 th.week-h.week-goals-met .week-dates {
-  color: #059669;
+  color: rgba(124,58,237,0.9);
   font-weight: 600;
 }
 
@@ -375,9 +375,9 @@ th.week-h.bonus-week .week-dates {
   width: 100%;
 }
 .loc-span-arrow {
-  font-size: 7px;
+  font-size: 8px;
   color: var(--accent);
-  opacity: 0.4;
+  opacity: 0.48;
   flex-shrink: 0;
   pointer-events: none;
   line-height: 1;
@@ -386,28 +386,40 @@ th.week-h.bonus-week .week-dates {
   display: inline-flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 0;
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  border-radius: 20px;
-  padding: 4px 12px;
+  background: linear-gradient(180deg, #ffffff 0%, var(--accent-light) 100%);
+  color: var(--accent);
+  border: 1px solid rgba(124,58,237,0.24);
+  border-radius: 10px;
+  width: 84px;
+  min-height: 28px;
+  padding: 4px 10px;
   cursor: pointer;
   font-family: inherit;
   transition: border-radius 0.15s, padding 0.15s, box-shadow 0.15s;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.14);
+  box-shadow: 0 4px 12px rgba(124,58,237,0.16), inset 0 1px 0 rgba(255,255,255,0.7);
   white-space: nowrap;
 }
-.loc-goal-badge:hover { filter: brightness(1.1); }
+.loc-goal-badge:hover {
+  filter: brightness(1.02);
+  box-shadow: 0 6px 16px rgba(124,58,237,0.22), inset 0 1px 0 rgba(255,255,255,0.8);
+}
 .loc-goal-badge.open {
-  border-radius: 8px;
-  padding: 7px 12px;
+  border-radius: 10px;
+  width: min(100%, 220px);
+  min-height: 30px;
+  padding: 7px 10px;
+  align-items: flex-start;
+  overflow: hidden;
 }
 .loc-badge-label {
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+  width: 100%;
+  text-align: center;
   pointer-events: none;
 }
 .loc-badge-detail {
@@ -423,7 +435,13 @@ th.week-h.bonus-week .week-dates {
   display: flex;
   align-items: center;
   gap: 5px;
-  white-space: nowrap;
+  background: linear-gradient(180deg, rgba(124,58,237,0.95) 0%, rgba(91,33,182,0.95) 100%);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 7px;
+  padding: 2px 6px;
+  width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
   pointer-events: none;
 }
 .loc-req-count {
@@ -449,7 +467,7 @@ th.week-h.bonus-week .week-dates {
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: white;
-  background: var(--wk-color, #2d5a27);
+  background: var(--wk-accent, #7c3aed);
   padding: 3px 10px;
   border-radius: 100px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -632,7 +650,8 @@ td.day-td.week-completed.weekend {
 }
 
 td.day-td.week-completed .sticker-slot.has-sticker {
-  border: 1.5px solid rgba(124,58,237,0.65);
+  /* Subtle completed-week indicator */
+  border: 1.5px solid rgba(124,58,237,0.28);
 }
 
 /* The sticker slot */
@@ -645,7 +664,7 @@ td.day-td.week-completed .sticker-slot.has-sticker {
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
+  cursor: default;
   transition: all 0.15s ease;
   position: relative;
   font-size: 20px;
@@ -656,7 +675,6 @@ td.day-td.week-completed .sticker-slot.has-sticker {
 .sticker-slot:hover {
   border-color: var(--accent-mid);
   background: var(--accent-light);
-  transform: scale(1.08);
 }
 
 .sticker-slot.has-sticker {
@@ -667,10 +685,33 @@ td.day-td.week-completed .sticker-slot.has-sticker {
 
 .sticker-slot.has-sticker:hover {
   background: #f0ede6;
-  transform: scale(1.1) rotate(3deg);
 }
 
-/* Qualifying sticker highlight removed — highlight shows only on week completion */
+/* Qualifying sticker highlight */
+.sticker-slot.qualifying {
+  border: 1.5px solid var(--accent-mid);
+}
+.sticker-slot.has-sticker.qualifying {
+  border: 1.5px solid var(--accent-mid);
+}
+.sticker-slot.qualifying::after {
+  content: '✓';
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 800;
+  color: #22c55e;
+  background: #0a0a0a;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+  pointer-events: none;
+}
 
 /* Shared JS tooltip */
 #cell-tooltip {
@@ -683,69 +724,17 @@ td.day-td.week-completed .sticker-slot.has-sticker {
   font-size: 9px;
   font-weight: 600;
   letter-spacing: 0.06em;
-  white-space: nowrap;
-  padding: 4px 9px;
+  white-space: pre-line;
+  line-height: 1.45;
+  max-width: 260px;
+  padding: 7px 9px;
   border-radius: 6px;
   pointer-events: none;
   box-shadow: 0 3px 10px rgba(0,0,0,0.22);
   transform: translateX(-50%);
 }
 
-/* Sticker picker popup */
-.picker-popup {
-  display: none;
-  position: fixed;
-  z-index: 1000;
-  background: white;
-  border: 1px solid var(--border-strong);
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.14);
-  padding: 10px;
-  gap: 6px;
-  flex-wrap: wrap;
-  width: 186px;
-}
 
-.picker-popup.open {
-  display: flex;
-}
-
-.picker-sticker {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
-  border-radius: 8px;
-  cursor: pointer;
-  border: 1.5px solid transparent;
-  transition: all 0.12s;
-  background: var(--off);
-}
-
-.picker-sticker:hover {
-  border-color: var(--accent);
-  background: var(--accent-light);
-  transform: scale(1.18);
-}
-
-.picker-clear {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  font-weight: 700;
-  color: #e55;
-  border-radius: 8px;
-  cursor: pointer;
-  border: 1.5px dashed #e55;
-  background: #fff5f5;
-  transition: all 0.12s;
-}
-.picker-clear:hover { background: #ffe8e8; transform: scale(1.1); }
 
 /* score */
 td.score-td {
@@ -826,9 +815,10 @@ td.score-td {
   font-weight: 700;
   padding: 4px 8px;
   border-radius: 5px;
-  background: rgba(255,255,255,0.1);
-  border: 1px solid rgba(255,255,255,0.2);
-  color: rgba(255,255,255,0.6);
+  background: var(--accent-light);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  opacity: 0.45;
   min-width: 42px;
   text-align: center;
 }
@@ -837,6 +827,7 @@ td.score-td {
   background: var(--accent-light);
   color: var(--accent);
   border-color: var(--accent);
+  opacity: 1;
   font-weight: 800;
 }
 
@@ -988,11 +979,6 @@ tr.location-group-header:first-child td.location-header-cell { border-top: none;
     document.head.appendChild(configScript);
   </script>
 
-<!-- STICKER PICKER (shared, repositioned via JS) -->
-<div class="picker-popup" id="picker">
-  <div class="picker-clear" id="picker-clear" title="Remove sticker">✕</div>
-</div>
-
 <!-- CELL TOOLTIP -->
 <div id="cell-tooltip"></div>
 
@@ -1035,7 +1021,7 @@ tr.location-group-header:first-child td.location-header-cell { border-top: none;
 
 <!-- FOOTER -->
 <div class="board-footer">
-  <div class="footer-note">Stickers auto-populated from Google Sheets check-ins · Click any cell to manually place or override a sticker</div>
+  <div class="footer-note">Stickers auto-populated from Google Sheets check-ins</div>
   <div class="footer-logo">Physique 57</div>
 </div>
 
@@ -1159,59 +1145,6 @@ const WEEK_COLORS = ['#2d5a27','#1a4d6e','#a05c2d','#6b3fa0','#c0392b'];
 // state[memberIdx][dayKey] = stickerEmoji or null
 const state = MEMBERS.map(() => ({}));
 
-// ── PICKER LOGIC ──
-const picker = document.getElementById('picker');
-let activeSlot = null;
-
-// Build picker buttons
-STICKERS.forEach(s => {
-  const btn = document.createElement('div');
-  btn.className = 'picker-sticker';
-  btn.textContent = s.emoji;
-  btn.title = s.label;
-  btn.addEventListener('click', () => {
-    if (activeSlot) {
-      const { mi, dk } = activeSlot;
-      state[mi][dk] = s.emoji;
-      refreshBoard();
-    }
-    closePicker();
-  });
-  picker.appendChild(btn);
-});
-
-document.getElementById('picker-clear').addEventListener('click', () => {
-  if (activeSlot) {
-    const { mi, dk } = activeSlot;
-    delete state[mi][dk];
-    refreshBoard();
-  }
-  closePicker();
-});
-
-function openPicker(slot, mi, dk, rect) {
-  activeSlot = { mi, dk };
-  picker.classList.add('open');
-  // Position
-  const pw = 186, ph = 140;
-  let left = rect.left + rect.width / 2 - pw / 2;
-  let top = rect.bottom + 6;
-  if (left + pw > window.innerWidth - 8) left = window.innerWidth - pw - 8;
-  if (left < 8) left = 8;
-  if (top + ph > window.innerHeight - 8) top = rect.top - ph - 6;
-  picker.style.left = left + 'px';
-  picker.style.top = top + 'px';
-}
-
-function closePicker() {
-  picker.classList.remove('open');
-  activeSlot = null;
-}
-
-document.addEventListener('click', (e) => {
-  if (!picker.contains(e.target) && !e.target.closest('.sticker-slot')) closePicker();
-});
-
 // ── CELL TOOLTIP ──
 const cellTooltip = document.getElementById('cell-tooltip');
 function showCellTooltip(text, anchorEl) {
@@ -1219,8 +1152,11 @@ function showCellTooltip(text, anchorEl) {
   cellTooltip.textContent = text;
   cellTooltip.style.display = 'block';
   const r = anchorEl.getBoundingClientRect();
+  const tooltipHeight = cellTooltip.offsetHeight;
   cellTooltip.style.left = (r.left + r.width / 2) + 'px';
-  cellTooltip.style.top  = (r.top - 28) + 'px';
+  let top = r.top - tooltipHeight - 8;
+  if (top < 8) top = r.bottom + 8;
+  cellTooltip.style.top = top + 'px';
 }
 function hideCellTooltip() {
   cellTooltip.style.display = 'none';
@@ -1253,12 +1189,41 @@ const EQUIV_GROUPS = [
   new Set(['CB',  'BBB', 'CBP', 'HIIT', 'PC']),
 ];
 
-function getEquivCount(counts, abbr) {
-  const group = EQUIV_GROUPS.find(g => g.has(abbr));
-  if (!group) return counts[abbr] || 0;
-  let total = 0;
-  group.forEach(a => { total += (counts[a] || 0); });
-  return total;
+function getEquivGroup(abbr) {
+  return EQUIV_GROUPS.find(g => g.has(abbr)) || null;
+}
+
+function areWeeklyRequirementsMet(counts, requirements) {
+  // Prevent double-counting by evaluating each equivalency group once.
+  const handledGroups = new Set();
+
+  for (const [classType, required] of Object.entries(requirements)) {
+    const group = getEquivGroup(classType);
+
+    // Non-equivalent class: strict exact count.
+    if (!group) {
+      if ((counts[classType] || 0) < required) return false;
+      continue;
+    }
+
+    // Equivalent classes: compare grouped available vs grouped required exactly once.
+    let groupId = '';
+    group.forEach(a => { groupId += a + '|'; });
+    if (handledGroups.has(groupId)) continue;
+    handledGroups.add(groupId);
+
+    let requiredInGroup = 0;
+    Object.entries(requirements).forEach(([reqClass, reqCount]) => {
+      if (group.has(reqClass)) requiredInGroup += reqCount;
+    });
+
+    let availableInGroup = 0;
+    group.forEach(a => { availableInGroup += (counts[a] || 0); });
+
+    if (availableInGroup < requiredInGroup) return false;
+  }
+
+  return true;
 }
 
 // Returns true if the given sticker abbr counts toward any requirement in weekNum for a given location
@@ -1294,14 +1259,8 @@ function getWeekScore(mi, weekNum) {
     }
   });
 
-  // Check if requirements met (respecting equivalency groups)
-  let completed = true;
-  for (const [classType, required] of Object.entries(requirements)) {
-    if (getEquivCount(counts, classType) < required) {
-      completed = false;
-      break;
-    }
-  }
+  // Week is complete only if all weekly goals are met without double-counting classes.
+  const completed = areWeeklyRequirementsMet(counts, requirements);
 
   return { completed, counts, requirements };
 }
@@ -1330,6 +1289,74 @@ function getTotalClasses(mi) {
 
 function reqToStr(req) {
   return Object.entries(req).map(([cls, n]) => `${n}×${cls}`).join(' · ');
+}
+
+function getRequirementLabel(abbr) {
+  return STICKER_LABEL[abbr]?.label || abbr;
+}
+
+function buildWeekQualificationTooltip(mi, weekNum) {
+  if (weekNum < 1 || weekNum > 4) return '';
+  const { completed, counts, requirements } = getWeekScore(mi, weekNum);
+  if (!requirements) return '';
+
+  const lines = [
+    `W${weekNum}: ${completed ? 'Qualified ✓' : 'Not qualified ✗'}`,
+    'Reason:'
+  ];
+
+  const handledGroups = new Set();
+
+  for (const [classType, required] of Object.entries(requirements)) {
+    const group = getEquivGroup(classType);
+
+    if (!group) {
+      const done = counts[classType] || 0;
+      lines.push(`• ${classType}: ${done}/${required}`);
+      continue;
+    }
+
+    const groupKey = Array.from(group).sort().join('|');
+    if (handledGroups.has(groupKey)) continue;
+    handledGroups.add(groupKey);
+
+    let requiredInGroup = 0;
+    const reqClasses = [];
+    Object.entries(requirements).forEach(([reqClass, reqCount]) => {
+      if (group.has(reqClass)) {
+        requiredInGroup += reqCount;
+        reqClasses.push(reqClass);
+      }
+    });
+
+    let availableInGroup = 0;
+    group.forEach(a => { availableInGroup += (counts[a] || 0); });
+
+    const perClass = reqClasses.map(rc => `${rc}: ${counts[rc] || 0}`).join(', ');
+    lines.push(`• ${perClass} → ${availableInGroup}/${requiredInGroup} combined`);
+  }
+
+  return lines.join('\n');
+}
+
+function buildSlotTooltip(abbr, label, mi, weekNum, loc) {
+  if (!abbr || weekNum < 1 || weekNum > 4) return label;
+  const { counts, requirements } = getWeekScore(mi, weekNum);
+  if (!requirements) return label;
+  const group = getEquivGroup(abbr);
+  if (!group) {
+    const req = requirements[abbr];
+    if (req === undefined) return label;
+    const done = counts[abbr] || 0;
+    return `${label}\nW${weekNum} · ${abbr}: ${done}/${req}${done >= req ? ' ✓' : ''}`;
+  }
+  const reqClasses = Object.keys(requirements).filter(r => group.has(r));
+  if (reqClasses.length === 0) return label;
+  const requiredInGroup = reqClasses.reduce((sum, rc) => sum + requirements[rc], 0);
+  let availableInGroup = 0;
+  group.forEach(a => { availableInGroup += (counts[a] || 0); });
+  const perClass = reqClasses.map(rc => `${rc}: ${counts[rc] || 0}`).join(', ');
+  return `${label}\nW${weekNum} · ${perClass} → ${availableInGroup}/${requiredInGroup} combined${availableInGroup >= requiredInGroup ? ' ✓' : ''}`;
 }
 
 // ── BUILD / REFRESH TABLE ──
@@ -1372,7 +1399,7 @@ function refreshBoard() {
     const weekTh = document.createElement('th');
     weekTh.className = 'week-h';
     weekTh.colSpan = chunk.length;
-    weekTh.style.setProperty('--wk-color', wColor);
+    // weekTh.style.setProperty('--wk-color', wColor);
     let anyMemberCompletedWeek = false;
     for (let mi = 0; mi < MEMBERS.length; mi++) {
       const { completed } = getWeekScore(mi, wi + 1);
@@ -1398,7 +1425,7 @@ function refreshBoard() {
     const bonusTh = document.createElement('th');
     bonusTh.className = 'week-h bonus-week';
     bonusTh.colSpan = bonusDays.length;
-    bonusTh.style.setProperty('--wk-color', '#888');
+    // bonusTh.style.setProperty('--wk-color', '#888');
     bonusTh.innerHTML = `
       <div class="week-group-header">
         <div class="week-tag">Bonus</div>
@@ -1479,7 +1506,7 @@ function refreshBoard() {
         const info = STICKER_LABEL[cls] || { emoji: '', label: cls };
         return `<span class="loc-req-pill"><em class="loc-req-count">${n}×</em><span class="loc-req-icon">${info.emoji}</span><span class="loc-req-name">${info.label}</span></span>`;
       }).join('');
-      goalTd.innerHTML = `<div class="loc-goal-wrap"><span class="loc-span-arrow loc-arrow-l">◄</span><button class="loc-goal-badge" onclick="this.classList.toggle('open')"><span class="loc-badge-label">Week ${wn}</span><div class="loc-badge-detail">${pills}</div></button><span class="loc-span-arrow loc-arrow-r">►</span></div>`;
+      goalTd.innerHTML = `<div class="loc-goal-wrap"><span class="loc-span-arrow loc-arrow-l">◄</span><button class="loc-goal-badge" onclick="this.classList.toggle('open')"><span class="loc-badge-label">Goals</span><div class="loc-badge-detail">${pills}</div></button><span class="loc-span-arrow loc-arrow-r">►</span></div>`;
       sepRow.appendChild(goalTd);
     });
 
@@ -1531,8 +1558,14 @@ function refreshBoard() {
         // Determine which week this day belongs to (1-4)
         const weekNum = Math.floor(di / 7) + 1;
         const isCompletedWeek = weekNum <= 4 && getWeekScore(m.mi, weekNum).completed;
+        const weekTooltipText = weekNum <= 4 ? buildWeekQualificationTooltip(m.mi, weekNum) : '';
 
         td.className = 'day-td' + (d.isWeekend ? ' weekend' : '') + (isCompletedWeek ? ' week-completed' : '');
+
+        if (weekTooltipText) {
+          td.addEventListener('mouseenter', () => showCellTooltip(weekTooltipText, td));
+          td.addEventListener('mouseleave', hideCellTooltip);
+        }
 
         // Add week separator border
         if (di > 0 && di % 7 === 0) {
@@ -1542,7 +1575,9 @@ function refreshBoard() {
         const stickerVal  = state[m.mi][d.key];
         const stickerAbbr  = stickerVal ? getStickerAbbr(stickerVal) : null;
         const stickerLabel = stickerVal ? (STICKERS.find(s => s.emoji === stickerVal)?.label || '') : '';
-        const qualifying   = !!stickerAbbr && weekNum >= 1 && weekNum <= 4 && isStickerQualifying(stickerAbbr, weekNum, m.loc);
+        // Only mark a sticker as "qualifying" if it both matches a required class and the
+        // member has actually completed that week (so partial progress doesn't show as fully qualified)
+        const qualifying   = !!stickerAbbr && weekNum >= 1 && weekNum <= 4 && isStickerQualifying(stickerAbbr, weekNum, m.loc) && isCompletedWeek;
         const slot = document.createElement('div');
         slot.className = 'sticker-slot' + (stickerVal ? ' has-sticker' : '') + (qualifying ? ' qualifying' : '');
         slot.textContent = stickerVal || '';
@@ -1550,13 +1585,16 @@ function refreshBoard() {
         slot.dataset.dk = d.key;
         if (stickerLabel) slot.dataset.label = stickerLabel;
 
-        slot.addEventListener('mouseenter', () => { if (stickerLabel) showCellTooltip(stickerLabel, slot); });
-        slot.addEventListener('mouseleave', hideCellTooltip);
-
-        slot.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const rect = slot.getBoundingClientRect();
-          openPicker(slot, m.mi, d.key, rect);
+        slot.addEventListener('mouseenter', () => {
+          if (stickerAbbr && weekNum <= 4) {
+            showCellTooltip(buildSlotTooltip(stickerAbbr, stickerLabel, m.mi, weekNum, m.loc), slot);
+          } else if (stickerLabel) {
+            showCellTooltip(stickerLabel, slot);
+          }
+        });
+        slot.addEventListener('mouseleave', () => {
+          if (weekTooltipText) showCellTooltip(weekTooltipText, td);
+          else hideCellTooltip();
         });
 
         td.appendChild(slot);

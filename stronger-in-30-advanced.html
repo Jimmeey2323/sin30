@@ -1062,6 +1062,7 @@ tr.data-row.hidden {
     };
     configScript.onload = function() {
       console.log('✅ Loaded custom configuration');
+      if (typeof fetchAndSeedCheckins === 'function') fetchAndSeedCheckins();
     };
     document.head.appendChild(configScript);
   </script>

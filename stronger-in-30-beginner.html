@@ -1875,9 +1875,19 @@ async function fetchAndSeedCheckins() {
       const emoji = cleanedClassToEmoji((row[iClass] || '').trim());
       if (!emoji) return;
 
-      // Match member by email
+      // Match member by email, with first+last name fallback
       const rowEmail = (row[iEmail] || '').trim().toLowerCase();
-      const mi = MEMBERS.findIndex(m => m.email && m.email.toLowerCase() === rowEmail);
+      let mi = MEMBERS.findIndex(m => m.email && m.email.toLowerCase() === rowEmail);
+      if (mi === -1) {
+        const rowFirst = (row[iFirst] || '').trim().toLowerCase();
+        const rowLast  = (row[iLast]  || '').trim().toLowerCase();
+        if (rowFirst && rowLast) {
+          mi = MEMBERS.findIndex(m =>
+            m.first.toLowerCase() === rowFirst &&
+            m.last.toLowerCase()  === rowLast
+          );
+        }
+      }
       if (mi === -1) return;
 
       // Build day key: `year-monthIndex-date`  (same format as days[] key)

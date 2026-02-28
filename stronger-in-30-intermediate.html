@@ -1864,7 +1864,18 @@ async function fetchAndSeedCheckins() {
       const emoji = cleanedClassToEmoji((row[iClass] || '').trim());
       if (!emoji) return;
       const rowEmail = (row[iEmail] || '').trim().toLowerCase();
-      const mi = MEMBERS.findIndex(m => m.email && m.email.toLowerCase() === rowEmail);
+      let mi = MEMBERS.findIndex(m => m.email && m.email.toLowerCase() === rowEmail);
+      // Fallback: match by first + last name if email has no match
+      if (mi === -1) {
+        const rowFirst = (row[iFirst] || '').trim().toLowerCase();
+        const rowLast  = (row[iLast]  || '').trim().toLowerCase();
+        if (rowFirst && rowLast) {
+          mi = MEMBERS.findIndex(m =>
+            m.first.toLowerCase() === rowFirst &&
+            m.last.toLowerCase()  === rowLast
+          );
+        }
+      }
       if (mi === -1) return;
       const dk = `${rowDate.getFullYear()}-${rowDate.getMonth()}-${rowDate.getDate()}`;
       if (!days.find(d => d.key === dk)) return;

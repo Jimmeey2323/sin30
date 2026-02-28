@@ -1150,7 +1150,7 @@ const MEMBERS = [
   { first: "Mallika",    last: "Mhatre",         email: "mallikamhatre1980@gmail.com",       loc: "Bandra" },
   { first: "Nitika",     last: "Gupta",          email: "nitika0059@gmail.com",               loc: "Bandra" },
   { first: "Sachin",     last: "Kotre",          email: "sachinmeranaam@gmail.com",           loc: "Bandra" },
-  { first: "Sanjam",     last: "Kini",           email: "sanjam.sagni@gmail.com",             loc: "Bandra" },
+  { first: "Sanjam",     last: "Kini",           email: "sanjam.sahni@gmail.com",             loc: "Bandra" },
   { first: "Shona",      last: "Barua",          email: "shonabarua27@gmail.com",             loc: "Bandra" },
   { first: "Sohini",     last: "Bera",           email: "sohinibera89@gmail.com",             loc: "Bandra" },
   { first: "Tania",      last: "Chourasia",      email: "tania94.7@gmail.com",               loc: "Bandra" },
@@ -1900,7 +1900,18 @@ async function fetchAndSeedCheckins() {
       const emoji = cleanedClassToEmoji((row[iClass] || '').trim());
       if (!emoji) return;
       const rowEmail = (row[iEmail] || '').trim().toLowerCase();
-      const mi = MEMBERS.findIndex(m => m.email && m.email.toLowerCase() === rowEmail);
+      let mi = MEMBERS.findIndex(m => m.email && m.email.toLowerCase() === rowEmail);
+      // Fallback: match by first + last name if email has no match
+      if (mi === -1) {
+        const rowFirst = (row[iFirst] || '').trim().toLowerCase();
+        const rowLast  = (row[iLast]  || '').trim().toLowerCase();
+        if (rowFirst && rowLast) {
+          mi = MEMBERS.findIndex(m =>
+            m.first.toLowerCase() === rowFirst &&
+            m.last.toLowerCase()  === rowLast
+          );
+        }
+      }
       if (mi === -1) return;
       const dk = `${rowDate.getFullYear()}-${rowDate.getMonth()}-${rowDate.getDate()}`;
       if (!days.find(d => d.key === dk)) return;

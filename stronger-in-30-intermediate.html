@@ -143,6 +143,14 @@ body {
   vertical-align: middle;
 }
 
+.qualified-count {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.05em;
+  margin-top: 2px;
+}
+
 /* ── STICKER LEGEND ── */
 .sticker-legend {
   background: var(--white);
@@ -911,7 +919,38 @@ td.location-header-cell {
 }
 tr.location-group-header:first-child td.location-header-cell { border-top: none; }
 
-/* ── DATA STATUS & REFRESH BUTTON ── */
+.location-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent);
+  padding: 0;
+  font-family: inherit;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  transition: opacity 0.2s ease;
+}
+
+.location-toggle-btn:hover { opacity: 0.7; }
+
+.location-toggle-icon {
+  display: inline-block;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+  font-size: 12px;
+  font-style: normal;
+}
+
+.location-toggle-btn.collapsed .location-toggle-icon {
+  transform: rotate(-90deg);
+}
+
+tr.data-row.hidden { display: none; }
 .data-status {
   font-size: 9px;
   font-weight: 500;
@@ -1007,7 +1046,10 @@ tr.location-group-header:first-child td.location-header-cell { border-top: none;
   </div>
   <div class="masthead-right">
     <div class="date-range"><strong>23 Feb</strong> — <strong>24 Mar 2026</strong></div>
-    <div class="member-count" id="member-count-display">25 <span>Members</span></div>
+    <div class="member-count">
+      <div id="member-count-display">48 <span>Members</span></div>
+      <div class="qualified-count" id="qualified-count-display">0 Qualified</div>
+    </div>
     <div id="data-status" class="data-status"></div>
     <button onclick="fetchAndSeedCheckins()" id="refresh-btn" class="refresh-btn">↻ Refresh</button>
   </div>
@@ -1039,57 +1081,55 @@ tr.location-group-header:first-child td.location-header-cell { border-top: none;
 // ── DATA ──
 const MEMBERS = [
   // ── Kemps Corner ──
-  { first: "Aishwarya",  last: "Kasliwal",      loc: "KC" },
-  { first: "Aliasgar",   last: "Nalwala",        loc: "KC" },
-  { first: "Amruta",     last: "Patil",          loc: "KC" },
-  { first: "Anjie",      last: "Kakar",          loc: "KC" },
-  { first: "Ankita",     last: "Saigal",         loc: "KC" },
-  { first: "Anu",        last: "Patel",          loc: "KC" },
-  { first: "Avni",       last: "Padsala",        loc: "KC" },
-  { first: "Ayesha",     last: "Munot",          loc: "KC" },
-  { first: "Deniese",    last: "Pereira",        loc: "KC" },
-  { first: "Devia",      last: "Cornelius",      loc: "KC" },
-  { first: "Dhanshri",   last: "Merchant",       loc: "KC" },
-  { first: "Dhanushi",   last: "Dhandhukiya",    loc: "KC" },
-  { first: "Hinal",      last: "Kuvadia",        loc: "KC" },
-  { first: "Maithili",   last: "Raut",           loc: "KC" },
-  { first: "Malcolm",    last: "Mistry",         loc: "KC" },
-  { first: "Manvee",     last: "K S",            loc: "KC" },
-  { first: "Miti",       last: "Joshi",          loc: "KC" },
-  { first: "Neelam",     last: "Ganglani",       loc: "KC" },
-  { first: "Nidhi",      last: "Jain",           loc: "KC" },
-  { first: "Niharika",   last: "Malik",          loc: "KC" },
-  { first: "Nikita",     last: "Pacheriwal",     loc: "KC" },
-  { first: "Poonam",     last: "Agarwal",        loc: "KC" },
-  { first: "Preeti",     last: "Ambani",         loc: "KC" },
-  { first: "Prianca",    last: "Jhaveri",        loc: "KC" },
-  { first: "Priyanka",   last: "Chokhani",       loc: "KC" },
-  { first: "Raksha",     last: "Bokadiya",       loc: "KC" },
-  { first: "Riah",       last: "Daswani",        loc: "KC" },
-  { first: "Saachi",     last: "Shetty",         loc: "KC" },
-  { first: "Sanna",      last: "Balsari",        loc: "KC" },
-  { first: "Saroj",      last: "Javeri",         loc: "KC" },
-  { first: "Simran",     last: "Shahani",        loc: "KC" },
-  { first: "Sreejita",   last: "DEB",            loc: "KC" },
-  { first: "SunainaK",   last: "Kewalramani",    loc: "KC" },
-  { first: "Swetha",     last: "Jain",           loc: "KC" },
-  { first: "Tia",        last: "Gopinath",       loc: "KC" },
-  { first: "Urvi",       last: "Kothari",        loc: "KC" },
-  { first: "Vidhi",      last: "Kapadia",        loc: "KC" },
+  { first: "Aishwarya", last: "Kasliwal",      email: "hello@twistmedia.in",                loc: "KC" },
+  { first: "Aliasgar",  last: "Nalwala",        email: "ali@asmaco.com",                     loc: "KC" },
+  { first: "Amruta",    last: "Patil",          email: "amrutavpatil@gmail.com",             loc: "KC" },
+  { first: "Anjie",     last: "Kakar",          email: "anjiekakar@gmail.com",               loc: "KC" },
+  { first: "Ankita",    last: "Saigal",         email: "ankitasaigal1997@gmail.com",         loc: "KC" },
+  { first: "Anu",       last: "Patel",          email: "anu.patel91@gmail.com",              loc: "KC" },
+  { first: "Avni",      last: "Padsala",        email: "avnipadsala@gmail.com",              loc: "KC" },
+  { first: "Ayesha",    last: "Munot",          email: "ayesha@physique57mumbai.com",        loc: "KC" },
+  { first: "Deniese",   last: "Pereira",        email: "deniesepereira01@gmail.com",         loc: "KC" },
+  { first: "Devia",     last: "Cornelius",      email: "devia.cornelius@gmail.com",          loc: "KC" },
+  { first: "Dhanshri",  last: "Merchant",       email: "dhanshri.merchant@gmail.com",        loc: "KC" },
+  { first: "Dhanushi",  last: "Dhandhukiya",    email: "dhanu.dhandhukiya@gmail.com",        loc: "KC" },
+  { first: "Hinal",     last: "Kuvadia",        email: "kuvadia.hinal@gmail.com",            loc: "KC" },
+  { first: "Maithili",  last: "Raut",           email: "maithili.raut@gmail.com",            loc: "KC" },
+  { first: "Malcolm",   last: "Mistry",         email: "malcolm@ushtate.com",                loc: "KC" },
+  { first: "Manvee",    last: "K S",            email: "manvee1999@gmail.com",               loc: "KC" },
+  { first: "Miti",      last: "Joshi",          email: "joshimiti08@gmail.com",              loc: "KC" },
+  { first: "Neelam",    last: "Ganglani",       email: "neelam.ganglani@gmail.com",          loc: "KC" },
+  { first: "Nidhi",     last: "Jain",           email: "nidhij92@gmail.com",                 loc: "KC" },
+  { first: "Niharika",  last: "Malik",          email: "niharika@meecuryind.com",            loc: "KC" },
+  { first: "Nikita",    last: "Pacheriwal",     email: "ntodi@hotmail.com",                  loc: "KC" },
+  { first: "Poonam",    last: "Agarwal",        email: "p_mukim@yahoo.com",                  loc: "KC" },
+  { first: "Preeti",    last: "Ambani",         email: "preeti.ambani@gmail.com",            loc: "KC" },
+  { first: "Prianca",   last: "Jhaveri",        email: "priancajhaveri@gmail.com",           loc: "KC" },
+  { first: "Priyanka",  last: "Chokhani",       email: "priyankaa2787@gmail.com",            loc: "KC" },
+  { first: "Raksha",    last: "Bokadiya",       email: "jkbokadia@gmail.com",                loc: "KC" },
+  { first: "Riah",      last: "Daswani",        email: "riahdaswani@gmail.com",              loc: "KC" },
+  { first: "Saachi",    last: "Shetty",         email: "saachi@physique57india.com",         loc: "KC" },
+  { first: "Sanna",     last: "Balsari",        email: "s.linnea7@gmail.com",                loc: "KC" },
+  { first: "Saroj",     last: "Javeri",         email: "saroj_821@hotmail.com",              loc: "KC" },
+  { first: "Simran",    last: "Shahani",        email: "simran_shahani@icloud.com",          loc: "KC" },
+  { first: "Sreejita",  last: "DEB",            email: "debsreejita23@gmail.com",            loc: "KC" },
+  { first: "SunainaK",  last: "Kewalramani",    email: "sukewalramani@gmail.com",            loc: "KC" },
+  { first: "Swetha",    last: "Jain",           email: "swethajain4@gmail.com",              loc: "KC" },
+  { first: "Vidhi",     last: "Kapadia",        email: "vidhi.kapadia1@gmail.com",           loc: "KC" },
   // ── Bandra ──
-  { first: "Anshika",    last: "Agrawal",        loc: "Bandra" },
-  { first: "Anushka",    last: "Mehra",          loc: "Bandra" },
-  { first: "Harpreet",   last: "Kaur",           loc: "Bandra" },
-  { first: "Kanchaan",   last: "Kaicker",        loc: "Bandra" },
-  { first: "Karishma",   last: "Gajaria",        loc: "Bandra" },
-  { first: "Khyati",     last: "Dand",           loc: "Bandra" },
-  { first: "Krisna",     last: "Krishnankutty",  loc: "Bandra" },
-  { first: "Kyra",       last: "Bakshi",         loc: "Bandra" },
-  { first: "Manpreet",   last: "Kaur",           loc: "Bandra" },
-  { first: "Pooja",      last: "Chen",           loc: "Bandra" },
-  { first: "Pooja",      last: "Nair",           loc: "Bandra" },
-  { first: "Radhika",    last: "Nihalani Bajaj", loc: "Bandra" },
-  { first: "Shreya",     last: "Sharma",         loc: "Bandra" },
+  { first: "Anshika",   last: "Agrawal",        email: "anshika.aggy@gmail.com",             loc: "Bandra" },
+  { first: "Anushka",   last: "Mehra",          email: "anushka.socialshout@gmail.com",      loc: "Bandra" },
+  { first: "Harpreet",  last: "Kaur",           email: "harpreet2391@gmail.com",             loc: "Bandra" },
+  { first: "Kanchaan",  last: "Kaicker",        email: "kanchaan1991@gmail.com",             loc: "Bandra" },
+  { first: "Karishma",  last: "Gajaria",        email: "kari.gajaria@gmail.com",             loc: "Bandra" },
+  { first: "Khyati",    last: "Dand",           email: "khyatidand@gmail.com",               loc: "Bandra" },
+  { first: "Krisna",    last: "Krishnankutty",  email: "kk@kripiq.com",                     loc: "Bandra" },
+  { first: "Kyra",      last: "Bakshi",         email: "kshitij.bakshi@spit.ac.in",          loc: "Bandra" },
+  { first: "Manpreet",  last: "Kaur",           email: "kaur.manpreet1592@gmail.com",        loc: "Bandra" },
+  { first: "Pooja",     last: "Chen",           email: "gadk.pooja@gmail.com",               loc: "Bandra" },
+  { first: "Pooja",     last: "Nair",           email: "nairpooja12@gmail.com",              loc: "Bandra" },
+  { first: "Radhika",   last: "Nihalani Bajaj", email: "radhika.n92@gmail.com",              loc: "Bandra" },
+  { first: "Shreya",    last: "Sharma",         email: "shreya.454@gmail.com",               loc: "Bandra" },
 ];
 
 // ── STICKER DEFINITIONS ──
@@ -1374,7 +1414,7 @@ function buildSlotTooltip(abbr, label, mi, weekNum, loc) {
 // ── STATE PERSISTENCE ──
 function saveStateToLocalStorage() {
   try {
-    localStorage.setItem('sin30_board_state', JSON.stringify(state));
+    localStorage.setItem('sin30_intermediate_state', JSON.stringify(state));
   } catch (e) {
     console.warn('Failed to save state to localStorage:', e);
   }
@@ -1382,7 +1422,7 @@ function saveStateToLocalStorage() {
 
 function restoreStateFromLocalStorage() {
   try {
-    const saved = localStorage.getItem('sin30_board_state');
+    const saved = localStorage.getItem('sin30_intermediate_state');
     if (saved) {
       const savedState = JSON.parse(saved);
       MEMBERS.forEach((m, mi) => {
@@ -1423,11 +1463,20 @@ function toggleLocationGroup(btn) {
   }
 }
 
+function getQualifiedMembersCount() {
+  return MEMBERS.filter(m => getScore(MEMBERS.indexOf(m)) >= 1).length;
+}
+
 // ── BUILD / REFRESH TABLE ──
 function refreshBoard() {
   // Update member count dynamically
   const countEl = document.getElementById('member-count-display');
   if (countEl) countEl.innerHTML = `${MEMBERS.length} <span>Members</span>`;
+
+  // Update qualified count
+  const qualifiedEl = document.getElementById('qualified-count-display');
+  const qualifiedCount = getQualifiedMembersCount();
+  if (qualifiedEl) qualifiedEl.textContent = `${qualifiedCount} Qualified`;
 
   // Group by location, sort by completed weeks desc, then total classes desc
   const allWithScores = MEMBERS.map((m, i) => ({ ...m, mi: i, score: getScore(i), streak: getStreak(i), total: getTotalClasses(i) }));
@@ -1796,6 +1845,7 @@ async function fetchAndSeedCheckins() {
     const col        = name => headers.indexOf(name);
     const iFirst     = col('First Name');
     const iLast      = col('Last Name');
+    const iEmail     = col('Email');
     const iCheckedIn = col('Checked In');
     const iDate      = col('Date (IST)');
     const iClass     = col('Cleaned Class');
@@ -1813,8 +1863,8 @@ async function fetchAndSeedCheckins() {
       if (isNaN(rowDate.getTime()) || rowDate < CHALLENGE_START) return;
       const emoji = cleanedClassToEmoji((row[iClass] || '').trim());
       if (!emoji) return;
-      const fullName = normalizeName((row[iFirst] || '') + ' ' + (row[iLast] || ''));
-      const mi       = MEMBERS.findIndex(m => normalizeName(m.first + ' ' + m.last) === fullName);
+      const rowEmail = (row[iEmail] || '').trim().toLowerCase();
+      const mi = MEMBERS.findIndex(m => m.email && m.email.toLowerCase() === rowEmail);
       if (mi === -1) return;
       const dk = `${rowDate.getFullYear()}-${rowDate.getMonth()}-${rowDate.getDate()}`;
       if (!days.find(d => d.key === dk)) return;

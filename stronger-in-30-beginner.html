@@ -1134,6 +1134,20 @@ const MEMBERS = [
   { first: "Vidit",    last: "Mehta",         email: "viditdmsons@gmail.com",              loc: "Bandra" },
   { first: "Yash",     last: "Prasad",        email: "yashwewill@gmail.com",               loc: "Bandra" },
   { first: "Yashvi",   last: "Vashi",         email: "yashvivashi@outlook.com",            loc: "Bandra" },
+  // ── Kenkere House, Bengaluru ──
+  { first: "Aditya",    last: "Rao",                    email: "adityarao84@gmail.com",               loc: "KH" },
+  { first: "Anushree",  last: "Garg",                   email: "anugarg1998@gmail.com",               loc: "KH" },
+  { first: "Bhawisha",  last: "Kewalramani",            email: "bhawishakewalramani22@gmail.com",     loc: "KH" },
+  { first: "Kripa",     last: "Shukla",                 email: "kripashukla2003@gmail.com",           loc: "KH" },
+  { first: "Minuri",    last: "Disanayake Rambukwella", email: "minuridr@gmail.com",                  loc: "KH" },
+  { first: "Safia",     last: "D",                      email: "safiasadhaam@gmail.com",              loc: "KH" },
+  { first: "Sarayu",    last: "Natarajan",              email: "sarayu.natarajan@gmail.com",          loc: "KH" },
+  { first: "Tia",       last: "Matthew",                email: "tia2512@gmail.com",                   loc: "KH" },
+  { first: "Vinay",     last: "Mirani",                 email: "vinay.mir89@gmail.com",               loc: "KH" },
+  // ── the Studio by Copper + Cloves, Indiranagar ──
+  { first: "Ann",       last: "Maria",                  email: "annmariasabu01@gmail.com",            loc: "CNC" },
+  { first: "Namya",     last: "Patiyal",                email: "namyapatiyal04@gmail.com",            loc: "CNC" },
+  { first: "Sinjini",   last: "Bhatta",                 email: "sinjinibhatta@gmail.com",             loc: "CNC" },
 ];
 
 // ── STICKER DEFINITIONS ──
@@ -1159,6 +1173,8 @@ const WEEKLY_REQUIREMENTS_KC = {
   4: { 'CB': 3, 'PC': 1, 'Mat': 1 }
 };
 const WEEKLY_REQUIREMENTS_BANDRA = WEEKLY_REQUIREMENTS_KC; // Beginner: identical at both locations
+const WEEKLY_REQUIREMENTS_KH  = WEEKLY_REQUIREMENTS_KC; // Kenkere House: same as KC for Beginner
+const WEEKLY_REQUIREMENTS_CNC = WEEKLY_REQUIREMENTS_KC; // the Studio, Indiranagar: same as KC for Beginner
 
 // ── DAY GENERATION ──
 const days = [];
@@ -1280,7 +1296,7 @@ function areWeeklyRequirementsMet(counts, requirements) {
 
 // Returns true if the given sticker abbr counts toward any requirement in weekNum for a given location
 function isStickerQualifying(abbr, weekNum, loc) {
-  const reqs = (loc === 'Bandra') ? WEEKLY_REQUIREMENTS_BANDRA : WEEKLY_REQUIREMENTS_KC;
+  const reqs = loc === 'Bandra' ? WEEKLY_REQUIREMENTS_BANDRA : loc === 'KH' ? WEEKLY_REQUIREMENTS_KH : loc === 'CNC' ? WEEKLY_REQUIREMENTS_CNC : WEEKLY_REQUIREMENTS_KC;
   const requirements = reqs[weekNum];
   if (!requirements || !abbr) return false;
   return Object.keys(requirements).some(reqAbbr => {
@@ -1295,7 +1311,7 @@ function getWeekScore(mi, weekNum) {
   if (!weekDays) return { completed: false, counts: {} };
 
   const loc = MEMBERS[mi] ? MEMBERS[mi].loc : 'KC';
-  const reqs = (loc === 'Bandra') ? WEEKLY_REQUIREMENTS_BANDRA : WEEKLY_REQUIREMENTS_KC;
+  const reqs = loc === 'Bandra' ? WEEKLY_REQUIREMENTS_BANDRA : loc === 'KH' ? WEEKLY_REQUIREMENTS_KH : loc === 'CNC' ? WEEKLY_REQUIREMENTS_CNC : WEEKLY_REQUIREMENTS_KC;
   const requirements = reqs[weekNum];
   if (!requirements) return { completed: false, counts: {} };
 
@@ -1482,6 +1498,8 @@ function refreshBoard() {
   const allWithScores = MEMBERS.map((m, i) => ({ ...m, mi: i, score: getScore(i), streak: getStreak(i), total: getTotalClasses(i) }));
   const kcSorted     = allWithScores.filter(m => m.loc === 'KC').sort((a, b) => b.score - a.score || b.total - a.total || a.first.localeCompare(b.first));
   const bandraSorted = allWithScores.filter(m => m.loc === 'Bandra').sort((a, b) => b.score - a.score || b.total - a.total || a.first.localeCompare(b.first));
+  const khSorted     = allWithScores.filter(m => m.loc === 'KH').sort((a, b) => b.score - a.score || b.total - a.total || a.first.localeCompare(b.first));
+  const cncSorted    = allWithScores.filter(m => m.loc === 'CNC').sort((a, b) => b.score - a.score || b.total - a.total || a.first.localeCompare(b.first));
 
   const thead = document.getElementById('thead');
   const tbody = document.getElementById('tbody');
@@ -1618,7 +1636,7 @@ function refreshBoard() {
     labelTd.appendChild(btn);
     sepRow.appendChild(labelTd);
 
-    const locReqs = (loc === 'Bandra') ? WEEKLY_REQUIREMENTS_BANDRA : WEEKLY_REQUIREMENTS_KC;
+    const locReqs = loc === 'Bandra' ? WEEKLY_REQUIREMENTS_BANDRA : loc === 'KH' ? WEEKLY_REQUIREMENTS_KH : loc === 'CNC' ? WEEKLY_REQUIREMENTS_CNC : WEEKLY_REQUIREMENTS_KC;
 
     // One td per week chunk (W1–W4), aligned to the day columns
     weekChunks.slice(0, 4).forEach((chunk, wi) => {
@@ -1755,6 +1773,8 @@ function refreshBoard() {
 
   renderGroupRows(kcSorted, '📍  Kemps Corner', 'KC');
   renderGroupRows(bandraSorted, '📍  Supreme HQ, Bandra', 'Bandra');
+  renderGroupRows(khSorted, '📍  Kenkere House, Bengaluru', 'KH');
+  renderGroupRows(cncSorted, '📍  the Studio by Copper + Cloves, Indiranagar', 'CNC');
 }
 
 // ── GOOGLE SHEETS CONFIG ──

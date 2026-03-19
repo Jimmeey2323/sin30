@@ -22,6 +22,9 @@
   --gold-bg: #fdf8e8;
 /* Use a single subtle accent for week highlights to avoid too many conflicting colors */
   --wk-accent: #7c3aed;
+  --badge-glass-bg: rgba(124, 58, 237, 0.22);
+  --badge-glass-border: rgba(255, 255, 255, 0.42);
+  --badge-glass-text: #fff;
   --radius: 10px;
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
   --shadow-md: 0 4px 16px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04);
@@ -82,12 +85,14 @@ body {
   font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1;
-  color: var(--ink);
+  color: #b066ff;
+  text-shadow: 0 0 6px rgba(176, 102, 255, 0.55), 0 0 14px rgba(176, 102, 255, 0.45), 0 0 28px rgba(124, 58, 237, 0.28);
 }
 
 .main-title em {
   font-style: italic;
-  color: var(--accent);
+  color: #d0a6ff;
+  text-shadow: 0 0 8px rgba(208, 166, 255, 0.7), 0 0 18px rgba(208, 166, 255, 0.5);
 }
 
 .level-chip {
@@ -937,25 +942,34 @@ td.score-td {
   display: flex;
   gap: 8px;
   align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .week-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-size: 9px;
   font-weight: 700;
-  padding: 4px 8px;
-  border-radius: 5px;
-  background: var(--accent-light);
-  border: 1px solid var(--accent);
-  color: var(--accent);
-  opacity: 0.45;
-  min-width: 42px;
+  width: 84px;
+  min-height: 28px;
+  padding: 4px 10px;
+  border-radius: 10px;
+  background: var(--badge-glass-bg);
+  border: 1px solid var(--badge-glass-border);
+  color: var(--badge-glass-text);
+  box-shadow: 0 6px 14px rgba(124,58,237,0.18), inset 0 1px 0 rgba(255,255,255,0.22);
+  backdrop-filter: blur(8px) saturate(130%);
+  -webkit-backdrop-filter: blur(8px) saturate(130%);
+  opacity: 0.72;
   text-align: center;
 }
 
 .week-badge.complete {
-  background: var(--accent-light);
-  color: var(--accent);
-  border-color: var(--accent);
+  background: var(--badge-glass-bg);
+  color: var(--badge-glass-text);
+  border-color: var(--badge-glass-border);
   opacity: 1;
   font-weight: 800;
 }
@@ -1086,6 +1100,61 @@ tr.data-row.hidden { display: none; }
 }
 .refresh-btn:hover { background: var(--border); }
 .refresh-btn:disabled { opacity: 0.45; cursor: default; }
+.qualification-toggle {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+}
+.toggle-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--off);
+  color: var(--ink);
+  cursor: pointer;
+  user-select: none;
+}
+.toggle-pill input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.toggle-slider {
+  position: relative;
+  width: 34px;
+  height: 20px;
+  border-radius: 999px;
+  background: #d1d5db;
+  transition: background 0.18s ease;
+  flex-shrink: 0;
+}
+.toggle-slider::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+  transition: transform 0.18s ease;
+}
+.toggle-pill input:checked + .toggle-slider {
+  background: var(--accent);
+}
+.toggle-pill input:checked + .toggle-slider::after {
+  transform: translateX(14px);
+}
+.toggle-text {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
 
 /* ── BOARD LOADER ── */
 #board-loader {
@@ -1164,6 +1233,13 @@ tr.data-row.hidden { display: none; }
     </div>
     <div id="data-status" class="data-status"></div>
     <button onclick="fetchAndSeedCheckins()" id="refresh-btn" class="refresh-btn">↻ Refresh</button>
+    <div class="qualification-toggle">
+      <label class="toggle-pill" for="mat-as-cardio-toggle">
+        <input type="checkbox" id="mat-as-cardio-toggle">
+        <span class="toggle-slider"></span>
+        <span class="toggle-text">Count Mat 57 as Cardio</span>
+      </label>
+    </div>
   </div>
 </div>
 
@@ -1278,6 +1354,7 @@ const STICKERS = [
   { emoji: '❤️‍🩹', label: 'Recovery', abbr: 'REC', color: '#9b72cf' },
 ];
 const STICKER_LABEL = Object.fromEntries(STICKERS.map(s => [s.abbr, { emoji: s.emoji, label: s.label }]));
+STICKER_LABEL['CBP'] = { emoji: '🫀', label: 'Cardio Barre Plus' };
 
 // ── WEEKLY REQUIREMENTS (Beginner) — same for both locations ──
 const WEEKLY_REQUIREMENTS_KC = {
@@ -1374,50 +1451,155 @@ function getStickerAbbr(emoji) {
   return sticker ? sticker.abbr : null;
 }
 
+const BOARD_SETTINGS_KEY = 'sin30_beginner_settings';
+const qualificationSettings = {
+  matCountsAsCardio: false,
+};
+const qualificationToggleEl = document.getElementById('mat-as-cardio-toggle');
+const CARDIO_QUALIFICATION_FORMATS = ['CB', 'CBP', 'HIIT', 'PC', 'BBB', 'AMP'];
+const STRENGTH_QUALIFICATION_FORMATS = ['LAB', 'FIT'];
+const QUALIFIED_DISPLAY_ORDER = ['CARDIO', 'STRENGTH'];
+
 // ── CLASS EQUIVALENCY GROUPS ──
 // Classes within a group are interchangeable when checking weekly requirements.
 // Group A: Strength-type  (FIT ↔ LAB)
-// Group B: Cardio-type    (CB ↔ BBB ↔ CBP ↔ HIIT ↔ PC)
+// Group B: Cardio-type    (CB ↔ BBB ↔ HIIT ↔ AMP ↔ CBP ↔ PC)
 const EQUIV_GROUPS = [
   new Set(['FIT', 'LAB']),
-  new Set(['CB',  'BBB', 'CBP', 'HIIT', 'PC']),
+  new Set(['CB', 'BBB', 'HIIT', 'AMP', 'CBP', 'PC']),
 ];
 
 function getEquivGroup(abbr) {
   return EQUIV_GROUPS.find(g => g.has(abbr)) || null;
 }
 
-function areWeeklyRequirementsMet(counts, requirements) {
-  // Prevent double-counting by evaluating each equivalency group once.
-  const handledGroups = new Set();
+function getQualifiedDisplayKey(abbr) {
+  if (CARDIO_QUALIFICATION_FORMATS.includes(abbr)) return 'CARDIO';
+  if (STRENGTH_QUALIFICATION_FORMATS.includes(abbr)) return 'STRENGTH';
+  return null;
+}
 
-  for (const [classType, required] of Object.entries(requirements)) {
-    const group = getEquivGroup(classType);
+function getActualQualifiedDisplayKey(abbr) {
+  if (STRENGTH_QUALIFICATION_FORMATS.includes(abbr)) return 'STRENGTH';
+  if (CARDIO_QUALIFICATION_FORMATS.includes(abbr)) return 'CARDIO';
+  if (qualificationSettings.matCountsAsCardio && abbr === 'Mat') return 'CARDIO';
+  return null;
+}
 
-    // Non-equivalent class: strict exact count.
-    if (!group) {
-      if ((counts[classType] || 0) < required) return false;
-      continue;
+function getQualifiedDisplayLabel(displayKey) {
+  if (displayKey === 'CARDIO') return 'Cardio';
+  if (displayKey === 'STRENGTH') return 'Strength';
+  return STICKER_LABEL[displayKey]?.label || displayKey;
+}
+
+function getQualifiedDisplayEmoji(displayKey) {
+  if (displayKey === 'CARDIO') return '🫀';
+  if (displayKey === 'STRENGTH') return '🏋️';
+  return STICKER_LABEL[displayKey]?.emoji || '•';
+}
+
+function getQualifiedDisplaySortValue(displayKey) {
+  const idx = QUALIFIED_DISPLAY_ORDER.indexOf(displayKey);
+  return idx === -1 ? QUALIFIED_DISPLAY_ORDER.length : idx;
+}
+
+function getRequirementEligibleActualAbbrs(reqAbbr) {
+  if (reqAbbr === 'TC') return STICKERS.map(s => s.abbr);
+  if (STRENGTH_QUALIFICATION_FORMATS.includes(reqAbbr)) return [...STRENGTH_QUALIFICATION_FORMATS];
+  if (CARDIO_QUALIFICATION_FORMATS.includes(reqAbbr)) {
+    return qualificationSettings.matCountsAsCardio
+      ? [...CARDIO_QUALIFICATION_FORMATS, 'Mat']
+      : [...CARDIO_QUALIFICATION_FORMATS];
+  }
+  return [reqAbbr];
+}
+
+function buildRequirementSlots(requirements) {
+  const slots = [];
+  Object.entries(requirements).forEach(([reqAbbr, required]) => {
+    for (let i = 0; i < required; i++) {
+      slots.push({
+        reqAbbr,
+        displayKey: getQualifiedDisplayKey(reqAbbr),
+        eligibleActuals: getRequirementEligibleActualAbbrs(reqAbbr),
+      });
+    }
+  });
+  slots.sort((a, b) => {
+    if (a.reqAbbr === 'TC' && b.reqAbbr !== 'TC') return 1;
+    if (b.reqAbbr === 'TC' && a.reqAbbr !== 'TC') return -1;
+    return a.eligibleActuals.length - b.eligibleActuals.length;
+  });
+  return slots;
+}
+
+function buildQualificationAnalysis(counts, requirements) {
+  const requiredByDisplay = {};
+  Object.entries(requirements).forEach(([reqAbbr, required]) => {
+    const displayKey = getQualifiedDisplayKey(reqAbbr);
+    if (displayKey) {
+      requiredByDisplay[displayKey] = (requiredByDisplay[displayKey] || 0) + required;
+    }
+  });
+
+  const rawQualifiedDoneByDisplay = {};
+  Object.entries(counts).forEach(([abbr, count]) => {
+    const displayKey = getActualQualifiedDisplayKey(abbr);
+    if (displayKey) {
+      rawQualifiedDoneByDisplay[displayKey] = (rawQualifiedDoneByDisplay[displayKey] || 0) + count;
+    }
+  });
+
+  const slots = buildRequirementSlots(requirements);
+  const available = Object.fromEntries(
+    Object.entries(counts).filter(([, count]) => count > 0)
+  );
+
+  let bestMatched = -1;
+  let bestCompletedByDisplay = {};
+
+  function search(slotIndex, remaining, completedByDisplay, matched) {
+    if (matched + (slots.length - slotIndex) < bestMatched) return;
+
+    if (slotIndex === slots.length) {
+      if (matched > bestMatched) {
+        bestMatched = matched;
+        bestCompletedByDisplay = { ...completedByDisplay };
+      }
+      return;
     }
 
-    // Equivalent classes: compare grouped available vs grouped required exactly once.
-    let groupId = '';
-    group.forEach(a => { groupId += a + '|'; });
-    if (handledGroups.has(groupId)) continue;
-    handledGroups.add(groupId);
+    const slot = slots[slotIndex];
 
-    let requiredInGroup = 0;
-    Object.entries(requirements).forEach(([reqClass, reqCount]) => {
-      if (group.has(reqClass)) requiredInGroup += reqCount;
+    slot.eligibleActuals.forEach(actualAbbr => {
+      if ((remaining[actualAbbr] || 0) <= 0) return;
+      remaining[actualAbbr]--;
+      if (slot.displayKey) {
+        completedByDisplay[slot.displayKey] = (completedByDisplay[slot.displayKey] || 0) + 1;
+      }
+      search(slotIndex + 1, remaining, completedByDisplay, matched + 1);
+      if (slot.displayKey) {
+        completedByDisplay[slot.displayKey]--;
+        if (!completedByDisplay[slot.displayKey]) delete completedByDisplay[slot.displayKey];
+      }
+      remaining[actualAbbr]++;
     });
 
-    let availableInGroup = 0;
-    group.forEach(a => { availableInGroup += (counts[a] || 0); });
-
-    if (availableInGroup < requiredInGroup) return false;
+    search(slotIndex + 1, remaining, completedByDisplay, matched);
   }
 
-  return true;
+  search(0, { ...available }, {}, 0);
+
+  return {
+    completed: bestMatched === slots.length,
+    completedByDisplay: bestCompletedByDisplay,
+    rawQualifiedDoneByDisplay,
+    requiredByDisplay,
+  };
+}
+
+function areWeeklyRequirementsMet(counts, requirements) {
+  return buildQualificationAnalysis(counts, requirements).completed;
 }
 
 // Returns true if the given sticker abbr counts toward any requirement in weekNum for a given location
@@ -1453,10 +1635,9 @@ function getWeekScore(mi, weekNum) {
     }
   });
 
-  // Week is complete only if all weekly goals are met without double-counting classes.
-  const completed = areWeeklyRequirementsMet(counts, requirements);
+  const qualificationAnalysis = buildQualificationAnalysis(counts, requirements);
 
-  return { completed, counts, requirements };
+  return { completed: qualificationAnalysis.completed, counts, requirements, qualificationAnalysis };
 }
 
 function getScore(mi) {
@@ -1489,46 +1670,62 @@ function getRequirementLabel(abbr) {
   return STICKER_LABEL[abbr]?.label || abbr;
 }
 
+function buildWeeklyClassBreakdown(counts) {
+  const lines = [];
+  let total = 0;
+
+  STICKERS.forEach(({ abbr, emoji, label }) => {
+    const count = counts[abbr] || 0;
+    if (!count) return;
+    total += count;
+    lines.push(`• ${emoji} ${label}: ${count}`);
+  });
+
+  if (!lines.length) {
+    return ['Classes done:', '• No classes logged'];
+  }
+
+  return ['Classes done:', ...lines, `Total classes: ${total}`];
+}
+
+function buildWeeklyRequirementBreakdown(requirements) {
+  const lines = [];
+  [...Object.keys(requirements)].sort((a, b) => {
+    const order = [...STICKERS.map(s => s.abbr), 'CBP', 'TC'];
+    return order.indexOf(a) - order.indexOf(b);
+  }).forEach(reqAbbr => {
+    const required = requirements[reqAbbr];
+    const emoji = STICKER_LABEL[reqAbbr]?.emoji || '•';
+    const label = getRequirementLabel(reqAbbr);
+    lines.push(`• ${emoji} ${label}: ${required}`);
+  });
+  return ['Formats required:', ...lines];
+}
+
+function buildQualifiedFormatBreakdown(qualificationAnalysis) {
+  const lines = [];
+  ['CARDIO', 'STRENGTH'].forEach(displayKey => {
+    const done = qualificationAnalysis.rawQualifiedDoneByDisplay[displayKey] || 0;
+    const required = qualificationAnalysis.requiredByDisplay[displayKey] || 0;
+    const emoji = getQualifiedDisplayEmoji(displayKey);
+    const label = getQualifiedDisplayLabel(displayKey);
+    lines.push(`• ${emoji} ${label}: ${done}/${required}${done >= required ? ' ✓' : ''}`);
+  });
+  return ['Qualified formats completed vs required:', ...lines];
+}
+
 function buildWeekQualificationTooltip(mi, weekNum) {
   if (weekNum < 1 || weekNum > 4) return '';
-  const { completed, counts, requirements } = getWeekScore(mi, weekNum);
+  const { completed, counts, requirements, qualificationAnalysis } = getWeekScore(mi, weekNum);
   if (!requirements) return '';
 
   const lines = [
     `W${weekNum}: ${completed ? 'Qualified ✓' : 'Not qualified ✗'}`,
-    'Reason:'
+    `Mat 57 counts as Cardio: ${qualificationSettings.matCountsAsCardio ? 'ON' : 'OFF'}`,
+    ...buildWeeklyClassBreakdown(counts),
+    ...buildWeeklyRequirementBreakdown(requirements),
+    ...buildQualifiedFormatBreakdown(qualificationAnalysis)
   ];
-
-  const handledGroups = new Set();
-
-  for (const [classType, required] of Object.entries(requirements)) {
-    const group = getEquivGroup(classType);
-
-    if (!group) {
-      const done = counts[classType] || 0;
-      lines.push(`• ${classType}: ${done}/${required}`);
-      continue;
-    }
-
-    const groupKey = Array.from(group).sort().join('|');
-    if (handledGroups.has(groupKey)) continue;
-    handledGroups.add(groupKey);
-
-    let requiredInGroup = 0;
-    const reqClasses = [];
-    Object.entries(requirements).forEach(([reqClass, reqCount]) => {
-      if (group.has(reqClass)) {
-        requiredInGroup += reqCount;
-        reqClasses.push(reqClass);
-      }
-    });
-
-    let availableInGroup = 0;
-    group.forEach(a => { availableInGroup += (counts[a] || 0); });
-
-    const perClass = reqClasses.map(rc => `${rc}: ${counts[rc] || 0}`).join(', ');
-    lines.push(`• ${perClass} → ${availableInGroup}/${requiredInGroup} combined`);
-  }
 
   return lines.join('\n');
 }
@@ -1578,6 +1775,31 @@ function restoreStateFromLocalStorage() {
     console.warn('Failed to restore state from localStorage:', e);
   }
   return false;
+}
+
+function saveQualificationSettings() {
+  try {
+    localStorage.setItem(BOARD_SETTINGS_KEY, JSON.stringify(qualificationSettings));
+  } catch (e) {
+    console.warn('Failed to save qualification settings:', e);
+  }
+}
+
+function restoreQualificationSettings() {
+  try {
+    const saved = localStorage.getItem(BOARD_SETTINGS_KEY);
+    if (!saved) return;
+    const parsed = JSON.parse(saved);
+    qualificationSettings.matCountsAsCardio = !!parsed.matCountsAsCardio;
+  } catch (e) {
+    console.warn('Failed to restore qualification settings:', e);
+  }
+}
+
+function syncQualificationToggle() {
+  if (qualificationToggleEl) {
+    qualificationToggleEl.checked = qualificationSettings.matCountsAsCardio;
+  }
 }
 
 // ── COLLAPSE/EXPAND HELPERS ──
@@ -2092,6 +2314,15 @@ async function fetchAndSeedCheckins() {
   }
 }
 // ── INIT ──
+restoreQualificationSettings();
+syncQualificationToggle();
+if (qualificationToggleEl) {
+  qualificationToggleEl.addEventListener('change', () => {
+    qualificationSettings.matCountsAsCardio = qualificationToggleEl.checked;
+    saveQualificationSettings();
+    refreshBoard();
+  });
+}
 if (restoreStateFromLocalStorage()) {
   renderLegend();
   refreshBoard();

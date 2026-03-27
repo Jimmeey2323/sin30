@@ -4948,6 +4948,52 @@ function filterQualified() {
   refreshBoard();
 }
 
+function positionScorePillTooltips() {
+  document.querySelectorAll('.score-pill').forEach(pill => {
+    const tooltip = pill.querySelector('.score-tooltip');
+    if (!tooltip) return;
+
+    pill.addEventListener('mouseenter', () => {
+      tooltip.style.display = 'block';
+
+      setTimeout(() => {
+        const pillRect = pill.getBoundingClientRect();
+        const tooltipRect = tooltip.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        const gap = 12;
+        const margin = 10;
+
+        let top = pillRect.top - tooltipRect.height - gap;
+        let left = pillRect.left + (pillRect.width - tooltipRect.width) / 2;
+
+        if (left + tooltipRect.width + margin > viewportWidth) {
+          left = viewportWidth - tooltipRect.width - margin;
+        }
+
+        if (left < margin) {
+          left = margin;
+        }
+
+        if (top < margin) {
+          top = pillRect.bottom + gap;
+        }
+
+        if (top + tooltipRect.height > viewportHeight - margin) {
+          top = Math.max(margin, viewportHeight - tooltipRect.height - margin);
+        }
+
+        tooltip.style.top = top + 'px';
+        tooltip.style.left = left + 'px';
+      }, 0);
+    });
+
+    pill.addEventListener('mouseleave', () => {
+      tooltip.style.display = 'none';
+    });
+  });
+}
+
 restoreQualificationSettings();
 syncQualificationToggle();
 bindSettingsModalEvents();

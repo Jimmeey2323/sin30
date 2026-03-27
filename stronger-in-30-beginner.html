@@ -1504,14 +1504,9 @@ const state = MEMBERS.map(() => ({}));
 
 // ── CELL TOOLTIP ──
 const cellTooltip = document.getElementById('cell-tooltip');
-function showCellTooltip(content, anchorEl) {
-  if (!content) return;
-  // Support both text and HTML content
-  if (typeof content === 'string' && content.includes('<')) {
-    cellTooltip.innerHTML = content;
-  } else {
-    cellTooltip.textContent = content;
-  }
+function showCellTooltip(text, anchorEl) {
+  if (!text) return;
+  cellTooltip.textContent = text;
   cellTooltip.style.display = 'block';
   const r = anchorEl.getBoundingClientRect();
   const tooltipHeight = cellTooltip.offsetHeight;
@@ -1547,11 +1542,6 @@ const qualificationSettings = {
   matCountsAsCardio: false,
   useClassDifferenceQualification: false,
   classToleranceValue: 3,
-  useBonusWeekCompensation: true, // Always active
-  interchangeableGroups: {
-    'Cardio': ['CB', 'PC', 'HIIT', 'CBP', 'AMP', 'BBB', 'TC'],
-    'Strength': ['FIT', 'LAB'],
-  },
 };
 const qualificationToggleEl = document.getElementById('mat-as-cardio-toggle');
 const classQualificationToggleEl = document.getElementById('class-diff-qualification-toggle');
@@ -1559,92 +1549,17 @@ const CARDIO_QUALIFICATION_FORMATS = ['CB', 'CBP', 'HIIT', 'PC', 'BBB', 'AMP'];
 const STRENGTH_QUALIFICATION_FORMATS = ['LAB', 'FIT'];
 const QUALIFIED_DISPLAY_ORDER = ['CARDIO', 'STRENGTH'];
 
-// ── CLASS EQUIVALENCY GROUPS ── (Built from interchangeableGroups)
-let EQUIV_GROUPS = [
-  new Set(qualificationSettings.interchangeableGroups['Strength']),
-  new Set(qualificationSettings.interchangeableGroups['Cardio']),
+// ── CLASS EQUIVALENCY GROUPS ──
+// Classes within a group are interchangeable when checking weekly requirements.
+// Group A: Strength-type  (FIT ↔ LAB)
+// Group B: Cardio-type    (CB ↔ BBB ↔ HIIT ↔ AMP ↔ CBP ↔ PC)
+const EQUIV_GROUPS = [
+  new Set(['FIT', 'LAB']),
+  new Set(['CB', 'BBB', 'HIIT', 'AMP', 'CBP', 'PC']),
 ];
 
 function getEquivGroup(abbr) {
   return EQUIV_GROUPS.find(g => g.has(abbr)) || null;
-}
-
-// ── BONUS WEEK COMPENSATION LOGIC ──
-function getBonusWeekDays() {
-  // Days 29-33 (Mar 23-27) - indices 28-32
-  return days.slice(28, 33);
-}
-
-function getBonusWeekClasses(mi) {
-  const bonusDays = getBonusWeekDays();
-  const counts = {};
-  bonusDays.forEach(day => {
-    const emoji = state[mi][day.key];
-    if (emoji) {
-      const abbr = getStickerAbbr(emoji);
-      if (abbr) {
-        counts[abbr] = (counts[abbr] || 0) + 1;
-      }
-    }
-  });
-  return counts;
-}
-
-function applyBonusWeekCompensation(weekCounts, requirements, bonusCounts) {
-  if (!qualificationSettings.useBonusWeekCompensation) {
-    return { compensated: weekCounts, bonusUsed: {} };
-  }
-  
-  const compensated = { ...weekCounts };
-  const bonusUsed = {};
-  
-  // Check each requirement for shortfalls
-  Object.entries(requirements).forEach(([reqAbbr, required]) => {
-    if (reqAbbr === 'TC') return; // Skip Trainer's Choice
-    
-    // Find what we have for this requirement
-    const group = getEquivGroup(reqAbbr);
-    let available = 0;
-    
-    if (group) {
-      // Count from the whole group
-      group.forEach(abbr => {
-        available += compensated[abbr] || 0;
-      });
-    } else {
-      // Specific class requirement
-      available = compensated[reqAbbr] || 0;
-    }
-    
-    // If we're short, check bonus week
-    if (available < required) {
-      const shortfall = required - available;
-      if (group) {
-        // Try to fill shortfall from bonus classes in same group
-        let filled = 0;
-        group.forEach(abbr => {
-          if (filled >= shortfall) return;
-          const bonusAvail = bonusCounts[abbr] || 0;
-          const canUse = Math.min(bonusAvail, shortfall - filled);
-          if (canUse > 0) {
-            compensated[abbr] = (compensated[abbr] || 0) + canUse;
-            bonusUsed[abbr] = (bonusUsed[abbr] || 0) + canUse;
-            filled += canUse;
-          }
-        });
-      } else {
-        // Try to fill shortfall from bonus classes of same type
-        const bonusAvail = bonusCounts[reqAbbr] || 0;
-        const canUse = Math.min(bonusAvail, shortfall);
-        if (canUse > 0) {
-          compensated[reqAbbr] = (compensated[reqAbbr] || 0) + canUse;
-          bonusUsed[reqAbbr] = (bonusUsed[reqAbbr] || 0) + canUse;
-        }
-      }
-    }
-  });
-  
-  return { compensated, bonusUsed };
 }
 
 function getQualifiedDisplayKey(abbr) {
@@ -1790,12 +1705,12 @@ function isStickerQualifying(abbr, weekNum, loc) {
 function getWeekScore(mi, weekNum) {
   const weekIdx = weekNum - 1;
   const weekDays = weekChunks[weekIdx];
-  if (!weekDays) return { completed: false, counts: {}, bonusUsed: {} };
+  if (!weekDays) return { completed: false, counts: {} };
 
   const loc = MEMBERS[mi] ? MEMBERS[mi].loc : 'KC';
   const reqs = loc === 'Bandra' ? WEEKLY_REQUIREMENTS_BANDRA : loc === 'KH' ? WEEKLY_REQUIREMENTS_KH : loc === 'CNC' ? WEEKLY_REQUIREMENTS_CNC : WEEKLY_REQUIREMENTS_KC;
   const requirements = reqs[weekNum];
-  if (!requirements) return { completed: false, counts: {}, bonusUsed: {} };
+  if (!requirements) return { completed: false, counts: {} };
 
   // Count stickers for this week
   const counts = {};
@@ -1809,20 +1724,9 @@ function getWeekScore(mi, weekNum) {
     }
   });
 
-  // Try to qualify with regular week classes first
-  let qualificationAnalysis = buildQualificationAnalysis(counts, requirements);
-  let bonusUsed = {};
-  
-  // If not qualified and bonus compensation is enabled, try to apply bonus classes
-  if (!qualificationAnalysis.completed && qualificationSettings.useBonusWeekCompensation) {
-    const bonusClasses = getBonusWeekClasses(mi);
-    const { compensated, bonusUsed: used } = applyBonusWeekCompensation(counts, requirements, bonusClasses);
-    bonusUsed = used;
-    // Re-evaluate with compensated counts
-    qualificationAnalysis = buildQualificationAnalysis(compensated, requirements);
-  }
+  const qualificationAnalysis = buildQualificationAnalysis(counts, requirements);
 
-  return { completed: qualificationAnalysis.completed, counts, requirements, qualificationAnalysis, bonusUsed };
+  return { completed: qualificationAnalysis.completed, counts, requirements, qualificationAnalysis };
 }
 
 function getScore(mi) {
@@ -1931,90 +1835,24 @@ function buildQualifiedFormatBreakdown(qualificationAnalysis) {
 
 function buildWeekQualificationTooltip(mi, weekNum) {
   if (weekNum < 1 || weekNum > 4) return '';
-  const { completed, counts, requirements, qualificationAnalysis, bonusUsed } = getWeekScore(mi, weekNum);
+  const { completed, counts, requirements, qualificationAnalysis } = getWeekScore(mi, weekNum);
   if (!requirements) return '';
 
-  const status = completed ? '✓ QUALIFIED' : '✗ NOT QUALIFIED';
-  const statusColor = completed ? '#22c55e' : '#ef4444';
+  const result = completed ? '✓ QUALIFIED' : '✗ NOT QUALIFIED';
   
-  // Build group-based breakdown
-  const groupBreakdown = [];
-  Object.entries(qualificationSettings.interchangeableGroups).forEach(([groupName, classes]) => {
-    const required = Object.entries(requirements)
-      .filter(([reqAbbr]) => classes.includes(reqAbbr))
-      .reduce((sum, [, count]) => sum + count, 0);
-    
-    if (required === 0) return;
-    
-    let completed = 0;
-    classes.forEach(abbr => {
-      completed += counts[abbr] || 0;
-    });
-    
-    const bonusAbbrs = Object.keys(bonusUsed || {})
-      .filter(abbr => classes.includes(abbr))
-      .map(abbr => ({
-        abbr,
-        count: bonusUsed[abbr],
-        label: STICKER_LABEL[abbr]?.label || abbr,
-      }));
-    
-    groupBreakdown.push({
-      groupName,
-      required,
-      completed,
-      bonusAbbrs,
-      qualified: completed >= required,
-    });
-  });
-  
-  let html = `
-    <div style="font-size: 12px; padding: 8px; max-width: 300px;">
-      <div style="font-weight: bold; margin-bottom: 8px; font-size: 13px;">
-        Week ${weekNum}
-        <span style="color: ${statusColor}; margin-left: 8px;">${status}</span>
-      </div>
-      <table style="width: 100%; border-collapse: collapse; margin-bottom: 8px;">
-        <thead>
-          <tr style="border-bottom: 1px solid #ddd;">
-            <th style="text-align: left; padding: 4px 0; font-weight: 600;">Group</th>
-            <th style="text-align: center; padding: 4px 0; font-weight: 600;">Need</th>
-            <th style="text-align: center; padding: 4px 0; font-weight: 600;">Have</th>
-          </tr>
-        </thead>
-        <tbody>`;
-  
-  groupBreakdown.forEach(group => {
-    const bgColor = group.qualified ? '#f0fdf4' : '#fef2f2';
-    const textColor = group.qualified ? '#15803d' : '#b91c1c';
-    html += `
-          <tr style="background-color: ${bgColor};">
-            <td style="padding: 4px 0; color: #666;">${group.groupName}</td>
-            <td style="text-align: center; padding: 4px 0; color: ${textColor}; font-weight: 500;">${group.required}</td>
-            <td style="text-align: center; padding: 4px 0; color: ${textColor}; font-weight: 500;">${group.completed}</td>
-          </tr>`;
-  });
-  
-  html += `
-        </tbody>
-      </table>`;
-  
-  // Show bonus compensations if any
-  if (bonusUsed && Object.keys(bonusUsed).length > 0) {
-    html += `<div style="font-size: 11px; color: #666; padding-top: 6px; border-top: 1px solid #ddd;">
-      <strong>Bonus Used:</strong> ${
-        Object.entries(bonusUsed)
-          .map(([abbr, count]) => {
-            const label = STICKER_LABEL[abbr]?.label || abbr;
-            return `<span style="text-decoration: line-through; color: #059669;">${count}× ${label}</span>`;
-          })
-          .join(', ')
-      }
-    </div>`;
-  }
-  
-  html += `</div>`;
-  return html;
+  const lines = [
+    `WEEK ${weekNum}: ${result}`,
+    '',
+    ...buildWeeklyClassBreakdown(counts),
+    '',
+    ...buildWeeklyRequirementBreakdown(requirements),
+    '',
+    ...buildQualifiedFormatBreakdown(qualificationAnalysis),
+    '',
+    `Setting: Mat counts as Cardio is ${qualificationSettings.matCountsAsCardio ? 'ON' : 'OFF'}`
+  ];
+
+  return lines.join('\n');
 }
 
 function buildSlotTooltip(abbr, label, mi, weekNum, loc) {
@@ -2080,15 +1918,6 @@ function restoreQualificationSettings() {
     qualificationSettings.matCountsAsCardio = !!parsed.matCountsAsCardio;
     qualificationSettings.useClassDifferenceQualification = !!parsed.useClassDifferenceQualification;
     qualificationSettings.classToleranceValue = parsed.classToleranceValue || 3;
-    qualificationSettings.useBonusWeekCompensation = parsed.useBonusWeekCompensation !== false; // Default true
-    if (parsed.interchangeableGroups) {
-      qualificationSettings.interchangeableGroups = parsed.interchangeableGroups;
-    }
-    // Rebuild EQUIV_GROUPS after restoration
-    EQUIV_GROUPS = [
-      new Set(qualificationSettings.interchangeableGroups['Strength'] || []),
-      new Set(qualificationSettings.interchangeableGroups['Cardio'] || []),
-    ];
   } catch (e) {
     console.warn('Failed to restore qualification settings:', e);
   }

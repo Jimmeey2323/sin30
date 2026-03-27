@@ -4420,6 +4420,7 @@ function refreshBoard() {
     tbody.appendChild(sepRow);
 
     groupList.forEach((m, rank) => {
+      const memberPlan = getMemberWeekPlan(m.mi);
       const animDelay = rank * 0.04;
       const row = document.createElement('tr');
       row.className = 'data-row';
@@ -4445,8 +4446,9 @@ function refreshBoard() {
       days.forEach((d, di) => {
         const td = document.createElement('td');
         const weekNum = Math.floor(di / 7) + 1;
-        const isCompletedWeek = weekNum <= 4 && getWeekScore(m.mi, weekNum).completed;
-        const isCompensatedWeek = weekNum <= 4 && computeBonusCompensationWeek(m.mi, weekNum).canCompensate && !isCompletedWeek;
+        const weekPlan = weekNum <= 4 ? memberPlan.weeks[weekNum] : null;
+        const isCompletedWeek = !!(weekPlan && weekPlan.finalQualified);
+        const isCompensatedWeek = !!(weekPlan && weekPlan.compensated);
         const weekTooltipText = weekNum <= 4 ? buildWeekQualificationTooltip(m.mi, weekNum) : '';
         
         // Week is "ended" if its last day is on or before today (midnight)

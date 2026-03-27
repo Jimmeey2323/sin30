@@ -55,6 +55,9 @@ function applyBonusClasses(weekData, bonusClasses) {
 
         // Debugging log to confirm bonus application
         console.log(`Applied bonus class for format: ${format} in week: ${week}`);
+      } else {
+        // Debugging log for unused bonus classes
+        console.log(`No available bonus class for format: ${format} in week: ${week}`);
       }
     });
   });

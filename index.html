@@ -183,6 +183,9 @@
     <div class="dashboard-header">
       <div class="dashboard-title">Stronger in 30</div>
       <div class="dashboard-subtitle">Select a difficulty level to view the challenge board</div>
+      <div style="position: absolute; right: 24px; top: 50%; transform: translateY(-50%);">
+        <button onclick="aggregateAndExportAllLevels()" style="font-size: 11px; font-weight: 600; letter-spacing: 0.06em; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; border: none; border-radius: 6px; padding: 8px 14px; cursor: pointer; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; transition: background 0.15s; box-shadow: 0 2px 6px rgba(139, 92, 246, 0.3);">📊 Export All Levels</button>
+      </div>
     </div>
 
     <div class="tab-bar">
@@ -204,6 +207,7 @@
     </div>
   </div>
 
+  <script src="export-utils.js"></script>
   <script>
     const tabButtons = document.querySelectorAll('.tab-button');
     const tabContents = document.querySelectorAll('.tab-content');
@@ -229,6 +233,73 @@
         }
       }
     });
+
+    // ── UNIFIED EXPORT FUNCTIONALITY ──
+    function aggregateAndExportAllLevels() {
+      try {
+        // Get iframes
+        const iframes = document.querySelectorAll('.tab-iframe');
+        if (iframes.length < 3) {
+          alert('Error: Not all level pages loaded');
+          return;
+        }
+
+        // Collect stats from each level
+        const allStats = [];
+        
+        try {
+          // Get Beginner stats
+          if (iframes[0].contentWindow && iframes[0].contentWindow.getBeginnerStats) {
+            const beginnerStats = iframes[0].contentWindow.getBeginnerStats();
+            allStats.push(...beginnerStats);
+          }
+        } catch (e) {
+          console.warn('Failed to get Beginner stats:', e);
+        }
+
+        try {
+          // Get Intermediate stats
+          if (iframes[1].contentWindow && iframes[1].contentWindow.getIntermediateStats) {
+            const intermediateStats = iframes[1].contentWindow.getIntermediateStats();
+            allStats.push(...intermediateStats);
+          }
+        } catch (e) {
+          console.warn('Failed to get Intermediate stats:', e);
+        }
+
+        try {
+          // Get Advanced stats
+          if (iframes[2].contentWindow && iframes[2].contentWindow.getAdvancedStats) {
+            const advancedStats = iframes[2].contentWindow.getAdvancedStats();
+            allStats.push(...advancedStats);
+          }
+        } catch (e) {
+          console.warn('Failed to get Advanced stats:', e);
+        }
+
+        if (allStats.length === 0) {
+          alert('No data available. Please ensure all levels have loaded.');
+          return;
+        }
+
+        // Ask user for export format
+        const format = confirm('Select export format:\nOK = CSV | Cancel = PDF');
+        
+        if (format) {
+          // CSV Export
+          downloadUnifiedCSV(allStats);
+        } else {
+          // PDF Export
+          generateUnifiedPDF(allStats);
+        }
+      } catch (error) {
+        console.error('Export failed:', error);
+        alert('Export failed: ' + error.message);
+      }
+    }
+
+    // Make function globally available
+    window.aggregateAndExportAllLevels = aggregateAndExportAllLevels;
   </script>
 </body>
 </html>

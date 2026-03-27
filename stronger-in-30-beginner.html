@@ -1563,6 +1563,7 @@ const QUALIFIED_DISPLAY_ORDER = ['CARDIO', 'STRENGTH'];
 const EQUIV_GROUPS = [
   new Set(['FIT', 'LAB', 'BBB']),
   new Set(['CB', 'HIIT', 'AMP', 'CBP', 'TC']),
+];
 
 function getEquivGroup(abbr) {
   return EQUIV_GROUPS.find(g => g.has(abbr)) || null;

@@ -1877,7 +1877,7 @@ function buildWeeklyRequirementBreakdown(requirements) {
 function buildQualifiedFormatBreakdown(qualificationAnalysis) {
   const lines = ['Formats Breakdown:'];
   ['CARDIO', 'STRENGTH'].forEach(displayKey => {
-    const done = qualificationAnalysis.rawQualifiedDoneByDisplay[displayKey] || 0;
+    const done = qualificationAnalysis.completedByDisplay[displayKey] || 0;
     const required = qualificationAnalysis.requiredByDisplay[displayKey] || 0;
     const emoji = getQualifiedDisplayEmoji(displayKey);
     const label = getQualifiedDisplayLabel(displayKey);
@@ -3093,6 +3093,29 @@ renderLegend();
 refreshBoard();
 positionScorePillTooltips();
 fetchAndSeedCheckins();
+
+// ── UNIFIED EXPORT SUPPORT ──
+// Function to publish stats to parent window for unified export
+function publishStatsToParent() {
+  const stats = generateParticipantStatsForLevel(
+    MEMBERS,
+    state,
+    days,
+    STICKERS,
+    'Intermediate',
+    getScore,
+    getTotalClasses,
+    getTotalClassesRequired,
+    getWeekScore,
+    qualificationSettings
+  );
+  return stats;
+}
+
+// Make stats available to parent window
+window.getIntermediateStats = publishStatsToParent;
 </script>
+
+<script src="export-utils.js"></script>
 </body>
 </html>

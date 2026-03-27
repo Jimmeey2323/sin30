@@ -4506,6 +4506,19 @@ function exportQualifiedMembersJSON() {
   link.click();
   document.body.removeChild(link);
 }
+
+function getIntermediateStats() {
+  return getParticipantStats().map(member => ({
+    ...member,
+    level: member.level || 'Intermediate',
+    week1Status: member.weekDetails?.[0]?.qualified ? '✓' : '✗',
+    week2Status: member.weekDetails?.[1]?.qualified ? '✓' : '✗',
+    week3Status: member.weekDetails?.[2]?.qualified ? '✓' : '✗',
+    week4Status: member.weekDetails?.[3]?.qualified ? '✓' : '✗',
+  }));
+}
+
+window.getIntermediateStats = getIntermediateStats;
 </script>
 </body>
 </html>

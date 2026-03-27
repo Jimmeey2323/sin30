@@ -2992,10 +2992,16 @@ function getBonusStatsHTML(mi) {
 
 
 // ── BUILD / REFRESH TABLE ──
+let showOnlyQualified = false;
+
 function refreshBoard() {
   // Update member count dynamically
   const countEl = document.getElementById('member-count-display');
-  if (countEl) countEl.innerHTML = `${MEMBERS.length} <span>Members</span>`;
+  if (countEl) {
+    countEl.innerHTML = showOnlyQualified
+      ? `${MEMBERS.filter((_, mi) => getScore(mi) >= 4).length} <span>Qualified Shown</span>`
+      : `${MEMBERS.length} <span>Members</span>`;
+  }
 
   // Update qualified count
   const qualifiedEl = document.getElementById('qualified-count-display');
@@ -3009,8 +3015,9 @@ function refreshBoard() {
 
   // Group by location, sort by completed weeks desc, then total classes desc
   const allWithScores = MEMBERS.map((m, i) => ({ ...m, mi: i, score: getScore(i), streak: getStreak(i), total: getTotalClasses(i) }));
-  const kcSorted     = allWithScores.filter(m => m.loc === 'KC').sort((a, b) => b.score - a.score || b.total - a.total || a.first.localeCompare(b.first));
-  const bandraSorted = allWithScores.filter(m => m.loc === 'Bandra').sort((a, b) => b.score - a.score || b.total - a.total || a.first.localeCompare(b.first));
+  const visibleMembers = showOnlyQualified ? allWithScores.filter(m => m.score >= 4) : allWithScores;
+  const kcSorted     = visibleMembers.filter(m => m.loc === 'KC').sort((a, b) => b.score - a.score || b.total - a.total || a.first.localeCompare(b.first));
+  const bandraSorted = visibleMembers.filter(m => m.loc === 'Bandra').sort((a, b) => b.score - a.score || b.total - a.total || a.first.localeCompare(b.first));
 
   const thead = document.getElementById('thead');
   const tbody = document.getElementById('tbody');
@@ -3932,3 +3939,70 @@ function showComprehensiveExportOptions() {
     exportToComprehensivePDF();
   }
 }
+
+function showExportOptions() {
+  const choice = confirm('Select export format:\nOK = CSV | Cancel = PDF');
+  if (choice) {
+    exportToCSV();
+  } else {
+    exportToPDF();
+  }
+}
+
+function exportQualifiedMembers() {
+  exportToCSV();
+}
+
+function getAdvancedStats() {
+  return getParticipantStats().map(member => ({
+    ...member,
+    level: member.level || 'Advanced',
+    week1Status: member.weekDetails?.[0]?.qualified ? '✓' : '✗',
+    week2Status: member.weekDetails?.[1]?.qualified ? '✓' : '✗',
+    week3Status: member.weekDetails?.[2]?.qualified ? '✓' : '✗',
+    week4Status: member.weekDetails?.[3]?.qualified ? '✓' : '✗',
+  }));
+}
+
+function getDetailedMemberExportData() {
+  return getParticipantStatsEnhanced().map(member => ({
+    name: member.name,
+    email: member.email || '',
+    location: member.location,
+    level: 'Advanced',
+    qualification: member.fullyQualified ? 'QUALIFIED' : 'DISQUALIFIED',
+    score: member.weeksQualified,
+    qualificationCriteria: member.qualificationMethod || '',
+    week1Status: member.weekDetails?.[0]?.qualified ? '✓' : '✗',
+    week2Status: member.weekDetails?.[1]?.qualified ? '✓' : '✗',
+    week3Status: member.weekDetails?.[2]?.qualified ? '✓' : '✗',
+    week4Status: member.weekDetails?.[3]?.qualified ? '✓' : '✗',
+    totalClasses: member.classesCompleted,
+    totalRequired: member.classesRequired,
+    bonusClassesUsed: 'See advanced report',
+    disqualReason: member.fullyQualified ? '' : 'Review weekly qualification details',
+  }));
+}
+
+function expandAll() {
+  expandAllGroups();
+}
+
+function collapseAll() {
+  collapseAllGroups();
+}
+
+function filterQualified() {
+  showOnlyQualified = !showOnlyQualified;
+  const button = document.querySelector('.toolbar .toolbar-btn:nth-child(3)');
+  if (button) {
+    button.textContent = showOnlyQualified ? 'Show All' : 'Filter Qualified';
+  }
+  refreshBoard();
+}
+
+window.getAdvancedStats = getAdvancedStats;
+window.getDetailedMemberExportData = getDetailedMemberExportData;
+</script>
+</body>
+</html>

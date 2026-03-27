@@ -1529,6 +1529,36 @@ const STICKERS = [
 const STICKER_LABEL = Object.fromEntries(STICKERS.map(s => [s.abbr, { emoji: s.emoji, label: s.label }]));
 STICKER_LABEL['CBP'] = { emoji: '🫀', label: 'Cardio Barre Plus' };
 
+// ── FORMAT INTERCHANGEABILITY SETTINGS (Initialize Early) ──
+let userFormatRules = {};
+
+function initializeFormatRules() {
+  const saved = localStorage.getItem('sin30_format_rules_beginner');
+  if (saved) {
+    try {
+      userFormatRules = JSON.parse(saved);
+    } catch (e) {
+      console.warn('Failed to parse format rules, using defaults');
+      userFormatRules = {
+        Mat_interchangeable: true,
+        B57_interchangeable: true,
+        PC_interchangeable: true,
+        REC_interchangeable: true
+      };
+    }
+  } else {
+    userFormatRules = {
+      Mat_interchangeable: true,
+      B57_interchangeable: true,
+      PC_interchangeable: true,
+      REC_interchangeable: true
+    };
+  }
+}
+
+// Initialize format rules immediately
+initializeFormatRules();
+
 // ── WEEKLY REQUIREMENTS (Beginner) — same for both locations ──
 const WEEKLY_REQUIREMENTS_KC = {
   1: { 'B57': 4, 'PC': 1 },                           // 5 total
@@ -2006,6 +2036,12 @@ function getRequirementLabel(abbr) {
 function buildWeeklyClassBreakdown(counts) {
   const lines = ['Classes Attended:'];
   let total = 0;
+
+  // Ensure counts is defined
+  if (!counts) {
+    lines.push('None logged');
+    return lines;
+  }
 
   STICKERS.forEach(({ abbr, emoji, label }) => {
     const count = counts[abbr] || 0;
@@ -3388,7 +3424,7 @@ function publishStatsToParent() {
 window.getBeginnerStats = publishStatsToParent;
 
 // ── FORMAT INTERCHANGEABILITY SETTINGS ──
-let userFormatRules = {};
+// userFormatRules already initialized above
 
 function initializeFormatRules() {
   const saved = localStorage.getItem('sin30_format_rules_beginner');

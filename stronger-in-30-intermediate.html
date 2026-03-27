@@ -1540,6 +1540,36 @@ STICKER_LABEL['CBP'] = { emoji: '🫀', label: 'Cardio Barre Plus' };
 // Trainer's Choice — wildcard, any class
 STICKER_LABEL['TC'] = { emoji: '🎲', label: "Trainer's Choice" };
 
+// ── FORMAT INTERCHANGEABILITY SETTINGS (Initialize Early) ──
+let userFormatRules = {};
+
+function initializeFormatRules() {
+  const saved = localStorage.getItem('sin30_format_rules_intermediate');
+  if (saved) {
+    try {
+      userFormatRules = JSON.parse(saved);
+    } catch (e) {
+      console.warn('Failed to parse format rules, using defaults');
+      userFormatRules = {
+        Mat_interchangeable: true,
+        B57_interchangeable: true,
+        PC_interchangeable: true,
+        REC_interchangeable: true
+      };
+    }
+  } else {
+    userFormatRules = {
+      Mat_interchangeable: true,
+      B57_interchangeable: true,
+      PC_interchangeable: true,
+      REC_interchangeable: true
+    };
+  }
+}
+
+// Initialize format rules immediately
+initializeFormatRules();
+
 // ── WEEKLY REQUIREMENTS (Intermediate) — Kemps Corner ──
 const WEEKLY_REQUIREMENTS_KC = {
   1: { 'CB': 3, 'PC': 1, 'Mat': 1 },                  // 5 total (CB or BBB substitute)
@@ -2029,6 +2059,12 @@ function getRequirementLabel(abbr) {
 function buildWeeklyClassBreakdown(counts) {
   const lines = ['Classes Attended:'];
   let total = 0;
+
+  // Ensure counts is defined
+  if (!counts) {
+    lines.push('None logged');
+    return lines;
+  }
 
   STICKERS.forEach(({ abbr, emoji, label }) => {
     const count = counts[abbr] || 0;
@@ -3409,7 +3445,7 @@ function publishStatsToParent() {
 window.getIntermediateStats = publishStatsToParent;
 
 // ── FORMAT INTERCHANGEABILITY SETTINGS ──
-let userFormatRules = {};
+// userFormatRules already initialized above
 
 function initializeFormatRules() {
   const saved = localStorage.getItem('sin30_format_rules_intermediate');

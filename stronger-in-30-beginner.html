@@ -4496,7 +4496,6 @@ function refreshBoard() {
         slot.textContent = stickerVal || '';
 
         // Highlight consumed bonus classes - only individual slots, not full week
-        const memberPlan = getMemberWeekPlan(m.mi);
         if (memberPlan.consumedBonusDayKeys[d.key]) slot.classList.add('bonus-consumed');
 
         slot.dataset.mi = m.mi;

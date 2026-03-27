@@ -3673,7 +3673,6 @@ function refreshBoard() {
         if (stickerLabel) slot.dataset.label = stickerLabel;
 
         // Highlight consumed bonus classes - only individual slots, not full week
-        const memberPlan = getMemberWeekPlan(m.mi);
         if (memberPlan.consumedBonusDayKeys[d.key]) slot.classList.add('bonus-consumed');
 
         slot.addEventListener('mouseenter', () => {

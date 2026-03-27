@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const normalizeClass = require('./normalize_classes');
+const { normalizeClass } = require('./normalize_classes');
 
 // Read and process the CSV file
 const csvFilePath = path.join(__dirname, 'Day End Report - Part 4 - Checkins (5).csv');

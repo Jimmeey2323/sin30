@@ -2510,19 +2510,582 @@ function buildSlotTooltip(abbr, label, mi, weekNum, loc) {
   return `${label}\nW${weekNum} · ${perClass} → ${availableInGroup}/${requiredInGroup} combined${availableInGroup >= requiredInGroup ? ' ✓' : ''}`;
 }
 
-/* Styling for Used Bonus Classes */
-.used-bonus-class {
-  background: linear-gradient(135deg, #fef3c7, #fde68a);
-  border: 1px solid #f59e0b;
-  border-radius: 8px;
-  padding: 4px 8px;
-  font-weight: 600;
-  color: #92400e;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+function saveStateToLocalStorage() {
+  try {
+    localStorage.setItem('sin30_beginner_state', JSON.stringify(state));
+  } catch (e) {
+    console.warn('Failed to save state to localStorage:', e);
+  }
 }
 
-.used-bonus-class:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+function restoreStateFromLocalStorage() {
+  try {
+    const saved = localStorage.getItem('sin30_beginner_state');
+    if (saved) {
+      const savedState = JSON.parse(saved);
+      MEMBERS.forEach((m, mi) => {
+        if (savedState[mi]) {
+          Object.assign(state[mi], savedState[mi]);
+        }
+      });
+      return true;
+    }
+  } catch (e) {
+    console.warn('Failed to restore state from localStorage:', e);
+  }
+  return false;
 }
+
+function saveQualificationSettings() {
+  try {
+    localStorage.setItem(BOARD_SETTINGS_KEY, JSON.stringify(qualificationSettings));
+  } catch (e) {
+    console.warn('Failed to save qualification settings:', e);
+  }
+}
+
+function restoreQualificationSettings() {
+  try {
+    const saved = localStorage.getItem(BOARD_SETTINGS_KEY);
+    if (!saved) return;
+    const parsed = JSON.parse(saved);
+    qualificationSettings.matCountsAsCardio = !!parsed.matCountsAsCardio;
+    qualificationSettings.useClassDifferenceQualification = !!parsed.useClassDifferenceQualification;
+    qualificationSettings.classToleranceValue = parsed.classToleranceValue || 3;
+    if (typeof parsed.useBonusWeekCompensation === 'boolean') {
+      qualificationSettings.useBonusWeekCompensation = parsed.useBonusWeekCompensation;
+    }
+  } catch (e) {
+    console.warn('Failed to restore qualification settings:', e);
+  }
+}
+
+function syncQualificationToggle() {
+  if (qualificationToggleEl) {
+    qualificationToggleEl.checked = qualificationSettings.matCountsAsCardio;
+  }
+  if (classQualificationToggleEl) {
+    classQualificationToggleEl.checked = qualificationSettings.useClassDifferenceQualification;
+  }
+  const toleranceInput = document.getElementById('class-tolerance-input');
+  const toleranceControl = document.querySelector('.tolerance-control');
+  if (toleranceInput) {
+    toleranceInput.value = qualificationSettings.classToleranceValue || 3;
+  }
+  if (toleranceControl) {
+    toleranceControl.style.display = qualificationSettings.useClassDifferenceQualification ? 'block' : 'none';
+  }
+}
+
+// ── COLLAPSE/EXPAND HELPERS ──
+function toggleLocationGroup(btn) {
+  const tbody = document.getElementById('tbody');
+  if (!tbody) return;
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  const header = btn.closest('tr.location-group-header');
+  if (!header) return;
+  let headerIndex = rows.indexOf(header);
+  if (headerIndex === -1) return;
+  btn.classList.toggle('collapsed');
+  for (let i = headerIndex + 1; i < rows.length; i++) {
+    const row = rows[i];
+    if (row.classList.contains('location-group-header')) break;
+    if (row.classList.contains('data-row')) {
+      row.classList.toggle('hidden');
+    }
+  }
+}
+
+function getQualifiedMembersCount() {
+  return MEMBERS.filter(m => getScore(MEMBERS.indexOf(m)) >= 4).length;
+}
+
+function getLocationStats(locationAbbr) {
+  const membersAtLoc = MEMBERS.map((m, idx) => ({ m, idx })).filter(({ m }) => m.loc === locationAbbr);
+  const totalCount = membersAtLoc.length;
+  const qualifiedCount = membersAtLoc.filter(({ idx }) => getScore(idx) >= 4).length;
+  return { total: totalCount, qualified: qualifiedCount };
+}
+
+// ── BUILD / REFRESH TABLE ──
+function refreshBoard() {
+  const countEl = document.getElementById('member-count-display');
+  if (countEl) countEl.innerHTML = `${MEMBERS.length} <span>Members</span>`;
+
+  const qualifiedEl = document.getElementById('qualified-count-display');
+  const qualifiedCount = getQualifiedMembersCount();
+  if (qualifiedEl) qualifiedEl.textContent = `${qualifiedCount} Qualified`;
+
+  const totalClassesEl = document.getElementById('total-classes-display');
+  const grandTotal = MEMBERS.reduce((sum, _, mi) => sum + getTotalClasses(mi), 0);
+  if (totalClassesEl) totalClassesEl.innerHTML = `${grandTotal} <span>Total Classes</span>`;
+
+  const allWithScores = MEMBERS.map((m, i) => ({ ...m, mi: i, score: getScore(i), streak: getStreak(i), total: getTotalClasses(i) }));
+  const kcSorted     = allWithScores.filter(m => m.loc === 'KC').sort((a, b) => b.score - a.score || b.total - a.total || a.first.localeCompare(b.first));
+  const bandraSorted = allWithScores.filter(m => m.loc === 'Bandra').sort((a, b) => b.score - a.score || b.total - a.total || a.first.localeCompare(b.first));
+  const khSorted     = allWithScores.filter(m => m.loc === 'KH').sort((a, b) => b.score - a.score || b.total - a.total || a.first.localeCompare(b.first));
+  const cncSorted    = allWithScores.filter(m => m.loc === 'CNC').sort((a, b) => b.score - a.score || b.total - a.total || a.first.localeCompare(b.first));
+
+  const thead = document.getElementById('thead');
+  const tbody = document.getElementById('tbody');
+
+  thead.innerHTML = '';
+
+  const weekRow = document.createElement('tr');
+  weekRow.className = 'week-header-row';
+
+  const weekRankTh = document.createElement('th');
+  weekRankTh.className = 'rank-h';
+  weekRow.appendChild(weekRankTh);
+
+  const weekNameTh = document.createElement('th');
+  weekNameTh.className = 'name-h';
+  weekRow.appendChild(weekNameTh);
+
+  weekChunks.slice(0, 4).forEach((chunk, wi) => {
+    const wFirst = chunk[0];
+    const wLast = chunk[chunk.length - 1];
+    const wDateStr = `${wFirst.mon} ${wFirst.num} – ${wLast.mon} ${wLast.num}`;
+    const weekTh = document.createElement('th');
+    weekTh.className = 'week-h';
+    weekTh.colSpan = chunk.length;
+    let anyMemberCompletedWeek = false;
+    for (let mi = 0; mi < MEMBERS.length; mi++) {
+      const { completed } = getWeekScore(mi, wi + 1);
+      if (completed) { anyMemberCompletedWeek = true; break; }
+    }
+    if (anyMemberCompletedWeek) weekTh.classList.add('week-goals-met');
+    weekTh.innerHTML = `<div class="week-group-header"><div class="week-tag">Week ${wi + 1}</div><div class="week-dates">${wDateStr}</div></div>`;
+    weekRow.appendChild(weekTh);
+  });
+
+  if (days.length > 28) {
+    const bonusDays = days.slice(28);
+    const bonusFirst = bonusDays[0];
+    const bonusLast = bonusDays[bonusDays.length - 1];
+    const bonusDateStr = `${bonusFirst.mon} ${bonusFirst.num} – ${bonusLast.mon} ${bonusLast.num}`;
+    const bonusTh = document.createElement('th');
+    bonusTh.className = 'week-h bonus-week';
+    bonusTh.colSpan = bonusDays.length;
+    bonusTh.innerHTML = `<div class="week-group-header"><div class="week-tag">Bonus</div><div class="week-dates">${bonusDateStr}</div></div>`;
+    weekRow.appendChild(bonusTh);
+  }
+
+  const weekScoreTh = document.createElement('th');
+  weekScoreTh.className = 'score-h';
+  weekRow.appendChild(weekScoreTh);
+  thead.appendChild(weekRow);
+
+  const headRow = document.createElement('tr');
+  const rankTh = document.createElement('th');
+  rankTh.className = 'rank-h';
+  headRow.appendChild(rankTh);
+  const nameTh = document.createElement('th');
+  nameTh.className = 'name-h';
+  nameTh.innerHTML = `<span class="col-label">Member</span>`;
+  headRow.appendChild(nameTh);
+
+  days.forEach((d, di) => {
+    const th = document.createElement('th');
+    th.className = 'day-h' + (d.isWeekend ? ' weekend' : '');
+    th.innerHTML = `<span class="day-num">${d.num}</span><span class="day-name">${d.dayName}</span>`;
+    if (di > 0 && di % 7 === 0) th.style.borderLeft = '2px solid var(--border-strong)';
+    headRow.appendChild(th);
+  });
+
+  const scoreTh = document.createElement('th');
+  scoreTh.className = 'score-h';
+  scoreTh.innerHTML = `<span class="col-label">Weeks</span>`;
+  headRow.appendChild(scoreTh);
+  thead.appendChild(headRow);
+
+  tbody.innerHTML = '';
+
+  function renderGroupRows(groupList, groupLabel, loc) {
+    const sepRow = document.createElement('tr');
+    sepRow.className = 'location-group-header';
+    const labelTd = document.createElement('td');
+    labelTd.colSpan = 2;
+    labelTd.className = 'location-header-cell location-label-cell';
+    const btn = document.createElement('button');
+    btn.className = 'location-toggle-btn';
+    btn.type = 'button';
+    const stats = getLocationStats(loc);
+    const countBadge = ` <span style="font-size: 9px; opacity: 0.9; margin-left: 8px;">(${stats.qualified}/${stats.total} qualified)</span>`;
+    btn.innerHTML = `<span class="location-toggle-icon">▼</span><span>${groupLabel}${countBadge}</span>`;
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleLocationGroup(btn);
+    });
+    labelTd.appendChild(btn);
+    sepRow.appendChild(labelTd);
+
+    const locReqs = loc === 'Bandra' ? WEEKLY_REQUIREMENTS_BANDRA : loc === 'KH' ? WEEKLY_REQUIREMENTS_KH : loc === 'CNC' ? WEEKLY_REQUIREMENTS_CNC : WEEKLY_REQUIREMENTS_KC;
+
+    weekChunks.slice(0, 4).forEach((chunk, wi) => {
+      const goalTd = document.createElement('td');
+      goalTd.colSpan = chunk.length;
+      goalTd.className = 'location-header-cell location-goal-cell';
+      const wn = wi + 1;
+      const pills = Object.entries(locReqs[wn]).map(([cls, n]) => {
+        const info = STICKER_LABEL[cls] || { emoji: '', label: cls };
+        return `<span class="loc-req-pill"><em class="loc-req-count">${n}×</em><span class="loc-req-icon">${info.emoji}</span><span class="loc-req-name">${info.label}</span></span>`;
+      }).join('');
+      goalTd.innerHTML = `<div class="loc-goal-wrap"><span class="loc-span-arrow loc-arrow-l">‹</span><button class="loc-goal-badge" onclick="this.classList.toggle('open')"><span class="loc-badge-label">Goals</span><div class="loc-badge-detail">${pills}</div></button><span class="loc-span-arrow loc-arrow-r">›</span></div>`;
+      sepRow.appendChild(goalTd);
+    });
+
+    if (days.length > 28) {
+      const bonusTd = document.createElement('td');
+      bonusTd.colSpan = days.length - 28;
+      bonusTd.className = 'location-header-cell';
+      sepRow.appendChild(bonusTd);
+    }
+
+    const scoreTd = document.createElement('td');
+    scoreTd.className = 'location-header-cell';
+    sepRow.appendChild(scoreTd);
+    tbody.appendChild(sepRow);
+
+    groupList.forEach((m, rank) => {
+      const animDelay = rank * 0.04;
+      const row = document.createElement('tr');
+      row.className = 'data-row';
+      row.style.animationDelay = animDelay + 's';
+
+      const rankTd = document.createElement('td');
+      rankTd.className = 'rank-td';
+      rankTd.innerHTML = `<div class="rank-inner">${rank + 1}</div>`;
+      row.appendChild(rankTd);
+
+      const nameTd = document.createElement('td');
+      nameTd.className = 'name-td';
+      const streakHtml = m.streak >= 3
+        ? `<span class="streak-flame show">🔥 ${m.streak}</span>`
+        : `<span class="streak-flame"></span>`;
+      const totalRequired = getTotalClassesRequired(m.mi);
+      nameTd.innerHTML = `
+        <div class="member-name">${m.first} ${m.last}</div>
+        <div class="member-sub">${streakHtml}<span class="member-total-classes">${m.total}/${totalRequired} classes</span></div>
+      `;
+      row.appendChild(nameTd);
+
+      days.forEach((d, di) => {
+        const td = document.createElement('td');
+        const weekNum = Math.floor(di / 7) + 1;
+        const isCompletedWeek = weekNum <= 4 && getWeekScore(m.mi, weekNum).completed;
+        const weekTooltipText = weekNum <= 4 ? buildWeekQualificationTooltip(m.mi, weekNum) : '';
+        const today = new Date(); today.setHours(0,0,0,0);
+        const weekLastDay = weekNum <= 4 ? weekChunks[weekNum - 1][weekChunks[weekNum - 1].length - 1].fullDate : null;
+        const isWeekEnded = weekLastDay ? (weekLastDay <= today) : false;
+        const isNotQualifiedEnded = isWeekEnded && !isCompletedWeek && weekNum <= 4;
+
+        td.className = 'day-td' + (d.isWeekend ? ' weekend' : '') + (isCompletedWeek ? ' week-completed' : '') + (isNotQualifiedEnded ? ' week-not-qualified' : '');
+
+        if (di % 7 === 3 && weekNum <= 4) {
+          td.style.zIndex = '10';
+          if (isCompletedWeek) {
+            const badge = document.createElement('div');
+            badge.className = 'week-qualified-badge';
+            badge.textContent = '✓ Qualified';
+            td.appendChild(badge);
+          } else if (isNotQualifiedEnded) {
+            const badge = document.createElement('div');
+            badge.className = 'week-not-qualified-badge';
+            badge.textContent = '✗ Not Qualified';
+            td.appendChild(badge);
+          }
+        }
+
+        if (weekTooltipText) {
+          td.addEventListener('mouseenter', () => showCellTooltip(weekTooltipText, td));
+          td.addEventListener('mouseleave', hideCellTooltip);
+        }
+        if (di > 0 && di % 7 === 0) td.style.borderLeft = '2px solid var(--border-strong)';
+
+        const stickerVal   = state[m.mi][d.key];
+        const stickerAbbr  = stickerVal ? getStickerAbbr(stickerVal) : null;
+        const stickerLabel = stickerVal ? (STICKERS.find(s => s.emoji === stickerVal)?.label || '') : '';
+        const slot = document.createElement('div');
+        slot.className = 'sticker-slot' + (stickerVal ? ' has-sticker' : '');
+        slot.textContent = stickerVal || '';
+        slot.dataset.mi = m.mi;
+        slot.dataset.dk = d.key;
+        if (stickerLabel) slot.dataset.label = stickerLabel;
+
+        slot.addEventListener('mouseenter', () => {
+          if (stickerAbbr && weekNum <= 4) {
+            showCellTooltip(buildSlotTooltip(stickerAbbr, stickerLabel, m.mi, weekNum, m.loc), slot);
+          } else if (stickerLabel) {
+            showCellTooltip(stickerLabel, slot);
+          }
+        });
+        slot.addEventListener('mouseleave', () => {
+          if (weekTooltipText) showCellTooltip(weekTooltipText, td);
+          else hideCellTooltip();
+        });
+
+        td.appendChild(slot);
+        row.appendChild(td);
+      });
+
+      const scoreTd = document.createElement('td');
+      scoreTd.className = 'score-td';
+      const sc = m.score;
+      const pillClass = sc === 0 ? '' : sc >= 4 ? ' maxed' : ' lit';
+
+      let tooltipHTML = '<div class="score-tooltip-header">';
+      tooltipHTML += sc >= 4 ? '👑 FULLY QUALIFIED' : 'QUALIFICATION STATUS';
+      tooltipHTML += '</div><div class="score-tooltip-content">';
+      tooltipHTML += '<div class="score-tooltip-section">';
+      tooltipHTML += '<div class="score-tooltip-section-header">📅 Weeks Qualified</div>';
+      for (let week = 1; week <= 4; week++) {
+        const { completed } = getWeekScore(m.mi, week);
+        const icon = completed ? '✓' : '✗';
+        const iconColor = completed ? '#6eff95' : '#ff8888';
+        tooltipHTML += `<div class="score-tooltip-item"><span style="color: ${iconColor}; font-weight: bold;">${icon}</span> Week ${week}: ${completed ? 'Qualified' : 'Not Qualified'}</div>`;
+      }
+      tooltipHTML += '</div>';
+      const totalClasses = getTotalClasses(m.mi);
+      const classesRequired = getTotalClassesRequired(m.mi);
+      tooltipHTML += '<div class="score-tooltip-section">';
+      tooltipHTML += '<div class="score-tooltip-section-header">📊 Classes</div>';
+      tooltipHTML += `<div class="score-tooltip-item">Done: ${totalClasses} / Required: ${classesRequired}</div>`;
+      tooltipHTML += '</div></div>';
+
+      scoreTd.innerHTML = `
+        <div class="score-pill${pillClass}">
+          ${sc}/4
+          <div class="score-tooltip">${tooltipHTML}</div>
+        </div>
+      `;
+      row.appendChild(scoreTd);
+      tbody.appendChild(row);
+    });
+  }
+
+  renderGroupRows(kcSorted, '📍  Kemps Corner', 'KC');
+  renderGroupRows(bandraSorted, '📍  Supreme HQ, Bandra', 'Bandra');
+  renderGroupRows(khSorted, '📍  Kenkere House', 'KH');
+  renderGroupRows(cncSorted, '📍  C & C', 'CNC');
+}
+
+// ── GOOGLE SHEETS CONFIG ──
+const GSHEET_SPREADSHEET_ID = window.GOOGLE_SHEETS_CONFIG.SPREADSHEET_ID;
+const GSHEET_SHEET_NAME     = window.GOOGLE_SHEETS_CONFIG.SHEET_NAME;
+const OAUTH_CLIENT_ID       = window.GOOGLE_SHEETS_CONFIG.CLIENT_ID;
+const OAUTH_CLIENT_SECRET   = window.GOOGLE_SHEETS_CONFIG.CLIENT_SECRET;
+const OAUTH_REFRESH_TOKEN   = window.GOOGLE_SHEETS_CONFIG.REFRESH_TOKEN;
+
+const CHALLENGE_START = new Date(2026, 1, 23);
+
+function cleanedClassToEmoji(cleanedClass) {
+  const c = (cleanedClass || '').toLowerCase();
+  if (/barre 57|studio barre/.test(c))           return '\u{1F499}';
+  if (/powercycle|power cycle|cycle/.test(c))    return '\u{1F6B4}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}';
+  if (/mat 57|mat57/.test(c))                    return '\u{1F9D8}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}';
+  if (/cardio barre/.test(c))                    return '\u{1FAC0}';
+  if (/strength lab|studio lab/.test(c))         return '\u{1F3CB}\u{FE0F}';
+  if (/back body blaze/.test(c))                 return '\u{1F519}';
+  if (/amped up/.test(c))                        return '\u{1F525}';
+  if (/\bfit\b/.test(c))                         return '\u{1F4AA}\u{1F3FB}';
+  if (/hiit/.test(c))                            return '\u{2764}\u{FE0F}\u{200D}\u{1F525}';
+  if (/recovery/.test(c))                        return '\u{2764}\u{FE0F}\u{200D}\u{1FA79}';
+  return null;
+}
+
+async function getAccessToken() {
+  const cfg = window.GOOGLE_SHEETS_CONFIG;
+  if (!cfg.CLIENT_ID || cfg.CLIENT_ID === 'YOUR_CLIENT_ID_HERE' ||
+      !cfg.CLIENT_SECRET || cfg.CLIENT_SECRET === 'YOUR_CLIENT_SECRET_HERE' ||
+      !cfg.REFRESH_TOKEN || cfg.REFRESH_TOKEN === 'YOUR_REFRESH_TOKEN_HERE') {
+    throw new Error('Google Sheets integration not configured. Please update GOOGLE_SHEETS_CONFIG with your credentials.');
+  }
+  const resp = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id:     cfg.CLIENT_ID,
+      client_secret: cfg.CLIENT_SECRET,
+      refresh_token: cfg.REFRESH_TOKEN,
+      grant_type:    'refresh_token',
+    })
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error('Token refresh failed: ' + (err.error_description || resp.status));
+  }
+  const data = await resp.json();
+  return data.access_token;
+}
+
+async function fetchSheetRows(accessToken) {
+  const cfg   = window.GOOGLE_SHEETS_CONFIG;
+  const range = encodeURIComponent(cfg.SHEET_NAME + '!A:Z');
+  const url   = `https://sheets.googleapis.com/v4/spreadsheets/${cfg.SPREADSHEET_ID}/values/${range}`;
+  const resp  = await fetch(url, { headers: { Authorization: 'Bearer ' + accessToken } });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error('Sheets fetch failed: ' + ((err.error && err.error.message) || resp.status));
+  }
+  const data = await resp.json();
+  return data.values || [];
+}
+
+async function fetchFallbackData() {
+  const fallbackPath = 'Day%20End%20Report%20-%20Part%204%20-%20Checkins%20(5).csv';
+  const response = await fetch(fallbackPath);
+  if (!response.ok) {
+    throw new Error('Failed to load fallback data');
+  }
+  const text = await response.text();
+  const rows = text.split('\n').map(row => row.split(','));
+  return rows;
+}
+
+async function fetchAndSeedCheckins() {
+  const statusEl = document.getElementById('data-status');
+  const btn      = document.getElementById('refresh-btn');
+  if (statusEl) statusEl.textContent = '';
+  if (btn)      btn.disabled = true;
+  const loader = document.getElementById('board-loader');
+  if (loader) loader.classList.remove('hidden');
+
+  try {
+    let rows;
+    try {
+      const accessToken = await getAccessToken();
+      rows = await fetchSheetRows(accessToken);
+    } catch (err) {
+      console.warn('Google Sheets fetch failed, falling back to local data:', err);
+      rows = await fetchFallbackData();
+    }
+
+    if (rows.length < 2) {
+      if (statusEl) statusEl.textContent = 'No data found.';
+      return;
+    }
+
+    const headers    = rows[0].map(h => h.trim());
+    const col        = name => headers.indexOf(name);
+    const iFirst     = col('First Name');
+    const iLast      = col('Last Name');
+    const iEmail     = col('Email');
+    const iCheckedIn = col('Checked In');
+    const iDate      = col('Date (IST)');
+    const iClass     = col('Cleaned Class');
+
+    MEMBERS.forEach((_, mi) => {
+      Object.keys(state[mi]).forEach(k => delete state[mi][k]);
+    });
+
+    let matched = 0;
+
+    rows.slice(1).forEach(row => {
+      if ((row[iCheckedIn] || '').trim().toUpperCase() !== 'TRUE') return;
+      const dateStr = (row[iDate] || '').trim();
+      const rowDate = new Date(dateStr + 'T00:00:00');
+      if (isNaN(rowDate.getTime()) || rowDate < CHALLENGE_START) return;
+      const emoji = cleanedClassToEmoji((row[iClass] || '').trim());
+      if (!emoji) return;
+      const rowEmail = (row[iEmail] || '').trim().toLowerCase();
+      let mi = MEMBERS.findIndex(m => m.email && m.email.toLowerCase() === rowEmail);
+      if (mi === -1) {
+        const rowFirst = (row[iFirst] || '').trim().toLowerCase();
+        const rowLast  = (row[iLast]  || '').trim().toLowerCase();
+        if (rowFirst && rowLast) {
+          mi = MEMBERS.findIndex(m =>
+            m.first.toLowerCase() === rowFirst &&
+            m.last.toLowerCase()  === rowLast
+          );
+        }
+      }
+      if (mi === -1) return;
+      const dk = `${rowDate.getFullYear()}-${rowDate.getMonth()}-${rowDate.getDate()}`;
+      if (!days.find(d => d.key === dk)) return;
+      if (!state[mi][dk]) { state[mi][dk] = emoji; matched++; }
+    });
+
+    refreshBoard();
+    saveStateToLocalStorage();
+    if (statusEl) statusEl.textContent = '';
+  } catch (err) {
+    console.error(err);
+    if (statusEl) {
+      if (err.message.includes('not configured') || err.message.includes('not found')) {
+        statusEl.textContent = '⚠ Google Sheets not configured · Please set up credentials';
+      } else {
+        statusEl.textContent = '✗ ' + err.message;
+      }
+    }
+  } finally {
+    if (btn) btn.disabled = false;
+    const loader = document.getElementById('board-loader');
+    if (loader) loader.classList.add('hidden');
+  }
+}
+
+function positionScorePillTooltips() {
+  document.querySelectorAll('.score-pill').forEach(pill => {
+    const tooltip = pill.querySelector('.score-tooltip');
+    if (!tooltip) return;
+    pill.addEventListener('mouseenter', () => {
+      tooltip.style.display = 'block';
+      setTimeout(() => {
+        const pillRect = pill.getBoundingClientRect();
+        const tooltipRect = tooltip.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        const gap = 12;
+        let top = pillRect.top - tooltipRect.height - gap;
+        let left = pillRect.left + (pillRect.width - tooltipRect.width) / 2;
+        if (left + tooltipRect.width + 10 > viewportWidth) left = viewportWidth - tooltipRect.width - 10;
+        if (left < 10) left = 10;
+        if (top < 10) top = pillRect.bottom + gap;
+        tooltip.style.top = top + 'px';
+        tooltip.style.left = left + 'px';
+      }, 0);
+    });
+    pill.addEventListener('mouseleave', () => {
+      tooltip.style.display = 'none';
+    });
+  });
+}
+
+// ── INIT ──
+restoreQualificationSettings();
+initializeFormatRules();
+syncQualificationToggle();
+if (classQualificationToggleEl) {
+  classQualificationToggleEl.addEventListener('change', () => {
+    qualificationSettings.useClassDifferenceQualification = classQualificationToggleEl.checked;
+    const toleranceCtrl = document.querySelector('.tolerance-control');
+    if (toleranceCtrl) toleranceCtrl.style.display = classQualificationToggleEl.checked ? 'block' : 'none';
+    saveQualificationSettings();
+    refreshBoard();
+    positionScorePillTooltips();
+  });
+}
+const toleranceInput = document.getElementById('class-tolerance-input');
+if (toleranceInput) {
+  toleranceInput.addEventListener('change', () => {
+    qualificationSettings.classToleranceValue = parseInt(toleranceInput.value) || 3;
+    saveQualificationSettings();
+    refreshBoard();
+    positionScorePillTooltips();
+  });
+}
+bindSettingsModalEvents();
+if (restoreStateFromLocalStorage()) {
+  renderLegend();
+  refreshBoard();
+  positionScorePillTooltips();
+}
+const loader = document.getElementById('board-loader');
+if (loader) loader.classList.add('hidden');
+renderLegend();
+refreshBoard();
+positionScorePillTooltips();
+</script>
+</body>
+</html>

@@ -242,9 +242,10 @@
         </label>
       </div>
       
-      <div style="display: flex; justify-content: space-between; gap: 12px;">
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
         <button onclick="exportSelectedData('csv')" style="flex: 1; background: #22c55e; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: 600;">Export CSV</button>
         <button onclick="exportSelectedData('pdf')" style="flex: 1; background: #ef4444; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: 600;">Export PDF</button>
+        <button onclick="exportSelectedData('png')" style="flex: 1; background: #0ea5e9; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: 600;">Export PNG</button>
       </div>
     </div>
   </div>
@@ -281,7 +282,7 @@
 
     function openExportModal() {
       // Collect and cache stats first
-      cachedStats = collectAllStats();
+      cachedStats = collectAllExportData();
       
       if (cachedStats.length === 0) {
         alert('No data available. Please ensure all levels have loaded.');
@@ -318,7 +319,7 @@
       checkboxes.forEach(cb => cb.checked = false);
     }
 
-    function collectAllStats() {
+    function collectAllExportData() {
       const allStats = [];
       
       try {
@@ -326,21 +327,21 @@
         const iframes = document.querySelectorAll('.tab-iframe');
         if (iframes.length < 3) return [];
 
-        // Get Beginner stats
-        if (iframes[0].contentWindow && iframes[0].contentWindow.getBeginnerStats) {
-          const beginnerStats = iframes[0].contentWindow.getBeginnerStats();
+        // Get Beginner detailed export data
+        if (iframes[0].contentWindow && iframes[0].contentWindow.getDetailedMemberExportData) {
+          const beginnerStats = iframes[0].contentWindow.getDetailedMemberExportData();
           allStats.push(...beginnerStats);
         }
 
-        // Get Intermediate stats
-        if (iframes[1].contentWindow && iframes[1].contentWindow.getIntermediateStats) {
-          const intermediateStats = iframes[1].contentWindow.getIntermediateStats();
+        // Get Intermediate detailed export data
+        if (iframes[1].contentWindow && iframes[1].contentWindow.getDetailedMemberExportData) {
+          const intermediateStats = iframes[1].contentWindow.getDetailedMemberExportData();
           allStats.push(...intermediateStats);
         }
 
-        // Get Advanced stats
-        if (iframes[2].contentWindow && iframes[2].contentWindow.getAdvancedStats) {
-          const advancedStats = iframes[2].contentWindow.getAdvancedStats();
+        // Get Advanced detailed export data
+        if (iframes[2].contentWindow && iframes[2].contentWindow.getDetailedMemberExportData) {
+          const advancedStats = iframes[2].contentWindow.getDetailedMemberExportData();
           allStats.push(...advancedStats);
         }
       } catch (error) {
@@ -367,9 +368,9 @@
       let filteredStats = cachedStats.filter(s => selectedLocations.includes(s.location));
       
       if (filterType === 'qualified') {
-        filteredStats = filteredStats.filter(s => s.fullyQualified);
+        filteredStats = filteredStats.filter(s => window.isQualifiedExportMember ? window.isQualifiedExportMember(s) : s.qualification === 'QUALIFIED');
       } else if (filterType === 'not-qualified') {
-        filteredStats = filteredStats.filter(s => !s.fullyQualified);
+        filteredStats = filteredStats.filter(s => !(window.isQualifiedExportMember ? window.isQualifiedExportMember(s) : s.qualification === 'QUALIFIED'));
       }
       
       if (filteredStats.length === 0) {
@@ -383,9 +384,11 @@
       // Export based on format
       try {
         if (format === 'csv') {
-          downloadUnifiedCSV(filteredStats);
+          downloadUnifiedCSV(filteredStats, { filePrefix: filterType === 'qualified' ? 'stronger-in-30-qualified-all-boards' : 'stronger-in-30-all-boards' });
+        } else if (format === 'pdf') {
+          generateUnifiedPDF(filteredStats, { title: filterType === 'qualified' ? 'Stronger in 30 — Qualified Members' : 'Stronger in 30 — Combined Member Export', filePrefix: filterType === 'qualified' ? 'stronger-in-30-qualified-all-boards' : 'stronger-in-30-all-boards' });
         } else {
-          generateUnifiedPDF(filteredStats);
+          downloadUnifiedPNG(filteredStats, { title: filterType === 'qualified' ? 'Stronger in 30 — Qualified Members' : 'Stronger in 30 — Combined Member Export', filePrefix: filterType === 'qualified' ? 'stronger-in-30-qualified-all-boards' : 'stronger-in-30-all-boards' });
         }
       } catch (error) {
         console.error('Export failed:', error);
@@ -402,13 +405,12 @@
           return;
         }
 
-        // Collect stats from each level
+        // Collect detailed export data from each level
         const allStats = [];
         
         try {
-          // Get Beginner stats
-          if (iframes[0].contentWindow && iframes[0].contentWindow.getBeginnerStats) {
-            const beginnerStats = iframes[0].contentWindow.getBeginnerStats();
+          if (iframes[0].contentWindow && iframes[0].contentWindow.getDetailedMemberExportData) {
+            const beginnerStats = iframes[0].contentWindow.getDetailedMemberExportData();
             allStats.push(...beginnerStats);
           }
         } catch (e) {
@@ -416,9 +418,8 @@
         }
 
         try {
-          // Get Intermediate stats
-          if (iframes[1].contentWindow && iframes[1].contentWindow.getIntermediateStats) {
-            const intermediateStats = iframes[1].contentWindow.getIntermediateStats();
+          if (iframes[1].contentWindow && iframes[1].contentWindow.getDetailedMemberExportData) {
+            const intermediateStats = iframes[1].contentWindow.getDetailedMemberExportData();
             allStats.push(...intermediateStats);
           }
         } catch (e) {
@@ -426,9 +427,8 @@
         }
 
         try {
-          // Get Advanced stats
-          if (iframes[2].contentWindow && iframes[2].contentWindow.getAdvancedStats) {
-            const advancedStats = iframes[2].contentWindow.getAdvancedStats();
+          if (iframes[2].contentWindow && iframes[2].contentWindow.getDetailedMemberExportData) {
+            const advancedStats = iframes[2].contentWindow.getDetailedMemberExportData();
             allStats.push(...advancedStats);
           }
         } catch (e) {
@@ -445,10 +445,9 @@
         
         if (format) {
           // CSV Export
-          downloadUnifiedCSV(allStats);
+          downloadUnifiedCSV(allStats, { filePrefix: 'stronger-in-30-all-boards' });
         } else {
-          // PDF Export
-          generateUnifiedPDF(allStats);
+          generateUnifiedPDF(allStats, { title: 'Stronger in 30 — Combined Member Export', filePrefix: 'stronger-in-30-all-boards' });
         }
       } catch (error) {
         console.error('Export failed:', error);

@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Stronger in 30 - Master Export</title>
+  <script src="export-utils.js"></script>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
@@ -53,6 +54,29 @@
       grid-template-columns: 1fr;
       gap: 12px;
       margin-bottom: 24px;
+    }
+
+    .filter-card {
+      background: rgba(226, 232, 240, 0.05);
+      border: 1px solid rgba(226, 232, 240, 0.1);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+
+    .filter-card h3 {
+      margin: 0 0 10px;
+      font-size: 14px;
+      color: #e2e8f0;
+    }
+
+    .filter-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 13px;
+      color: #cbd5e1;
     }
     
     .level-item {
@@ -126,7 +150,7 @@
       width: 100%;
       padding: 16px;
       font-size: 16px;
-      margin-top: 20px;
+      margin-top: 12px;
     }
     
     .btn-all:hover {
@@ -174,7 +198,15 @@
     <div class="info-box">
       <strong>📊 Export Options:</strong><br>
       • Export individual level details with day-by-day breakdowns<br>
-      • Combine all three levels into a single comprehensive CSV
+      • Combine all three levels into a single detailed CSV / PDF / PNG<br>
+      • Filter to qualified members only before exporting
+    </div>
+
+    <div class="filter-card">
+      <h3>Combined export filter</h3>
+      <label class="filter-option"><input type="radio" name="combined-filter" value="all" checked> All members</label>
+      <label class="filter-option"><input type="radio" name="combined-filter" value="qualified"> Qualified members only</label>
+      <label class="filter-option"><input type="radio" name="combined-filter" value="not-qualified"> Not qualified members only</label>
     </div>
     
     <div>
@@ -204,7 +236,9 @@
         <button class="btn-advanced" onclick="exportSingleLevel('advanced')">Export</button>
       </div>
       
-      <button class="btn-all" onclick="exportAllLevels()" id="combined-export-btn">📥 Export All Levels Combined</button>
+      <button class="btn-all" onclick="exportAllLevels('csv')" id="combined-export-btn">📥 Export All Levels Combined (CSV)</button>
+      <button class="btn-all" onclick="exportAllLevels('pdf')" style="background:#ef4444;" id="combined-export-pdf-btn">🧾 Export All Levels Combined (PDF)</button>
+      <button class="btn-all" onclick="exportAllLevels('png')" style="background:#0ea5e9;" id="combined-export-png-btn">🖼️ Export All Levels Combined (PNG)</button>
     </div>
     
     <div class="status-message" id="status-message"></div>
@@ -248,6 +282,11 @@
                 const data = iframeWindow.getDetailedMemberExportData();
                 combinedData[level] = data;
                 showStatus(`✓ ${level.charAt(0).toUpperCase() + level.slice(1)} data loaded (${data.length} members)`, 'success', false);
+              } else if (iframeWindow.getBeginnerStats || iframeWindow.getIntermediateStats || iframeWindow.getAdvancedStats) {
+                const getter = iframeWindow.getBeginnerStats || iframeWindow.getIntermediateStats || iframeWindow.getAdvancedStats;
+                const data = getter();
+                combinedData[level] = data;
+                showStatus(`✓ ${level.charAt(0).toUpperCase() + level.slice(1)} summary loaded (${data.length} members)`, 'success', false);
               } else {
                 showStatus(`✗ Could not load ${level} data - function not found`, 'error', true);
               }
@@ -299,7 +338,12 @@
       }, 500);
     }
     
-    async function exportAllLevels() {
+    function getCombinedFilterType() {
+      const selected = document.querySelector('input[name="combined-filter"]:checked');
+      return selected ? selected.value : 'all';
+    }
+
+    async function exportAllLevels(format = 'csv') {
       const btn = document.getElementById('combined-export-btn');
       btn.disabled = true;
       showStatus('Preparing combined export from all levels...', 'loading', false);
@@ -325,24 +369,32 @@
           return;
         }
         
-        // Generate combined CSV
-        const csv = generateCombinedCSV(allData);
-        
-        // Download
-        const timestamp = new Date().toISOString().split('T')[0];
-        const filename = `sin30-all-levels-combined-${timestamp}.csv`;
-        
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        link.setAttribute('href', url);
-        link.setAttribute('download', filename);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        showStatus(`✓ Downloaded: ${filename} (${allData.length} members)`, 'success', true);
+        const filterType = getCombinedFilterType();
+        let filteredData = allData;
+        if (filterType === 'qualified') {
+          filteredData = allData.filter(member => window.isQualifiedExportMember ? window.isQualifiedExportMember(member) : member.qualification === 'QUALIFIED');
+        } else if (filterType === 'not-qualified') {
+          filteredData = allData.filter(member => !(window.isQualifiedExportMember ? window.isQualifiedExportMember(member) : member.qualification === 'QUALIFIED'));
+        }
+
+        if (!filteredData.length) {
+          showStatus('✗ No members matched the selected filter', 'error', true);
+          btn.disabled = false;
+          return;
+        }
+
+        const prefix = filterType === 'qualified' ? 'sin30-qualified-all-levels' : 'sin30-all-levels-combined';
+        const title = filterType === 'qualified' ? 'Stronger in 30 — Qualified Members' : 'Stronger in 30 — Combined Member Export';
+
+        if (format === 'csv') {
+          downloadUnifiedCSV(filteredData, { filePrefix: prefix, title });
+        } else if (format === 'pdf') {
+          generateUnifiedPDF(filteredData, { filePrefix: prefix, title });
+        } else {
+          downloadUnifiedPNG(filteredData, { filePrefix: prefix, title });
+        }
+
+        showStatus(`✓ Downloaded ${format.toUpperCase()} export (${filteredData.length} members)`, 'success', true);
       } catch (error) {
         console.error('Error exporting all levels:', error);
         showStatus(`✗ Error: ${error.message}`, 'error', true);

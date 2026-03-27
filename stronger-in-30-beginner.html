@@ -1586,6 +1586,7 @@ function updateEquivGroupsFromCustomGroups() {
 // ── FORMAT INTERCHANGEABILITY SETTINGS ──
 // New flexible format rules system (declare early!)
 let customFormatGroups = [];
+let EQUIV_GROUPS = [];  // Will be populated by initializeFormatGroups()
 
 // Initialize format rules immediately
 initializeFormatGroups();
@@ -1648,7 +1649,8 @@ const WEEK_COLORS = ['#2d5a27','#1a4d6e','#a05c2d','#6b3fa0','#c0392b'];
 
 // ── STATE ──
 // state[memberIdx][dayKey] = stickerEmoji or null
-const state = MEMBERS.map(() => ({}));
+// Declare state early so it's available when fetchAndSeedCheckins() is called
+let state = MEMBERS.map(() => ({}));
 
 // ── CELL TOOLTIP ──
 const cellTooltip = document.getElementById('cell-tooltip');
@@ -1702,13 +1704,9 @@ const QUALIFIED_DISPLAY_ORDER = ['CARDIO', 'STRENGTH'];
 
 // ── CLASS EQUIVALENCY GROUPS ──
 // Classes within a group are interchangeable when checking weekly requirements.
-// Group A: Strength-type  (FIT ↔ LAB ↔ BBB)
-// Group B: Cardio-type    (CB ↔ HIIT ↔ AMP ↔ CBP ↔ TC)
-// NOTE: PC (PowerCycle) and specific formats (B57, Mat, REC) are NOT interchangeable
-const EQUIV_GROUPS = [
-  new Set(['FIT', 'LAB', 'BBB']),
-  new Set(['CB', 'HIIT', 'AMP', 'CBP', 'TC']),
-];
+// Group A: Strength-type   (CB ↔ B57 ↔ Mat)
+// Group B: Cardio+Strength  (CB ↔ PC)
+// EQUIV_GROUPS is now declared early and populated by initializeFormatGroups()
 
 function getEquivGroup(abbr) {
   return EQUIV_GROUPS.find(g => g.has(abbr)) || null;
@@ -2916,13 +2914,6 @@ async function fetchSheetRows(accessToken) {
 }
 
 async function fetchAndSeedCheckins() {
-  // Guard: ensure state is initialized
-  if (typeof state === 'undefined' || !Array.isArray(state)) {
-    console.warn('State not yet initialized, deferring fetchAndSeedCheckins');
-    setTimeout(() => fetchAndSeedCheckins(), 100);
-    return;
-  }
-
   const statusEl = document.getElementById('data-status');
   const btn      = document.getElementById('refresh-btn');
   if (statusEl) statusEl.textContent = '';

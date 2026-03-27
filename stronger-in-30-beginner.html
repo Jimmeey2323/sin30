@@ -1728,6 +1728,7 @@ tr.data-row.hidden { display: none; }
     <div style="display:flex; align-items:center; gap:6px; margin-top:4px; flex-wrap:wrap;">
       <button onclick="fetchAndSeedCheckins()" id="refresh-btn" class="refresh-btn">↻ Refresh</button>
       <button onclick="openSettingsModal()" id="settings-btn" class="refresh-btn settings-btn">⚙ Settings</button>
+      <button onclick="exportQualifiedMembers()" class="refresh-btn" title="Export qualified members as CSV">📥 Export</button>
       <label class="toggle-pill" for="class-diff-qualification-toggle">
         <input type="checkbox" id="class-diff-qualification-toggle">
         <span class="toggle-slider"></span>
@@ -2364,17 +2365,34 @@ function getMemberWeekPlan(mi) {
         week.compensated = true;
         week.finalQualified = true;
         
-        // Simple heuristic: mark bonus days as consumed if their format could help
-        Object.keys(bonusPool).forEach(abbr => {
-          if (bonusPool[abbr] > 0) {
-            const bonusDays = bonusDayKeysByAbbr[abbr] || [];
-            for (let i = 0; i < Math.min(bonusPool[abbr], 1); i++) {
-              if (bonusDays[i]) {
-                consumedBonusDayKeys[bonusDays[i]] = weekNum;
+        // Calculate which bonus classes are actually needed to fill the gap
+        const bonusNeeded = {};
+        Object.entries(requirements).forEach(([reqAbbr, required]) => {
+          const eligible = getRequirementEligibleActualAbbrs(reqAbbr);
+          let available = 0;
+          eligible.forEach(abbr => {
+            available += counts[abbr] || 0;
+          });
+          if (available < required) {
+            const gap = required - available;
+            // Find which bonus formats could fill this gap
+            eligible.forEach(abbr => {
+              const bonusCount = bonusPool[abbr] || 0;
+              if (bonusCount > 0 && gap > 0) {
+                const use = Math.min(bonusCount, gap);
+                bonusNeeded[abbr] = (bonusNeeded[abbr] || 0) + use;
               }
-            }
-            bonusPool[abbr] = 0;
+            });
           }
+        });
+        
+        // Mark only the needed bonus days as consumed
+        Object.entries(bonusNeeded).forEach(([abbr, needed]) => {
+          const bonusDays = bonusDayKeysByAbbr[abbr] || [];
+          for (let i = 0; i < needed && i < bonusDays.length; i++) {
+            consumedBonusDayKeys[bonusDays[i]] = weekNum;
+          }
+          bonusPool[abbr] -= needed;
         });
       }
     }
@@ -2739,6 +2757,11 @@ function buildWeekQualificationTooltip(mi, weekNum) {
   if (weekNum < 1 || weekNum > 4) return '';
   const { completed, counts, requirements } = getWeekScore(mi, weekNum);
   if (!requirements) return '';
+  
+  // Get bonus compensation info
+  const plan = getMemberWeekPlan(mi);
+  const weekPlan = plan.weeks[weekNum];
+  const isCompensated = weekPlan && weekPlan.compensated;
 
   let html = '<div class="tooltip-wrapper">';
   html += `<div class="tooltip-head">📋 Week ${weekNum} Qualification</div>`;
@@ -2791,6 +2814,32 @@ function buildWeekQualificationTooltip(mi, weekNum) {
   
   rows.forEach(row => html += row.html);
   
+  // Show bonus compensation info if applicable
+  if (isCompensated) {
+    html += '<div class="tooltip-section-label" style="margin-top: 8px; color: #f59e0b;">🎁 Bonus Compensation</div>';
+    
+    // Calculate which classes from bonus are being used
+    let bonusUsedCount = 0;
+    const bonusFormats = [];
+    for (let i = 0; i < STICKERS.length; i++) {
+      const abbr = STICKERS[i].abbr;
+      const bonusCount = plan.remainingBonus[abbr] || 0;
+      const originalBonus = getBonusWeekClasses(mi)[abbr] || 0;
+      const used = originalBonus - bonusCount;
+      if (used > 0) {
+        bonusUsedCount += used;
+        bonusFormats.push(`${used}× ${abbr}`);
+      }
+    }
+    
+    if (bonusFormats.length > 0) {
+      html += `<div style="padding: 6px; background: rgba(245, 158, 11, 0.1); border-radius: 4px; border-left: 3px solid #f59e0b;">`;
+      html += `<div style="font-size: 9px; color: #d97706; margin-bottom: 4px; font-weight: 600;">Classes Used from Bonus:</div>`;
+      html += `<div style="font-size: 10px; color: #92400e;">${bonusFormats.join(', ')}</div>`;
+      html += `</div>`;
+    }
+  }
+  
   html += '<div class="tooltip-section-label">Overall Progress</div>';
   const overallPercent = Math.min(100, (totalDone / totalRequired) * 100);
   html += `<div style="padding: 6px; background: rgba(255,255,255,0.03); border-radius: 4px; border-left: 3px solid #64b5ff;">`;
@@ -2800,8 +2849,11 @@ function buildWeekQualificationTooltip(mi, weekNum) {
   html += `<div style="font-weight: 700; color: #64b5ff; min-width: 50px; text-align: right;">${totalDone}/${totalRequired}</div>`;
   html += `</div></div>`;
   
+  let statusText = completed ? '✓ QUALIFIED' : '✗ NOT QUALIFIED';
+  if (isCompensated) statusText += ' (with Bonus)';
+  
   html += `<div class="tooltip-footer ${completed ? 'qualified-status' : 'not-qualified-status'}">`;
-  html += completed ? '✓ QUALIFIED' : '✗ NOT QUALIFIED';
+  html += statusText;
   html += '</div>';
   html += '</div>';
 
@@ -3456,6 +3508,90 @@ if (loader) loader.classList.add('hidden');
 renderLegend();
 refreshBoard();
 positionScorePillTooltips();
+
+// ── EXPORT FUNCTIONALITY ──
+function getQualifiedMembersData() {
+  const qualified = [];
+  MEMBERS.forEach((m, mi) => {
+    const score = getScore(mi);
+    if (score >= 4) {
+      const totalClasses = getTotalClasses(mi);
+      const required = getTotalClassesRequired(mi);
+      qualified.push({
+        name: `${m.first} ${m.last}`,
+        location: m.loc,
+        level: 'Beginner',
+        score: score,
+        classesCompleted: totalClasses,
+        classesRequired: required,
+        email: m.email || '',
+      });
+    }
+  });
+  return qualified;
+}
+
+function generateCSV(data, level = 'Beginner') {
+  if (!data || data.length === 0) return '';
+  
+  const headers = ['Name', 'Location', 'Level', 'Score', 'Classes Completed', 'Classes Required', 'Email'];
+  const rows = data.map(m => [
+    `"${m.name}"`,
+    `"${m.location}"`,
+    `"${m.level}"`,
+    m.score,
+    m.classesCompleted,
+    m.classesRequired,
+    `"${m.email}"`,
+  ]);
+  
+  return [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+}
+
+function exportQualifiedMembers(format = 'csv') {
+  const qualified = getQualifiedMembersData();
+  
+  if (qualified.length === 0) {
+    alert('No qualified members to export');
+    return;
+  }
+  
+  const csv = generateCSV(qualified);
+  const timestamp = new Date().toISOString().split('T')[0];
+  const filename = `qualified-members-beginner-${timestamp}.csv`;
+  
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+function exportQualifiedMembersJSON() {
+  const qualified = getQualifiedMembersData();
+  
+  if (qualified.length === 0) {
+    alert('No qualified members to export');
+    return;
+  }
+  
+  const timestamp = new Date().toISOString().split('T')[0];
+  const filename = `qualified-members-beginner-${timestamp}.json`;
+  
+  const blob = new Blob([JSON.stringify(qualified, null, 2)], { type: 'application/json' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
 </script>
 </body>
 </html>

@@ -1640,6 +1640,7 @@ tr.data-row.hidden {
     <div id="data-status" class="data-status"></div>
     <button onclick="fetchAndSeedCheckins()" id="refresh-btn" class="refresh-btn">↻ Refresh</button>
     <button onclick="openSettingsModal()" id="settings-btn" class="refresh-btn settings-btn">⚙ Settings</button>
+    <button onclick="exportQualifiedMembers()" class="refresh-btn" title="Export qualified members as CSV">📥 Export</button>
     <div class="qualification-toggle">
       <label class="toggle-pill" for="mat-as-cardio-toggle">
         <input type="checkbox" id="mat-as-cardio-toggle">
@@ -2510,6 +2511,11 @@ function buildWeekQualificationTooltip(mi, weekNum) {
   if (weekNum < 1 || weekNum > 4) return '';
   const { completed, counts, requirements } = getWeekScore(mi, weekNum);
   if (!requirements) return '';
+  
+  // Get bonus compensation info
+  const plan = getMemberWeekPlan(mi);
+  const weekPlan = plan.weeks[weekNum];
+  const isCompensated = weekPlan && weekPlan.compensated;
 
   // Build table for formats done vs required
   let html = '<div class="tooltip-table-wrapper">';
@@ -2547,7 +2553,34 @@ function buildWeekQualificationTooltip(mi, weekNum) {
     });
   
   html += '</tbody></table>';
-  html += `<div class="tooltip-footer">${completed ? '<span style="color: #22c55e; font-weight: 700;">✓ QUALIFIED</span>' : '<span style="color: #ef4444; font-weight: 700;">✗ NOT QUALIFIED</span>'}</div>`;
+  
+  // Show bonus compensation info if applicable
+  if (isCompensated) {
+    html += '<div style="margin-top: 8px; padding: 8px; background: rgba(245, 158, 11, 0.1); border-radius: 4px; border-left: 3px solid #f59e0b;">';
+    html += '<div style="font-size: 11px; color: #d97706; margin-bottom: 4px; font-weight: 600;">🎁 Bonus Classes Used:</div>';
+    
+    // Calculate which classes from bonus are being used
+    const bonusFormats = [];
+    for (let i = 0; i < STICKERS.length; i++) {
+      const abbr = STICKERS[i].abbr;
+      const bonusCount = plan.remainingBonus[abbr] || 0;
+      const originalBonus = plan.weeks[weekNum]?.bonusUsedCounts?.[abbr] || 0;
+      if (originalBonus > 0) {
+        bonusFormats.push(`${originalBonus}× ${abbr}`);
+      }
+    }
+    
+    if (bonusFormats.length > 0) {
+      html += `<div style="font-size: 10px; color: #92400e;">${bonusFormats.join(', ')}</div>`;
+    }
+    html += '</div>';
+  }
+  
+  let statusTxt = completed ? '<span style="color: #22c55e; font-weight: 700;">✓ QUALIFIED' : '<span style="color: #ef4444; font-weight: 700;">✗ NOT QUALIFIED';
+  if (isCompensated) statusTxt += ' (with Bonus)';
+  statusTxt += '</span>';
+  
+  html += `<div class="tooltip-footer">${statusTxt}</div>`;
   html += '</div>';
 
   return html;
@@ -3817,6 +3850,60 @@ if (loader) loader.classList.add('hidden');
 renderLegend();
 refreshBoard();
 positionScorePillTooltips();
+
+function getQualifiedMembersData() {
+  const qualified = [];
+  MEMBERS.forEach((m, mi) => {
+    const score = getScore(mi);
+    if (score >= 4) {
+      qualified.push({
+        name: `${m.first} ${m.last}`,
+        location: m.loc,
+        level: 'Advanced',
+        score: score,
+        classesCompleted: getTotalClasses(mi),
+        classesRequired: getTotalClassesRequired(mi),
+        email: m.email || '',
+      });
+    }
+  });
+  return qualified;
+}
+
+function generateCSV(data) {
+  const headers = ['Name', 'Location', 'Level', 'Score', 'Classes Completed', 'Classes Required', 'Email'];
+  const rows = data.map(d => [
+    `"${d.name}"`,
+    `"${d.location}"`,
+    `"${d.level}"`,
+    d.score,
+    d.classesCompleted,
+    d.classesRequired,
+    `"${d.email}"`,
+  ]);
+  const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+  return csv;
+}
+
+function exportQualifiedMembers() {
+  const qualified = getQualifiedMembersData();
+  if (qualified.length === 0) {
+    alert('No qualified members to export');
+    return;
+  }
+  const csv = generateCSV(qualified);
+  const timestamp = new Date().toISOString().split('T')[0];
+  const filename = `qualified-members-advanced-${timestamp}.csv`;
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
 </script>
 </body>
 </html>

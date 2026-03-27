@@ -1545,17 +1545,20 @@ const qualificationSettings = {
 };
 const qualificationToggleEl = document.getElementById('mat-as-cardio-toggle');
 const classQualificationToggleEl = document.getElementById('class-diff-qualification-toggle');
-const CARDIO_QUALIFICATION_FORMATS = ['CB', 'CBP', 'HIIT', 'PC', 'BBB', 'AMP'];
+// ── INTERCHANGEABLE FORMATS ──
+// CARDIO: Cardio Barre, PowerCycle, HIIT, Cardio Barre Plus, Amped Up, Back Body Blaze, Trainer's Choice
+const CARDIO_QUALIFICATION_FORMATS = ['CB', 'CBP', 'HIIT', 'PC', 'BBB', 'AMP', 'TC'];
+// STRENGTH: FIT, Strength Lab
 const STRENGTH_QUALIFICATION_FORMATS = ['LAB', 'FIT'];
 const QUALIFIED_DISPLAY_ORDER = ['CARDIO', 'STRENGTH'];
 
 // ── CLASS EQUIVALENCY GROUPS ──
 // Classes within a group are interchangeable when checking weekly requirements.
 // Group A: Strength-type  (FIT ↔ LAB)
-// Group B: Cardio-type    (CB ↔ BBB ↔ HIIT ↔ AMP ↔ CBP ↔ PC)
+// Group B: Cardio-type    (CB ↔ BBB ↔ HIIT ↔ AMP ↔ CBP ↔ PC ↔ TC)
 const EQUIV_GROUPS = [
   new Set(['FIT', 'LAB']),
-  new Set(['CB', 'BBB', 'HIIT', 'AMP', 'CBP', 'PC']),
+  new Set(['CB', 'BBB', 'HIIT', 'AMP', 'CBP', 'PC', 'TC']),
 ];
 
 function getEquivGroup(abbr) {

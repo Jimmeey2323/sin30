@@ -4900,38 +4900,294 @@ function showExportOptions() {
   }
 }
 
-function exportQualifiedMembers() {
-  exportToCSV();
+function getDayByDayBreakdown(mi) {
+  const memberStates = state[mi];
+  const plan = getMemberWeekPlan(mi);
+  const dayRows = [];
+
+  days.forEach((day) => {
+    if (day.num > 33) return;
+
+    const emoji = memberStates[day.key];
+    const isBonus = day.num >= 28;
+    const classAbbr = emoji ? getStickerAbbr(emoji) : '-';
+    const isConsumedBonus = emoji && isBonus && plan.consumedBonusDayKeys[day.key];
+
+    dayRows.push({
+      dayNum: day.num,
+      dayLabel: day.label,
+      class: classAbbr,
+      isBonus,
+      bonusUsedForWeek: isConsumedBonus ? `Week ${isConsumedBonus}` : '-'
+    });
+  });
+
+  return dayRows;
 }
 
-function getAdvancedStats() {
-  return getParticipantStats().map(member => ({
-    ...member,
-    level: member.level || 'Advanced',
-    week1Status: member.weekDetails?.[0]?.qualified ? '✓' : '✗',
-    week2Status: member.weekDetails?.[1]?.qualified ? '✓' : '✗',
-    week3Status: member.weekDetails?.[2]?.qualified ? '✓' : '✗',
-    week4Status: member.weekDetails?.[3]?.qualified ? '✓' : '✗',
-  }));
+function getDisqualificationReason(mi) {
+  const score = getScore(mi);
+  if (score >= 4) return '';
+
+  const plan = getMemberWeekPlan(mi);
+  const reasons = [];
+
+  for (let w = 1; w <= 4; w++) {
+    if (!plan.weeks[w] || plan.weeks[w].finalQualified) continue;
+    const week = plan.weeks[w];
+    const missing = [];
+    Object.entries(week.requirements || {}).forEach(([fmt, req]) => {
+      const group = getEquivGroup(fmt);
+      let available = 0;
+      if (group) {
+        group.forEach(f => { available += week.counts[f] || 0; });
+      } else {
+        available = week.counts[fmt] || 0;
+      }
+      if (available < req) {
+        missing.push(`${fmt}: ${available}/${req}`);
+      }
+    });
+    if (missing.length > 0) {
+      reasons.push(`Week ${w}: ${missing.join(', ')}`);
+    }
+  }
+
+  return reasons.join(' | ') || 'Insufficient classes across weeks';
 }
 
 function getDetailedMemberExportData() {
-  return getParticipantStatsEnhanced().map(member => ({
+  const allData = [];
+
+  MEMBERS.forEach((m, mi) => {
+    const score = getScore(mi);
+    const plan = getMemberWeekPlan(mi);
+    const bonusClasses = getBonusWeekClasses(mi);
+    const dayByDay = getDayByDayBreakdown(mi);
+    const status = score >= 4 ? 'QUALIFIED' : 'DISQUALIFIED';
+    const disqualReason = score < 4 ? getDisqualificationReason(mi) : '';
+
+    let bonusUsedSummary = '';
+    const usedFormats = [];
+    Object.entries(bonusClasses).forEach(([fmt, total]) => {
+      const remaining = plan.remainingBonus?.[fmt] || 0;
+      const used = total - remaining;
+      if (used > 0) {
+        usedFormats.push(`${fmt}(${used})`);
+      }
+    });
+    bonusUsedSummary = usedFormats.length > 0 ? usedFormats.join(', ') : 'None';
+
+    const totalClasses = getTotalClasses(mi);
+    const required = getTotalClassesRequired(mi);
+    const reqs = getRequirementsForLocation(m.loc);
+
+    let qualifCriteria = '';
+    for (let week = 1; week <= 4; week++) {
+      if (reqs[week]) {
+        const reqList = Object.entries(reqs[week]).map(([fmt, cnt]) => `${fmt}×${cnt}`).join(',');
+        qualifCriteria += `Week${week}:(${reqList})|`;
+      }
+    }
+    qualifCriteria = qualifCriteria.slice(0, -1);
+
+    const dayColumns = {};
+    dayByDay.forEach(d => {
+      const dayKey = `Day${d.dayNum}`;
+      if (d.class !== '-') {
+        if (d.isBonus && d.bonusUsedForWeek !== '-') {
+          dayColumns[dayKey] = `${d.class}*Week${d.bonusUsedForWeek.substring(5)}`;
+        } else {
+          dayColumns[dayKey] = d.class;
+        }
+      } else {
+        dayColumns[dayKey] = '-';
+      }
+    });
+
+    allData.push({
+      name: `${m.first} ${m.last}`,
+      location: m.loc,
+      level: 'Advanced',
+      email: m.email || '',
+      qualification: status,
+      score,
+      qualificationCriteria: qualifCriteria,
+      week1Status: plan.weeks[1]?.finalQualified ? '✓' : '✗',
+      week2Status: plan.weeks[2]?.finalQualified ? '✓' : '✗',
+      week3Status: plan.weeks[3]?.finalQualified ? '✓' : '✗',
+      week4Status: plan.weeks[4]?.finalQualified ? '✓' : '✗',
+      totalClasses,
+      totalRequired: required,
+      bonusClassesUsed: bonusUsedSummary,
+      disqualReason,
+      ...dayColumns
+    });
+  });
+
+  return allData;
+}
+
+function generateDetailedCSV(data) {
+  if (!data || data.length === 0) return '';
+
+  const sortedData = data.sort((a, b) => {
+    if (a.location !== b.location) {
+      return a.location.localeCompare(b.location);
+    }
+    if (a.level !== b.level) {
+      return a.level.localeCompare(b.level);
+    }
+    return a.name.localeCompare(b.name);
+  });
+
+  const baseHeaders = [
+    'Location', 'Name', 'Email', 'Level', 'Qualification Status', 'Score',
+    'Week 1 Qualified', 'Week 2 Qualified', 'Week 3 Qualified', 'Week 4 Qualified',
+    'Qualification Criteria', 'Total Classes Done', 'Total Classes Required',
+    'Bonus Classes Used', 'Disqualification Reason'
+  ];
+
+  const dayHeaders = [];
+  for (let i = 1; i <= 33; i++) {
+    dayHeaders.push(`Day ${i}`);
+  }
+
+  const headers = [...baseHeaders, ...dayHeaders];
+
+  const rows = sortedData.map(m => {
+    const baseRow = [
+      `"${m.location}"`,
+      `"${m.name}"`,
+      `"${m.email}"`,
+      `"${m.level}"`,
+      m.qualification,
+      m.score,
+      m.week1Status,
+      m.week2Status,
+      m.week3Status,
+      m.week4Status,
+      `"${m.qualificationCriteria}"`,
+      m.totalClasses,
+      m.totalRequired,
+      `"${m.bonusClassesUsed}"`,
+      `"${m.disqualReason}"`,
+    ];
+
+    const dayRow = [];
+    for (let i = 1; i <= 33; i++) {
+      const dayKey = `Day${i}`;
+      dayRow.push(m[dayKey] || '-');
+    }
+
+    return [...baseRow, ...dayRow];
+  });
+
+  return [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+}
+
+function exportDetailedReport() {
+  const data = getDetailedMemberExportData();
+
+  if (data.length === 0) {
+    alert('No member data to export');
+    return;
+  }
+
+  const csv = generateDetailedCSV(data);
+  const timestamp = new Date().toISOString().split('T')[0];
+  const filename = `detailed-report-advanced-${timestamp}.csv`;
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+function getQualifiedMembersData() {
+  const qualified = [];
+  MEMBERS.forEach((m, mi) => {
+    const score = getScore(mi);
+    if (score >= 4) {
+      const totalClasses = getTotalClasses(mi);
+      const required = getTotalClassesRequired(mi);
+      qualified.push({
+        name: `${m.first} ${m.last}`,
+        location: m.loc,
+        level: 'Advanced',
+        score,
+        classesCompleted: totalClasses,
+        classesRequired: required,
+        email: m.email || '',
+      });
+    }
+  });
+  return qualified;
+}
+
+function generateCSV(data, level = 'Advanced') {
+  if (!data || data.length === 0) return '';
+
+  const headers = ['Name', 'Location', 'Level', 'Score', 'Classes Completed', 'Classes Required', 'Email'];
+  const rows = data.map(m => [
+    `"${m.name}"`,
+    `"${m.location}"`,
+    `"${m.level}"`,
+    m.score,
+    m.classesCompleted,
+    m.classesRequired,
+    `"${m.email}"`,
+  ]);
+
+  return [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+}
+
+function exportQualifiedMembers(format = 'csv') {
+  exportDetailedReport();
+}
+
+function exportQualifiedMembersJSON() {
+  const qualified = getQualifiedMembersData();
+
+  if (qualified.length === 0) {
+    alert('No qualified members to export');
+    return;
+  }
+
+  const timestamp = new Date().toISOString().split('T')[0];
+  const filename = `qualified-members-advanced-${timestamp}.json`;
+
+  const blob = new Blob([JSON.stringify(qualified, null, 2)], { type: 'application/json' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+function getAdvancedStats() {
+  return getDetailedMemberExportData().map(member => ({
     name: member.name,
     email: member.email || '',
     location: member.location,
     level: 'Advanced',
-    qualification: member.fullyQualified ? 'QUALIFIED' : 'DISQUALIFIED',
-    score: member.weeksQualified,
-    qualificationCriteria: member.qualificationMethod || '',
-    week1Status: member.weekDetails?.[0]?.qualified ? '✓' : '✗',
-    week2Status: member.weekDetails?.[1]?.qualified ? '✓' : '✗',
-    week3Status: member.weekDetails?.[2]?.qualified ? '✓' : '✗',
-    week4Status: member.weekDetails?.[3]?.qualified ? '✓' : '✗',
-    totalClasses: member.classesCompleted,
-    totalRequired: member.classesRequired,
-    bonusClassesUsed: 'See advanced report',
-    disqualReason: member.fullyQualified ? '' : 'Review weekly qualification details',
+    classesCompleted: member.totalClasses,
+    classesRequired: member.totalRequired,
+    weeksQualified: member.score,
+    fullyQualified: member.qualification === 'QUALIFIED',
+    status: member.qualification,
+    week1Status: member.week1Status,
+    week2Status: member.week2Status,
+    week3Status: member.week3Status,
+    week4Status: member.week4Status,
   }));
 }
 

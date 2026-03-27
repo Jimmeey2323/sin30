@@ -2453,9 +2453,109 @@ function getTotalBonusClasses(mi) {
   return Object.values(getBonusWeekClasses(mi)).reduce((sum, count) => sum + count, 0);
 }
 
+function getRequirementsForLocation(loc) {
+  return (loc === 'Bandra')
+    ? WEEKLY_REQUIREMENTS_BANDRA
+    : (loc === 'KH')
+      ? WEEKLY_REQUIREMENTS_KH
+      : (loc === 'CNC')
+        ? WEEKLY_REQUIREMENTS_CNC
+        : WEEKLY_REQUIREMENTS_KC;
+}
+
+function cloneCountMap(source = {}) {
+  return Object.fromEntries(
+    Object.entries(source).filter(([, count]) => count > 0)
+  );
+}
+
+function serializeCountMap(source = {}) {
+  return Object.entries(source)
+    .filter(([, count]) => count > 0)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([abbr, count]) => `${abbr}:${count}`)
+    .join('|');
+}
+
+function addCountMaps(base = {}, extra = {}) {
+  const combined = { ...base };
+  Object.entries(extra).forEach(([abbr, count]) => {
+    if (!count) return;
+    combined[abbr] = (combined[abbr] || 0) + count;
+  });
+  return combined;
+}
+
+function subtractCountMaps(base = {}, used = {}) {
+  const remaining = { ...base };
+  Object.entries(used).forEach(([abbr, count]) => {
+    if (!count) return;
+    remaining[abbr] = (remaining[abbr] || 0) - count;
+    if (remaining[abbr] <= 0) delete remaining[abbr];
+  });
+  return remaining;
+}
+
+function totalCountMapValues(source = {}) {
+  return Object.values(source).reduce((sum, count) => sum + count, 0);
+}
+
+function getWeekBonusUsageOptions(counts, requirements, availableBonus) {
+  const slots = buildRequirementSlots(requirements);
+  const initialBase = cloneCountMap(counts);
+  const initialBonus = cloneCountMap(availableBonus);
+  const memo = new Set();
+  const solutions = new Map();
+
+  function search(slotIndex, remainingBase, remainingBonus, usage) {
+    const memoKey = `${slotIndex}|${serializeCountMap(remainingBase)}|${serializeCountMap(remainingBonus)}`;
+    if (memo.has(memoKey)) return;
+    memo.add(memoKey);
+
+    if (slotIndex === slots.length) {
+      const usageKey = serializeCountMap(usage);
+      if (!solutions.has(usageKey)) {
+        solutions.set(usageKey, cloneCountMap(usage));
+      }
+      return;
+    }
+
+    const slot = slots[slotIndex];
+    const eligible = [...slot.eligibleActuals].sort();
+
+    for (const actualAbbr of eligible) {
+      if ((remainingBase[actualAbbr] || 0) > 0) {
+        remainingBase[actualAbbr]--;
+        if (remainingBase[actualAbbr] <= 0) delete remainingBase[actualAbbr];
+        search(slotIndex + 1, remainingBase, remainingBonus, usage);
+        remainingBase[actualAbbr] = (remainingBase[actualAbbr] || 0) + 1;
+      }
+
+      if ((remainingBonus[actualAbbr] || 0) > 0) {
+        remainingBonus[actualAbbr]--;
+        if (remainingBonus[actualAbbr] <= 0) delete remainingBonus[actualAbbr];
+        usage[actualAbbr] = (usage[actualAbbr] || 0) + 1;
+        search(slotIndex + 1, remainingBase, remainingBonus, usage);
+        usage[actualAbbr]--;
+        if (usage[actualAbbr] <= 0) delete usage[actualAbbr];
+        remainingBonus[actualAbbr] = (remainingBonus[actualAbbr] || 0) + 1;
+      }
+    }
+  }
+
+  search(0, initialBase, initialBonus, {});
+
+  return Array.from(solutions.values()).sort((a, b) => {
+    const totalDiff = totalCountMapValues(a) - totalCountMapValues(b);
+    if (totalDiff !== 0) return totalDiff;
+    return serializeCountMap(a).localeCompare(serializeCountMap(b));
+  });
+}
+
 function getMemberWeekPlan(mi) {
   const member = MEMBERS[mi];
   const loc = member ? member.loc : 'KC';
+  const requirementsByWeek = getRequirementsForLocation(loc);
   const bonusPool = {};
   const bonusDayKeysByAbbr = {};
   days.slice(28, 33).forEach(day => {
@@ -2468,69 +2568,126 @@ function getMemberWeekPlan(mi) {
     bonusDayKeysByAbbr[abbr].push(day.key);
   });
 
-  const consumedBonusDayKeys = {};
-  const weeks = {};
-
+  const baseWeeks = {};
   for (let weekNum = 1; weekNum <= 4; weekNum++) {
-    const reqs = (loc === 'Bandra') ? WEEKLY_REQUIREMENTS_BANDRA : (loc === 'KH') ? WEEKLY_REQUIREMENTS_KH : (loc === 'CNC') ? WEEKLY_REQUIREMENTS_CNC : WEEKLY_REQUIREMENTS_KC;
-    const requirements = reqs[weekNum];
+    const requirements = requirementsByWeek[weekNum];
     if (!requirements) continue;
-    
+
     const counts = getWeekCounts(mi, weekNum);
     const baseAnalysis = buildQualificationAnalysis(counts, requirements);
-    const week = {
+    baseWeeks[weekNum] = {
       requirements,
       counts,
       analysis: baseAnalysis,
       completed: baseAnalysis.completed,
       compensated: false,
       finalQualified: baseAnalysis.completed,
+      combinedCounts: { ...counts },
+      bonusUsage: {},
+    };
+  }
+
+  const decisionMemo = new Map();
+
+  function chooseBestPlan(weekNum, remainingBonus) {
+    const memoKey = `${weekNum}|${serializeCountMap(remainingBonus)}`;
+    if (decisionMemo.has(memoKey)) {
+      return decisionMemo.get(memoKey);
+    }
+
+    if (weekNum > 4) {
+      const result = { qualifiedWeeks: 0, totalBonusUsed: 0, weeks: {}, remainingBonus: cloneCountMap(remainingBonus) };
+      decisionMemo.set(memoKey, result);
+      return result;
+    }
+
+    const currentWeek = baseWeeks[weekNum];
+    if (!currentWeek) {
+      const skipped = chooseBestPlan(weekNum + 1, remainingBonus);
+      const result = { ...skipped, weeks: { ...skipped.weeks } };
+      decisionMemo.set(memoKey, result);
+      return result;
+    }
+
+    let bestPlan;
+
+    const nextWithoutBonus = chooseBestPlan(weekNum + 1, remainingBonus);
+    const unresolvedWeek = {
+      ...currentWeek,
+      compensated: false,
+      finalQualified: currentWeek.completed,
+      combinedCounts: { ...currentWeek.counts },
+      bonusUsage: {},
+    };
+    bestPlan = {
+      qualifiedWeeks: (currentWeek.completed ? 1 : 0) + nextWithoutBonus.qualifiedWeeks,
+      totalBonusUsed: nextWithoutBonus.totalBonusUsed,
+      weeks: { ...nextWithoutBonus.weeks, [weekNum]: unresolvedWeek },
+      remainingBonus: cloneCountMap(nextWithoutBonus.remainingBonus),
     };
 
-    if (!baseAnalysis.completed && qualificationSettings.useBonusWeekCompensation) {
-      const combinedCounts = { ...counts };
-      Object.entries(bonusPool).forEach(([abbr, count]) => {
-        if (count > 0) combinedCounts[abbr] = (combinedCounts[abbr] || 0) + count;
+    if (!currentWeek.completed && qualificationSettings.useBonusWeekCompensation) {
+      const usageOptions = getWeekBonusUsageOptions(currentWeek.counts, currentWeek.requirements, remainingBonus);
+
+      usageOptions.forEach(usage => {
+        const nextRemainingBonus = subtractCountMaps(remainingBonus, usage);
+        const nextPlan = chooseBestPlan(weekNum + 1, nextRemainingBonus);
+        const candidate = {
+          qualifiedWeeks: 1 + nextPlan.qualifiedWeeks,
+          totalBonusUsed: totalCountMapValues(usage) + nextPlan.totalBonusUsed,
+          weeks: {
+            ...nextPlan.weeks,
+            [weekNum]: {
+              ...currentWeek,
+              compensated: true,
+              finalQualified: true,
+              combinedCounts: addCountMaps(currentWeek.counts, usage),
+              bonusUsage: { ...usage },
+            },
+          },
+          remainingBonus: cloneCountMap(nextPlan.remainingBonus),
+        };
+
+        const isBetter =
+          candidate.qualifiedWeeks > bestPlan.qualifiedWeeks ||
+          (candidate.qualifiedWeeks === bestPlan.qualifiedWeeks && candidate.totalBonusUsed < bestPlan.totalBonusUsed) ||
+          (candidate.qualifiedWeeks === bestPlan.qualifiedWeeks &&
+            candidate.totalBonusUsed === bestPlan.totalBonusUsed &&
+            serializeCountMap(candidate.remainingBonus).localeCompare(serializeCountMap(bestPlan.remainingBonus)) > 0);
+
+        if (isBetter) {
+          bestPlan = candidate;
+        }
       });
-      const combinedAnalysis = buildQualificationAnalysis(combinedCounts, requirements);
-      if (combinedAnalysis.completed) {
-        week.compensated = true;
-        week.finalQualified = true;
-        
-        // Calculate which bonus classes are actually needed to fill the gap
-        const bonusNeeded = {};
-        Object.entries(requirements).forEach(([reqAbbr, required]) => {
-          const eligible = getRequirementEligibleActualAbbrs(reqAbbr);
-          let available = 0;
-          eligible.forEach(abbr => {
-            available += counts[abbr] || 0;
-          });
-          if (available < required) {
-            const gap = required - available;
-            // Find which bonus formats could fill this gap
-            eligible.forEach(abbr => {
-              const bonusCount = bonusPool[abbr] || 0;
-              if (bonusCount > 0 && gap > 0) {
-                const use = Math.min(bonusCount, gap);
-                bonusNeeded[abbr] = (bonusNeeded[abbr] || 0) + use;
-              }
-            });
-          }
-        });
-        
-        // Mark only the needed bonus days as consumed
-        Object.entries(bonusNeeded).forEach(([abbr, needed]) => {
-          const bonusDays = bonusDayKeysByAbbr[abbr] || [];
-          for (let i = 0; i < needed && i < bonusDays.length; i++) {
-            consumedBonusDayKeys[bonusDays[i]] = weekNum;
-          }
-          bonusPool[abbr] -= needed;
-        });
-      }
     }
-    weeks[weekNum] = week;
+
+    decisionMemo.set(memoKey, bestPlan);
+    return bestPlan;
   }
-  return { weeks, consumedBonusDayKeys, remainingBonus: bonusPool };
+
+  const chosenPlan = chooseBestPlan(1, cloneCountMap(bonusPool));
+  const consumedBonusDayKeys = {};
+  const availableDayKeysByAbbr = Object.fromEntries(
+    Object.entries(bonusDayKeysByAbbr).map(([abbr, dayKeys]) => [abbr, [...dayKeys]])
+  );
+
+  for (let weekNum = 1; weekNum <= 4; weekNum++) {
+    const week = chosenPlan.weeks[weekNum];
+    if (!week || !week.bonusUsage) continue;
+
+    Object.entries(week.bonusUsage).forEach(([abbr, needed]) => {
+      const dayKeys = availableDayKeysByAbbr[abbr] || [];
+      for (let i = 0; i < needed && dayKeys.length; i++) {
+        consumedBonusDayKeys[dayKeys.shift()] = weekNum;
+      }
+    });
+  }
+
+  return {
+    weeks: chosenPlan.weeks,
+    consumedBonusDayKeys,
+    remainingBonus: chosenPlan.remainingBonus,
+  };
 }
 
 function getWeekCounts(mi, weekNum) {
@@ -2556,24 +2713,18 @@ function computeBonusCompensationWeek(mi, weekNum) {
     return { canCompensate: false, bonusCounts: {}, combinedCounts: {} };
   }
 
+  const plan = getMemberWeekPlan(mi);
+  const weekPlan = plan.weeks[weekNum];
   const base = getWeekScore(mi, weekNum);
-  if (base.completed) {
+  if (!weekPlan || base.completed) {
     return { canCompensate: false, bonusCounts: {}, combinedCounts: base.counts };
   }
 
-  const bonusCounts = getBonusWeekClasses(mi);
-  const combinedCounts = { ...base.counts };
-  Object.entries(bonusCounts).forEach(([abbr, count]) => {
-    combinedCounts[abbr] = (combinedCounts[abbr] || 0) + count;
-  });
-
-  const compensationAnalysis = buildQualificationAnalysis(combinedCounts, base.requirements);
-
   return {
-    canCompensate: !!compensationAnalysis.completed,
-    bonusCounts,
-    combinedCounts,
-    compensationAnalysis,
+    canCompensate: !!weekPlan.compensated,
+    bonusCounts: weekPlan.bonusUsage || {},
+    combinedCounts: weekPlan.combinedCounts || base.counts,
+    compensationAnalysis: weekPlan.analysis,
   };
 }
 
@@ -2718,7 +2869,7 @@ function getWeekScore(mi, weekNum) {
   if (!weekDays) return { completed: false, counts: {} };
 
   const loc = MEMBERS[mi] ? MEMBERS[mi].loc : 'KC';
-  const reqs = (loc === 'Bandra') ? WEEKLY_REQUIREMENTS_BANDRA : WEEKLY_REQUIREMENTS_KC;
+  const reqs = getRequirementsForLocation(loc);
   const requirements = reqs[weekNum];
   if (!requirements) return { completed: false, counts: {} };
 
@@ -2843,15 +2994,65 @@ function buildQualifiedFormatBreakdown(qualificationAnalysis) {
   return lines;
 }
 
+function getWeekRequirementProgress(requirements, counts) {
+  return Object.entries(requirements)
+    .sort((a, b) => {
+      const order = [...STICKERS.map(s => s.abbr), 'CBP', 'TC'];
+      return order.indexOf(a[0]) - order.indexOf(b[0]);
+    })
+    .map(([reqAbbr, required]) => {
+      const eligible = getRequirementEligibleActualAbbrs(reqAbbr);
+      const available = eligible.reduce((sum, actualAbbr) => sum + (counts[actualAbbr] || 0), 0);
+      const shortfall = Math.max(0, required - available);
+      return { reqAbbr, required, available, shortfall, eligible };
+    });
+}
+
+function buildWeekDisqualificationReasons(requirements, counts) {
+  return getWeekRequirementProgress(requirements, counts)
+    .filter(item => item.shortfall > 0)
+    .map(item => {
+      const label = getRequirementLabel(item.reqAbbr);
+      const eligibleText = item.reqAbbr === 'TC'
+        ? 'any class'
+        : item.eligible.length > 1
+          ? item.eligible.join(' / ')
+          : item.reqAbbr;
+      return {
+        label,
+        text: `${label}: short by ${item.shortfall} (${item.available}/${item.required}; counts ${eligibleText})`,
+      };
+    });
+}
+
+function buildBonusUsageDetails(bonusUsage = {}) {
+  return Object.entries(bonusUsage)
+    .filter(([, count]) => count > 0)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([abbr, count]) => {
+      const info = STICKER_LABEL[abbr] || { emoji: '', label: abbr };
+      return {
+        abbr,
+        count,
+        emoji: info.emoji || '•',
+        label: info.label || abbr,
+      };
+    });
+}
+
 function buildWeekQualificationTooltip(mi, weekNum) {
   if (weekNum < 1 || weekNum > 4) return '';
-  const { completed, counts, requirements } = getWeekScore(mi, weekNum);
-  if (!requirements) return '';
-  
-  // Get bonus compensation info
   const plan = getMemberWeekPlan(mi);
   const weekPlan = plan.weeks[weekNum];
-  const isCompensated = weekPlan && weekPlan.compensated;
+  if (!weekPlan || !weekPlan.requirements) return '';
+
+  const requirements = weekPlan.requirements;
+  const baseCounts = weekPlan.counts || {};
+  const effectiveCounts = weekPlan.combinedCounts || baseCounts;
+  const completed = !!weekPlan.finalQualified;
+  const isCompensated = !!weekPlan.compensated;
+  const bonusDetails = buildBonusUsageDetails(weekPlan.bonusUsage || {});
+  const disqualReasons = completed ? [] : buildWeekDisqualificationReasons(requirements, effectiveCounts);
 
   let html = '<div class="tooltip-wrapper">';
   html += `<div class="tooltip-head">📋 Week ${weekNum} Qualification</div>`;
@@ -2871,16 +3072,8 @@ function buildWeekQualificationTooltip(mi, weekNum) {
     })
     .forEach(([reqAbbr, required]) => {
       totalRequired += required;
-      const group = getEquivGroup(reqAbbr);
-      let available = 0;
-
-      if (group) {
-        group.forEach(fmt => {
-          available += counts[fmt] || 0;
-        });
-      } else {
-        available = counts[reqAbbr] || 0;
-      }
+      const eligible = getRequirementEligibleActualAbbrs(reqAbbr);
+      const available = eligible.reduce((sum, actualAbbr) => sum + (effectiveCounts[actualAbbr] || 0), 0);
       
       const done = Math.min(available, required);
       totalDone += done;
@@ -2896,29 +3089,36 @@ function buildWeekQualificationTooltip(mi, weekNum) {
     });
   
   html += '</div></div>';
+
+  if (!completed) {
+    html += '<div class="tooltip-section">';
+    html += '<div class="tooltip-section-header" style="border-left-color: #f87171; color: #ef4444;">⚠ Why this week is not qualified</div>';
+    if (disqualReasons.length) {
+      html += '<div style="display:grid; gap:6px; font-size:11px; color:#7f1d1d;">';
+      disqualReasons.forEach(reason => {
+        html += `<div>• ${reason.text}</div>`;
+      });
+      html += '</div>';
+    } else {
+      html += '<div style="font-size: 10px; color: #7f1d1d; opacity: 0.7;">Requirements were not fully met.</div>';
+    }
+    html += '</div>';
+  }
   
   // Bonus compensation section
   if (isCompensated) {
     html += '<div class="tooltip-bonus-section">';
     html += '<div class="tooltip-bonus-header">🎁 Bonus Compensation Used</div>';
     html += '<div class="tooltip-bonus-items">';
-    
-    let bonusFound = false;
-    for (let i = 0; i < STICKERS.length; i++) {
-      const abbr = STICKERS[i].abbr;
-      const bonusCount = plan.remainingBonus[abbr] || 0;
-      const originalBonus = getBonusWeekClasses(mi)[abbr] || 0;
-      const used = originalBonus - bonusCount;
-      if (used > 0) {
-        bonusFound = true;
+
+    if (bonusDetails.length) {
+      bonusDetails.forEach(({ abbr, count, emoji, label }) => {
         html += `<div class="tooltip-bonus-item">`;
-        html += `<span style="font-weight: 700;">${abbr}</span>`;
-        html += `<span style="opacity: 0.8;">→ ${used} class${used !== 1 ? 'es' : ''} used</span>`;
+        html += `<span style="font-weight: 700;">${emoji} ${label}</span>`;
+        html += `<span style="opacity: 0.8;">→ added from bonus as ${count} ${abbr} class${count !== 1 ? 'es' : ''}</span>`;
         html += `</div>`;
-      }
-    }
-    
-    if (!bonusFound) {
+      });
+    } else {
       html += `<div style="font-size: 10px; color: #92400e; opacity: 0.6;">No bonus classes needed for this week</div>`;
     }
     
@@ -2951,8 +3151,12 @@ function buildWeekQualificationTooltip(mi, weekNum) {
 
 function buildSlotTooltip(abbr, label, mi, weekNum, loc) {
   if (!abbr || weekNum < 1 || weekNum > 4) return label;
+  const plan = getMemberWeekPlan(mi);
+  const weekPlan = plan.weeks[weekNum];
   const { counts, requirements } = getWeekScore(mi, weekNum);
-  if (!requirements) return label;
+  if (!requirements || !weekPlan) return label;
+  const isBonusContribution = !!(weekPlan.bonusUsage && weekPlan.bonusUsage[abbr] > 0);
+  const bonusNote = isBonusContribution ? `\nAdded from bonus to qualify Week ${weekNum}` : '';
 
   // TC week: show Trainer's Choice total progress for any non-specific sticker
   if ('TC' in requirements) {
@@ -2965,7 +3169,7 @@ function buildSlotTooltip(abbr, label, mi, weekNum, loc) {
       const specificTotal = Object.entries(requirements).filter(([k]) => k !== 'TC').reduce((s, [, v]) => s + v, 0);
       const totalAttended = Object.values(counts).reduce((s, c) => s + c, 0);
       const tcDone = Math.max(0, totalAttended - specificTotal);
-      return `${label}\nW${weekNum} · Trainer's Choice: ${tcDone}/${tcRequired}${tcDone >= tcRequired ? ' ✓' : ''}`;
+      return `${label}${bonusNote}\nW${weekNum} · Trainer's Choice: ${tcDone}/${tcRequired}${tcDone >= tcRequired ? ' ✓' : ''}`;
     }
   }
 
@@ -2974,7 +3178,7 @@ function buildSlotTooltip(abbr, label, mi, weekNum, loc) {
     const req = requirements[abbr];
     if (req === undefined) return label;
     const done = counts[abbr] || 0;
-    return `${label}\nW${weekNum} · ${abbr}: ${done}/${req}${done >= req ? ' ✓' : ''}`;
+    return `${label}${bonusNote}\nW${weekNum} · ${abbr}: ${done}/${req}${done >= req ? ' ✓' : ''}`;
   }
   const reqClasses = Object.keys(requirements).filter(r => group.has(r));
   if (reqClasses.length === 0) return label;
@@ -2982,7 +3186,7 @@ function buildSlotTooltip(abbr, label, mi, weekNum, loc) {
   let availableInGroup = 0;
   group.forEach(a => { availableInGroup += (counts[a] || 0); });
   const perClass = reqClasses.map(rc => `${rc}: ${counts[rc] || 0}`).join(', ');
-  return `${label}\nW${weekNum} · ${perClass} → ${availableInGroup}/${requiredInGroup} combined${availableInGroup >= requiredInGroup ? ' ✓' : ''}`;
+  return `${label}${bonusNote}\nW${weekNum} · ${perClass} → ${availableInGroup}/${requiredInGroup} combined${availableInGroup >= requiredInGroup ? ' ✓' : ''}`;
 }
 
 // ── STATE PERSISTENCE ──

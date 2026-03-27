@@ -14,7 +14,6 @@
   --ink-muted: #8a8a8a;
   --ink-light: #c8c8c8;
   --accent: #b91c1c;
-  --accent-rgb: 185, 28, 28;
   --accent-light: #fef2f2;
   --accent-mid: #dc2626;
   --border: #e8e6e0;
@@ -921,8 +920,8 @@ td.score-td {
   font-weight: 500;
   white-space: pre-wrap;
   word-wrap: break-word;
-  z-index: 999999;
-  box-shadow: 0 12px 32px rgba(0,0,0,0.35);
+  z-index: 10000;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
   max-width: 400px;
   min-width: 280px;
   line-height: 1.6;
@@ -932,8 +931,6 @@ td.score-td {
   pointer-events: auto;
   margin: 0;
   padding: 0;
-  top: 0 !important;
-  left: 0 !important;
 }
 
 .score-tooltip-content {
@@ -992,8 +989,8 @@ td.score-td {
 }
 
 .score-pill:hover .score-tooltip {
-  display: block !important;
-  /* Smart positioning handled by JavaScript */
+  display: block;
+  /* Smart positioning: check if tooltip would overflow right */
 }
 
 .score-pill {
@@ -1117,47 +1114,19 @@ tbody tr.data-row {
 }
 
 /* ── LOCATION GROUP SEPARATOR ── */
-tr.location-group-header { 
-  animation: none;
-  position: relative;
-}
-tr.location-group-header::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, var(--accent), transparent);
-  opacity: 0.4;
-}
+tr.location-group-header { animation: none; }
 td.location-header-cell {
-  padding: 12px 18px 14px;
-  background: linear-gradient(135deg, var(--accent-light) 0%, rgba(var(--accent-rgb), 0.08) 100%);
+  padding: 10px 18px 12px;
+  background: var(--accent-light);
   border-top: 2px solid var(--border-strong);
   border-bottom: 1px solid var(--border-strong);
-  position: relative;
-  overflow: hidden;
-}
-td.location-header-cell::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-  transition: left 0.5s ease;
-}
-td.location-header-cell:hover::after {
-  left: 100%;
 }
 tr.location-group-header:first-child td.location-header-cell { border-top: none; }
 
 .location-toggle-btn {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   background: none;
   border: none;
   cursor: pointer;
@@ -1167,51 +1136,28 @@ tr.location-group-header:first-child td.location-header-cell { border-top: none;
   padding: 0;
   font-family: inherit;
   text-decoration: none;
-  transition: all 0.2s ease;
-  position: relative;
+  transition: opacity 0.2s ease;
 }
 
 .location-toggle-btn:hover {
-  opacity: 0.8;
-  transform: translateX(2px);
-}
-
-.location-toggle-btn:active {
-  transform: translateX(1px) scale(0.98);
+  opacity: 0.7;
 }
 
 .location-toggle-icon {
   display: inline-block;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   flex-shrink: 0;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  font-size: 14px;
-  color: var(--accent);
-  background: rgba(var(--accent-rgb), 0.1);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  transition: transform 0.2s ease;
+  font-size: 12px;
 }
 
 .location-toggle-btn.collapsed .location-toggle-icon {
   transform: rotate(-90deg);
-  background: rgba(var(--accent-rgb), 0.2);
 }
 
 tr.data-row.hidden {
-  opacity: 0;
-  transform: translateY(-10px);
-  max-height: 0;
-  overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-tr.data-row {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  opacity: 1;
-  transform: translateY(0);
+  display: none;
 }
 
 /* ── DATA STATUS & REFRESH BUTTON ── */
@@ -1239,33 +1185,6 @@ tr.data-row {
 }
 .refresh-btn:hover { background: var(--border); }
 .refresh-btn:disabled { opacity: 0.45; cursor: default; }
-
-/* ── GROUP CONTROL BUTTONS ── */
-.group-control-btn {
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  background: var(--off);
-  border: 1px solid var(--border-strong);
-  border-radius: 5px;
-  padding: 4px 10px;
-  cursor: pointer;
-  color: var(--ink);
-  transition: all 0.15s;
-  font-family: 'Syne', sans-serif;
-}
-.group-control-btn:hover { 
-  background: var(--border);
-  transform: translateY(-1px);
-}
-.group-control-btn:active {
-  transform: translateY(0);
-}
-.group-control-btn:disabled { 
-  opacity: 0.45; 
-  cursor: default;
-  transform: none;
-}
 .qualification-toggle {
   margin-top: 10px;
   display: flex;
@@ -1421,13 +1340,13 @@ tr.data-row {
     </div>
     <div id="data-status" class="data-status"></div>
     <button onclick="fetchAndSeedCheckins()" id="refresh-btn" class="refresh-btn">↻ Refresh</button>
-    <button onclick="openFormatSettingsModal()" id="settings-btn" class="refresh-btn" style="margin-left: 8px;">⚙ Format Rules</button>
-    <div class="group-controls" style="margin-left: 12px; display: inline-flex; gap: 6px; align-items: center;">
-      <button onclick="collapseAllGroups()" id="collapse-all-btn" class="group-control-btn" title="Collapse All Groups">▲ Collapse All</button>
-      <button onclick="expandAllGroups()" id="expand-all-btn" class="group-control-btn" title="Expand All Groups">▼ Expand All</button>
-    </div>
     <div class="qualification-toggle">
-      <label class="toggle-pill" for="class-diff-qualification-toggle">
+      <label class="toggle-pill" for="mat-as-cardio-toggle">
+        <input type="checkbox" id="mat-as-cardio-toggle">
+        <span class="toggle-slider"></span>
+        <span class="toggle-text">Count Mat 57 as Cardio</span>
+      </label>
+      <label class="toggle-pill" for="class-diff-qualification-toggle" style="margin-left: 12px;">
         <input type="checkbox" id="class-diff-qualification-toggle">
         <span class="toggle-slider"></span>
         <span class="toggle-text">Qualify within Classes: </span>
@@ -1521,47 +1440,12 @@ STICKER_LABEL['CBP'] = { emoji: '🫀', label: 'Cardio Barre Plus' };
 // Trainer's Choice — wildcard, any class
 STICKER_LABEL['TC'] = { emoji: '🎲', label: "Trainer's Choice" };
 
-// ── FORMAT INTERCHANGEABILITY SETTINGS (Initialize Early) ──
-let userFormatRules = {};
-
-function initializeFormatRules() {
-  const saved = localStorage.getItem('sin30_format_rules_advanced');
-  if (saved) {
-    try {
-      userFormatRules = JSON.parse(saved);
-    } catch (e) {
-      console.warn('Failed to parse format rules, using defaults');
-      userFormatRules = {
-        Mat_interchangeable: true,
-        B57_interchangeable: true,
-        PC_interchangeable: true,
-        REC_interchangeable: true
-      };
-    }
-  } else {
-    userFormatRules = {
-      Mat_interchangeable: true,
-      B57_interchangeable: true,
-      PC_interchangeable: true,
-      REC_interchangeable: true
-    };
-  }
-}
-
-// ── FORMAT INTERCHANGEABILITY SETTINGS ──
-// New flexible format rules system (declare early!)
-let customFormatGroups = [];
-let EQUIV_GROUPS = [];  // Will be populated by initializeFormatGroups()
-
-// Initialize format rules immediately
-initializeFormatGroups();
-
 // ── WEEKLY REQUIREMENTS (Advanced) — Kemps Corner ──
 const WEEKLY_REQUIREMENTS_KC = {
   1: { 'CB': 2, 'FIT': 1, 'PC': 1, 'LAB': 1 },       // 5 total
   2: { 'CB': 2, 'LAB': 2, 'PC': 1 },                  // 5 total (CB or BBB, LAB or FIT substitutes)
   3: { 'CB': 2, 'LAB': 2, 'PC': 2 },                  // 6 total (CB or AU/BBB substitutes)
-  4: { 'CB': 2, 'PC': 1, 'LAB': 3 }                   // 6 total
+  4: { 'CB': 2, 'LAB': 3 }                            // 5-6 total (CB or AU, LAB flexible)
 };
 // ── WEEKLY REQUIREMENTS (Advanced) — C & C (Bengaluru) ──
 const WEEKLY_REQUIREMENTS_BANDRA = {
@@ -1606,8 +1490,7 @@ const WEEK_COLORS = ['#2d5a27','#1a4d6e','#a05c2d','#6b3fa0','#c0392b'];
 
 // ── STATE ──
 // state[memberIdx][dayKey] = stickerEmoji or null
-// Declare state early so it's available when fetchAndSeedCheckins() is called
-let state = MEMBERS.map(() => ({}));
+const state = MEMBERS.map(() => ({}));
 
 // ── CELL TOOLTIP ──
 const cellTooltip = document.getElementById('cell-tooltip');
@@ -1646,27 +1529,107 @@ function getStickerAbbr(emoji) {
 
 const BOARD_SETTINGS_KEY = 'sin30_advanced_settings';
 const qualificationSettings = {
+  matCountsAsCardio: false,
   useClassDifferenceQualification: false,
   classToleranceValue: 3,
+  useBonusWeekCompensation: true, // Always active
+  interchangeableGroups: {
+    'Cardio': ['CB', 'PC', 'HIIT', 'CBP', 'AMP', 'BBB', 'TC'],
+    'Strength': ['FIT', 'LAB'],
+  },
 };
+const qualificationToggleEl = document.getElementById('mat-as-cardio-toggle');
 const classQualificationToggleEl = document.getElementById('class-diff-qualification-toggle');
-// ── INTERCHANGEABLE FORMATS ──
-// CARDIO: Cardio Barre, HIIT, Amped Up, Cardio Barre Plus, Trainer's Choice
-// (NOTE: PowerCycle is NOT interchangeable - must be matched exactly)
-const CARDIO_QUALIFICATION_FORMATS = ['CB', 'HIIT', 'AMP', 'CBP', 'TC'];
-// STRENGTH: FIT, Strength Lab, Back Body Blaze
-const STRENGTH_QUALIFICATION_FORMATS = ['LAB', 'FIT', 'BBB'];
+const CARDIO_QUALIFICATION_FORMATS = ['CB', 'CBP', 'HIIT', 'PC', 'BBB', 'AMP'];
+const STRENGTH_QUALIFICATION_FORMATS = ['LAB', 'FIT'];
 const QUALIFIED_DISPLAY_ORDER = ['CARDIO', 'STRENGTH'];
 
-// ── CLASS EQUIVALENCY GROUPS ──
-// Classes within a group are interchangeable when checking weekly requirements.
-// Group A: Strength-type  (FIT ↔ LAB ↔ BBB)
-// Group B: Cardio-type    (CB ↔ HIIT ↔ AMP ↔ CBP ↔ TC)
-// NOTE: PC (PowerCycle) and specific formats (B57, Mat, REC) are NOT interchangeable
-// EQUIV_GROUPS is now declared early and populated by initializeFormatGroups()
+// ── CLASS EQUIVALENCY GROUPS ── (Built from interchangeableGroups)
+let EQUIV_GROUPS = [
+  new Set(qualificationSettings.interchangeableGroups['Strength']),
+  new Set(qualificationSettings.interchangeableGroups['Cardio']),
+];
 
 function getEquivGroup(abbr) {
   return EQUIV_GROUPS.find(g => g.has(abbr)) || null;
+}
+
+// ── BONUS WEEK COMPENSATION LOGIC ──
+function getBonusWeekDays() {
+  // Days 29-33 (Mar 23-27) - indices 28-32
+  return days.slice(28, 33);
+}
+
+function getBonusWeekClasses(mi) {
+  const bonusDays = getBonusWeekDays();
+  const counts = {};
+  bonusDays.forEach(day => {
+    const emoji = state[mi][day.key];
+    if (emoji) {
+      const abbr = getStickerAbbr(emoji);
+      if (abbr) {
+        counts[abbr] = (counts[abbr] || 0) + 1;
+      }
+    }
+  });
+  return counts;
+}
+
+function applyBonusWeekCompensation(weekCounts, requirements, bonusCounts) {
+  if (!qualificationSettings.useBonusWeekCompensation) {
+    return { compensated: weekCounts, bonusUsed: {} };
+  }
+  
+  const compensated = { ...weekCounts };
+  const bonusUsed = {};
+  
+  // Check each requirement for shortfalls
+  Object.entries(requirements).forEach(([reqAbbr, required]) => {
+    if (reqAbbr === 'TC') return; // Skip Trainer's Choice
+    
+    // Find what we have for this requirement
+    const group = getEquivGroup(reqAbbr);
+    let available = 0;
+    
+    if (group) {
+      // Count from the whole group
+      group.forEach(abbr => {
+        available += compensated[abbr] || 0;
+      });
+    } else {
+      // Specific class requirement
+      available = compensated[reqAbbr] || 0;
+    }
+    
+    // If we're short, check bonus week
+    if (available < required) {
+      const shortfall = required - available;
+      if (group) {
+        // Try to fill shortfall from bonus classes in same group
+        let filled = 0;
+        group.forEach(abbr => {
+          if (filled >= shortfall) return;
+          const bonusAvail = bonusCounts[abbr] || 0;
+          const canUse = Math.min(bonusAvail, shortfall - filled);
+          if (canUse > 0) {
+            compensated[abbr] = (compensated[abbr] || 0) + canUse;
+            bonusUsed[abbr] = (bonusUsed[abbr] || 0) + canUse;
+            filled += canUse;
+          }
+        });
+      } else {
+        // Try to fill shortfall from bonus classes of same type
+        const bonusAvail = bonusCounts[reqAbbr] || 0;
+        const canUse = Math.min(bonusAvail, shortfall);
+        if (canUse > 0) {
+          compensated[reqAbbr] = (compensated[reqAbbr] || 0) + canUse;
+          bonusUsed[reqAbbr] = (bonusUsed[reqAbbr] || 0) + canUse;
+        }
+      }
+    }
+  });
+  
+  return { compensated, bonusUsed };
 }
 
 function getQualifiedDisplayKey(abbr) {
@@ -1678,8 +1641,7 @@ function getQualifiedDisplayKey(abbr) {
 function getActualQualifiedDisplayKey(abbr) {
   if (STRENGTH_QUALIFICATION_FORMATS.includes(abbr)) return 'STRENGTH';
   if (CARDIO_QUALIFICATION_FORMATS.includes(abbr)) return 'CARDIO';
-  // Check if Mat is interchangeable with cardio via format rules
-  if (abbr === 'Mat' && userFormatRules && userFormatRules['Mat_interchangeable']) return 'CARDIO';
+  if (qualificationSettings.matCountsAsCardio && abbr === 'Mat') return 'CARDIO';
   return null;
 }
 
@@ -1702,23 +1664,13 @@ function getQualifiedDisplaySortValue(displayKey) {
 
 function getRequirementEligibleActualAbbrs(reqAbbr) {
   if (reqAbbr === 'TC') return STICKERS.map(s => s.abbr);
-  
-  // Start with the base format
-  let eligibleFormats = [reqAbbr];
-  
-  // Check if this format is part of any custom group
-  customFormatGroups.forEach(group => {
-    if (group.active && group.formats.includes(reqAbbr)) {
-      // Add all formats from this group as eligible
-      group.formats.forEach(format => {
-        if (!eligibleFormats.includes(format)) {
-          eligibleFormats.push(format);
-        }
-      });
-    }
-  });
-  
-  return eligibleFormats;
+  if (STRENGTH_QUALIFICATION_FORMATS.includes(reqAbbr)) return [...STRENGTH_QUALIFICATION_FORMATS];
+  if (CARDIO_QUALIFICATION_FORMATS.includes(reqAbbr)) {
+    return qualificationSettings.matCountsAsCardio
+      ? [...CARDIO_QUALIFICATION_FORMATS, 'Mat']
+      : [...CARDIO_QUALIFICATION_FORMATS];
+  }
+  return [reqAbbr];
 }
 
 function buildRequirementSlots(requirements) {
@@ -1741,98 +1693,67 @@ function buildRequirementSlots(requirements) {
 }
 
 function buildQualificationAnalysis(counts, requirements) {
-  // Keep track of both specific format requirements and their display grouping
-  const requiredByFormat = {};
+  const requiredByDisplay = {};
   Object.entries(requirements).forEach(([reqAbbr, required]) => {
-    requiredByFormat[reqAbbr] = (requiredByFormat[reqAbbr] || 0) + required;
-  });
-
-  // Build requirement slots - ONE SLOT PER SPECIFIC FORMAT REQUIRED
-  const slots = [];
-  Object.entries(requiredByFormat).forEach(([reqAbbr, required]) => {
-    for (let i = 0; i < required; i++) {
-      slots.push({
-        reqAbbr,
-        eligibleActuals: getRequirementEligibleActualAbbrs(reqAbbr),
-      });
+    const displayKey = getQualifiedDisplayKey(reqAbbr);
+    if (displayKey) {
+      requiredByDisplay[displayKey] = (requiredByDisplay[displayKey] || 0) + required;
     }
   });
 
-  // Sort slots: more restrictive (fewer alternatives) first for efficient matching
-  slots.sort((a, b) => {
-    if (a.eligibleActuals.length === 1 && b.eligibleActuals.length > 1) return -1;
-    if (b.eligibleActuals.length === 1 && a.eligibleActuals.length > 1) return 1;
-    return a.eligibleActuals.length - b.eligibleActuals.length;
+  const rawQualifiedDoneByDisplay = {};
+  Object.entries(counts).forEach(([abbr, count]) => {
+    const displayKey = getActualQualifiedDisplayKey(abbr);
+    if (displayKey) {
+      rawQualifiedDoneByDisplay[displayKey] = (rawQualifiedDoneByDisplay[displayKey] || 0) + count;
+    }
   });
 
-  // Available classes from member
+  const slots = buildRequirementSlots(requirements);
   const available = Object.fromEntries(
     Object.entries(counts).filter(([, count]) => count > 0)
   );
 
   let bestMatched = -1;
-  let bestMatchedFormats = {};
+  let bestCompletedByDisplay = {};
 
-  function search(slotIndex, remaining, matchedFormats, matched) {
-    // Pruning: if best possible score is worse than current best, stop
+  function search(slotIndex, remaining, completedByDisplay, matched) {
     if (matched + (slots.length - slotIndex) < bestMatched) return;
 
-    // Base case: all slots checked
     if (slotIndex === slots.length) {
       if (matched > bestMatched) {
         bestMatched = matched;
-        bestMatchedFormats = { ...matchedFormats };
+        bestCompletedByDisplay = { ...completedByDisplay };
       }
       return;
     }
 
     const slot = slots[slotIndex];
 
-    // Try each eligible actual format
     slot.eligibleActuals.forEach(actualAbbr => {
       if ((remaining[actualAbbr] || 0) <= 0) return;
-      
-      // Use this actual to satisfy the requirement
       remaining[actualAbbr]--;
-      matchedFormats[actualAbbr] = (matchedFormats[actualAbbr] || 0) + 1;
-      
-      search(slotIndex + 1, remaining, matchedFormats, matched + 1);
-      
-      // Backtrack
-      matchedFormats[actualAbbr]--;
-      if (!matchedFormats[actualAbbr]) delete matchedFormats[actualAbbr];
+      if (slot.displayKey) {
+        completedByDisplay[slot.displayKey] = (completedByDisplay[slot.displayKey] || 0) + 1;
+      }
+      search(slotIndex + 1, remaining, completedByDisplay, matched + 1);
+      if (slot.displayKey) {
+        completedByDisplay[slot.displayKey]--;
+        if (!completedByDisplay[slot.displayKey]) delete completedByDisplay[slot.displayKey];
+      }
       remaining[actualAbbr]++;
     });
 
-    // Try not matching this slot (for permutations)
-    search(slotIndex + 1, remaining, matchedFormats, matched);
+    search(slotIndex + 1, remaining, completedByDisplay, matched);
   }
 
   search(0, { ...available }, {}, 0);
 
-  // Build display summary (for tooltip)
-  const completedByDisplay = {};
-  Object.entries(bestMatchedFormats).forEach(([fmt, count]) => {
-    const displayKey = getActualQualifiedDisplayKey(fmt);
-    if (displayKey) {
-      completedByDisplay[displayKey] = (completedByDisplay[displayKey] || 0) + count;
-    }
-  });
-
-  const requiredByDisplay = {};
-  Object.entries(requiredByFormat).forEach(([fmt, count]) => {
-    const displayKey = getQualifiedDisplayKey(fmt);
-    if (displayKey) {
-      requiredByDisplay[displayKey] = (requiredByDisplay[displayKey] || 0) + count;
-    }
-  });
-
   return {
     completed: bestMatched === slots.length,
-    completedByDisplay,
+    completedByDisplay: bestCompletedByDisplay,
+    rawQualifiedDoneByDisplay,
     requiredByDisplay,
-    requiredByFormat,
-    matchedFormats: bestMatchedFormats,
   };
 }
 
@@ -1856,174 +1777,39 @@ function isStickerQualifying(abbr, weekNum, loc) {
 function getWeekScore(mi, weekNum) {
   const weekIdx = weekNum - 1;
   const weekDays = weekChunks[weekIdx];
-  if (!weekDays) return { completed: false, counts: {} };
+  if (!weekDays) return { completed: false, counts: {}, bonusUsed: {} };
 
   const loc = MEMBERS[mi] ? MEMBERS[mi].loc : 'KC';
   const reqs = (loc === 'Bandra') ? WEEKLY_REQUIREMENTS_BANDRA : WEEKLY_REQUIREMENTS_KC;
   const requirements = reqs[weekNum];
-  if (!requirements) return { completed: false, counts: {} };
+  if (!requirements) return { completed: false, counts: {}, bonusUsed: {} };
 
-  // Count stickers for this week ONLY
-  const weekCounts = {};
+  // Count stickers for this week
+  const counts = {};
   weekDays.forEach(day => {
     const emoji = state[mi][day.key];
     if (emoji) {
       const abbr = getStickerAbbr(emoji);
       if (abbr) {
-        weekCounts[abbr] = (weekCounts[abbr] || 0) + 1;
+        counts[abbr] = (counts[abbr] || 0) + 1;
       }
     }
   });
 
-  // First check if week qualifies with its own classes
-  const initialAnalysis = buildQualificationAnalysis(weekCounts, requirements);
+  // Try to qualify with regular week classes first
+  let qualificationAnalysis = buildQualificationAnalysis(counts, requirements);
+  let bonusUsed = {};
   
-  if (initialAnalysis.completed) {
-    // Week already qualifies without compensation
-    return { 
-      completed: true, 
-      counts: weekCounts, 
-      requirements, 
-      qualificationAnalysis: initialAnalysis,
-      compensationUsed: false
-    };
+  // If not qualified and bonus compensation is enabled, try to apply bonus classes
+  if (!qualificationAnalysis.completed && qualificationSettings.useBonusWeekCompensation) {
+    const bonusClasses = getBonusWeekClasses(mi);
+    const { compensated, bonusUsed: used } = applyBonusWeekCompensation(counts, requirements, bonusClasses);
+    bonusUsed = used;
+    // Re-evaluate with compensated counts
+    qualificationAnalysis = buildQualificationAnalysis(compensated, requirements);
   }
 
-  // Week doesn't qualify - try bonus day compensation
-  const compensatedAnalysis = applyBonusDayCompensation(mi, weekCounts, requirements);
-  
-  return { 
-    completed: compensatedAnalysis.completed, 
-    counts: compensatedAnalysis.finalCounts, 
-    requirements, 
-    qualificationAnalysis: compensatedAnalysis,
-    compensationUsed: compensatedAnalysis.compensationUsed || false,
-    bonusClassesUsed: compensatedAnalysis.bonusClassesUsed || {}
-  };
-}
-
-// ── BONUS DAY COMPENSATION SYSTEM ──
-function applyBonusDayCompensation(mi, weekCounts, requirements) {
-  // Get bonus day classes (Mar 23-27, days 28-32 in the days array)
-  const bonusCounts = {};
-  const bonusDayDetails = []; // Track which bonus days and classes are used
-  
-  if (days.length > 28) {
-    const bonusDays = days.slice(28, 33); // Mar 23-27 (5 days)
-    bonusDays.forEach(day => {
-      const emoji = state[mi][day.key];
-      if (emoji) {
-        const abbr = getStickerAbbr(emoji);
-        if (abbr) {
-          bonusCounts[abbr] = (bonusCounts[abbr] || 0) + 1;
-          bonusDayDetails.push({ day: day.display, abbr, emoji });
-        }
-      }
-    });
-  }
-
-  // If no bonus classes, return original analysis
-  if (Object.keys(bonusCounts).length === 0) {
-    const analysis = buildQualificationAnalysis(weekCounts, requirements);
-    return { ...analysis, compensationUsed: false, bonusDayDetails: [] };
-  }
-
-  // Get original analysis to understand what's missing
-  const originalAnalysis = buildQualificationAnalysis(weekCounts, requirements);
-  
-  // Find what requirements are still needed after applying format rules
-  const neededByFormat = {};
-  const totalSlots = [];
-  
-  // Build requirement slots like in buildQualificationAnalysis
-  Object.entries(requirements).forEach(([reqAbbr, required]) => {
-    for (let i = 0; i < required; i++) {
-      totalSlots.push({
-        reqAbbr,
-        eligibleActuals: getRequirementEligibleActualAbbrs(reqAbbr),
-        matched: false
-      });
-    }
-  });
-  
-  // Sort slots: more restrictive first
-  totalSlots.sort((a, b) => {
-    if (a.eligibleActuals.length === 1 && b.eligibleActuals.length > 1) return -1;
-    if (b.eligibleActuals.length === 1 && a.eligibleActuals.length > 1) return 1;
-    return a.eligibleActuals.length - b.eligibleActuals.length;
-  });
-  
-  // Try to match week classes to slots first
-  const availableWeekClasses = { ...weekCounts };
-  const matchedSlots = [];
-  
-  totalSlots.forEach((slot, index) => {
-    for (const actualAbbr of slot.eligibleActuals) {
-      if (availableWeekClasses[actualAbbr] > 0) {
-        availableWeekClasses[actualAbbr]--;
-        slot.matched = true;
-        slot.matchedWith = actualAbbr;
-        matchedSlots.push(index);
-        break;
-      }
-    }
-  });
-  
-  // Find unmatched slots (these need bonus compensation)
-  const unmatchedSlots = totalSlots.filter((slot, index) => !slot.matched);
-  
-  // Try to satisfy unmatched requirements with bonus classes
-  const compensatedCounts = { ...weekCounts };
-  const bonusClassesUsed = {};
-  const availableBonus = { ...bonusCounts };
-  const compensationDetails = [];
-  
-  unmatchedSlots.forEach(slot => {
-    if (slot.matched) return; // Already handled
-    
-    // Try to find a bonus class that can satisfy this requirement
-    for (const actualAbbr of slot.eligibleActuals) {
-      const availableBonusCount = availableBonus[actualAbbr] || 0;
-      if (availableBonusCount > 0) {
-        // Use this bonus class to satisfy the requirement
-        compensatedCounts[actualAbbr] = (compensatedCounts[actualAbbr] || 0) + 1;
-        bonusClassesUsed[actualAbbr] = (bonusClassesUsed[actualAbbr] || 0) + 1;
-        availableBonus[actualAbbr]--;
-        slot.matched = true;
-        slot.matchedWith = actualAbbr;
-        slot.compensated = true;
-        
-        // Find the specific bonus day that provided this class
-        const bonusDay = bonusDayDetails.find(bd => bd.abbr === actualAbbr);
-        if (bonusDay) {
-          compensationDetails.push({
-            reqAbbr: slot.reqAbbr,
-            actualAbbr,
-            bonusDay: bonusDay.day,
-            emoji: bonusDay.emoji
-          });
-          // Mark this bonus day as used
-          bonusDay.used = true;
-        }
-        break;
-      }
-    }
-  });
-
-  // Re-analyze with compensated counts to verify qualification
-  const finalAnalysis = buildQualificationAnalysis(compensatedCounts, requirements);
-  
-  return {
-    ...finalAnalysis,
-    originalCounts: weekCounts,
-    finalCounts: compensatedCounts,
-    compensationUsed: Object.keys(bonusClassesUsed).length > 0,
-    bonusClassesUsed: bonusClassesUsed,
-    compensationDetails: compensationDetails,
-    bonusDayDetails: bonusDayDetails,
-    unmatchedSlots: totalSlots.filter(slot => !slot.matched),
-    totalSlots: totalSlots
-  };
+  return { completed: qualificationAnalysis.completed, counts, requirements, qualificationAnalysis, bonusUsed };
 }
 
 function getScore(mi) {
@@ -2079,48 +1865,15 @@ function getRequirementLabel(abbr) {
   return STICKER_LABEL[abbr]?.label || abbr;
 }
 
-function buildWeeklyClassBreakdown(counts, compensationDetails) {
+function buildWeeklyClassBreakdown(counts) {
   const lines = [];
   let total = 0;
-
-  // Ensure counts is defined
-  if (!counts) {
-    return ['Classes Attended:', '(None logged)'];
-  }
-
-  // Build compensation mapping for visual indicators
-  const compensationMap = {};
-  if (compensationDetails) {
-    compensationDetails.forEach(detail => {
-      if (!compensationMap[detail.actualAbbr]) {
-        compensationMap[detail.actualAbbr] = [];
-      }
-      compensationMap[detail.actualAbbr].push(detail);
-    });
-  }
 
   STICKERS.forEach(({ abbr, emoji, label }) => {
     const count = counts[abbr] || 0;
     if (!count) return;
     total += count;
-    
-    let displayLine = `${emoji} ${label}: ${count}`;
-    
-    // Add compensation indicators if this format was compensated
-    if (compensationMap[abbr]) {
-      const compensatedCount = compensationMap[abbr].length;
-      const regularCount = count - compensatedCount;
-      
-      if (compensatedCount > 0) {
-        if (regularCount > 0) {
-          displayLine = `${emoji} ${label}: ${regularCount} + ✨${compensatedCount} (bonus)`;
-        } else {
-          displayLine = `${emoji} ${label}: ✨${compensatedCount} (from bonus days)`;
-        }
-      }
-    }
-    
-    lines.push(displayLine);
+    lines.push(`${emoji} ${label}: ${count}`);
   });
 
   if (!lines.length) {
@@ -2147,7 +1900,7 @@ function buildWeeklyRequirementBreakdown(requirements) {
 function buildQualifiedFormatBreakdown(qualificationAnalysis) {
   const lines = [];
   ['CARDIO', 'STRENGTH'].forEach(displayKey => {
-    const done = qualificationAnalysis.completedByDisplay[displayKey] || 0;
+    const done = qualificationAnalysis.rawQualifiedDoneByDisplay[displayKey] || 0;
     const required = qualificationAnalysis.requiredByDisplay[displayKey] || 0;
     const emoji = getQualifiedDisplayEmoji(displayKey);
     const label = getQualifiedDisplayLabel(displayKey);
@@ -2160,75 +1913,23 @@ function buildQualifiedFormatBreakdown(qualificationAnalysis) {
 
 function buildWeekQualificationTooltip(mi, weekNum) {
   if (weekNum < 1 || weekNum > 4) return '';
-  const weekScore = getWeekScore(mi, weekNum);
-  const { 
-    completed, 
-    counts, 
-    originalCounts,
-    requirements, 
-    qualificationAnalysis, 
-    compensationUsed, 
-    compensationDetails,
-    bonusDayDetails
-  } = weekScore;
+  const { completed, counts, requirements, qualificationAnalysis } = getWeekScore(mi, weekNum);
   if (!requirements) return '';
 
   const result = completed ? '✓ QUALIFIED' : '✗ NOT QUALIFIED';
-  const compensationNote = compensationUsed ? ' ✨ (with Bonus Day compensation)' : '';
   
   const lines = [
-    `WEEK ${weekNum}: ${result}${compensationNote}`,
-    ''
+    `WEEK ${weekNum}: ${result}`,
+    '',
+    ...buildWeeklyClassBreakdown(counts),
+    '',
+    ...buildWeeklyRequirementBreakdown(requirements),
+    '',
+    ...buildQualifiedFormatBreakdown(qualificationAnalysis),
+    '',
+    `Setting: Mat counts as Cardio is ${qualificationSettings.matCountsAsCardio ? 'ON' : 'OFF'}`
   ];
 
-  // Show class breakdown with compensation indicators
-  if (compensationUsed && compensationDetails) {
-    lines.push(...buildWeeklyClassBreakdown(counts, compensationDetails));
-  } else {
-    lines.push(...buildWeeklyClassBreakdown(counts));
-  }
-  
-  lines.push('');
-  lines.push(...buildWeeklyRequirementBreakdown(requirements));
-  lines.push('');
-  lines.push(...buildQualifiedFormatBreakdown(qualificationAnalysis));
-
-  // Add detailed bonus compensation info if used
-  if (compensationUsed && compensationDetails && compensationDetails.length > 0) {
-    lines.push('');
-    lines.push('✨ BONUS DAY COMPENSATION APPLIED:');
-    
-    // Group by requirement type for cleaner display
-    const groupedCompensation = {};
-    compensationDetails.forEach(detail => {
-      const reqLabel = getRequirementLabel(detail.reqAbbr);
-      if (!groupedCompensation[reqLabel]) {
-        groupedCompensation[reqLabel] = [];
-      }
-      groupedCompensation[reqLabel].push(detail);
-    });
-    
-    Object.entries(groupedCompensation).forEach(([reqLabel, details]) => {
-      const formatLabel = STICKER_LABEL[details[0].actualAbbr]?.label || details[0].actualAbbr;
-      lines.push(`• ${formatLabel} (${details[0].bonusDay}) → counted for ${reqLabel}`);
-    });
-    
-    // Show which bonus days were used with strike-through effect
-    if (bonusDayDetails && bonusDayDetails.length > 0) {
-      lines.push('');
-      lines.push('BONUS WEEK CLASSES:');
-      bonusDayDetails.forEach(detail => {
-        const formatLabel = STICKER_LABEL[detail.abbr]?.label || detail.abbr;
-        if (detail.used) {
-          lines.push(`• ${detail.day}: ̶${detail.emoji} ${formatLabel}̶ (used for compensation)`);
-        } else {
-          lines.push(`• ${detail.day}: ${detail.emoji} ${formatLabel} (available)`);
-        }
-      });
-    }
-  }
-
-  lines.push('');
   return lines.join('\n');
 }
 
@@ -2308,14 +2009,27 @@ function restoreQualificationSettings() {
     const saved = localStorage.getItem(BOARD_SETTINGS_KEY);
     if (!saved) return;
     const parsed = JSON.parse(saved);
+    qualificationSettings.matCountsAsCardio = !!parsed.matCountsAsCardio;
     qualificationSettings.useClassDifferenceQualification = !!parsed.useClassDifferenceQualification;
     qualificationSettings.classToleranceValue = parsed.classToleranceValue || 3;
+    qualificationSettings.useBonusWeekCompensation = parsed.useBonusWeekCompensation !== false; // Default true
+    if (parsed.interchangeableGroups) {
+      qualificationSettings.interchangeableGroups = parsed.interchangeableGroups;
+    }
+    // Rebuild EQUIV_GROUPS after restoration
+    EQUIV_GROUPS = [
+      new Set(qualificationSettings.interchangeableGroups['Strength'] || []),
+      new Set(qualificationSettings.interchangeableGroups['Cardio'] || []),
+    ];
   } catch (e) {
     console.warn('Failed to restore qualification settings:', e);
   }
 }
 
 function syncQualificationToggle() {
+  if (qualificationToggleEl) {
+    qualificationToggleEl.checked = qualificationSettings.matCountsAsCardio;
+  }
   if (classQualificationToggleEl) {
     classQualificationToggleEl.checked = qualificationSettings.useClassDifferenceQualification;
   }
@@ -2352,64 +2066,6 @@ function toggleLocationGroup(btn) {
       row.classList.toggle('hidden');
     }
   }
-}
-
-function collapseAllGroups() {
-  const tbody = document.getElementById('tbody');
-  if (!tbody) return;
-  
-  // Find all location toggle buttons and collapse them
-  const toggleBtns = tbody.querySelectorAll('.location-toggle-btn');
-  toggleBtns.forEach(btn => {
-    if (!btn.classList.contains('collapsed')) {
-      btn.classList.add('collapsed');
-      
-      // Hide all data rows for this group
-      const rows = Array.from(tbody.querySelectorAll('tr'));
-      const header = btn.closest('tr.location-group-header');
-      if (!header) return;
-      
-      let headerIndex = rows.indexOf(header);
-      if (headerIndex === -1) return;
-      
-      for (let i = headerIndex + 1; i < rows.length; i++) {
-        const row = rows[i];
-        if (row.classList.contains('location-group-header')) break;
-        if (row.classList.contains('data-row')) {
-          row.classList.add('hidden');
-        }
-      }
-    }
-  });
-}
-
-function expandAllGroups() {
-  const tbody = document.getElementById('tbody');
-  if (!tbody) return;
-  
-  // Find all location toggle buttons and expand them
-  const toggleBtns = tbody.querySelectorAll('.location-toggle-btn');
-  toggleBtns.forEach(btn => {
-    if (btn.classList.contains('collapsed')) {
-      btn.classList.remove('collapsed');
-      
-      // Show all data rows for this group
-      const rows = Array.from(tbody.querySelectorAll('tr'));
-      const header = btn.closest('tr.location-group-header');
-      if (!header) return;
-      
-      let headerIndex = rows.indexOf(header);
-      if (headerIndex === -1) return;
-      
-      for (let i = headerIndex + 1; i < rows.length; i++) {
-        const row = rows[i];
-        if (row.classList.contains('location-group-header')) break;
-        if (row.classList.contains('data-row')) {
-          row.classList.remove('hidden');
-        }
-      }
-    }
-  });
 }
 
 function getQualifiedMembersCount() {
@@ -2615,37 +2271,6 @@ function refreshBoard() {
       const bonusTd = document.createElement('td');
       bonusTd.colSpan = days.length - 28;
       bonusTd.className = 'location-header-cell';
-      
-      // Calculate group stats
-      const totalMembers = groupList.length;
-      const qualifiedMembers = groupList.filter(m => m.score >= 4).length;
-      const totalClasses = groupList.reduce((sum, m) => sum + getTotalClasses(m.mi), 0);
-      const avgClasses = totalMembers > 0 ? (totalClasses / totalMembers).toFixed(1) : 0;
-      const avgWeeks = totalMembers > 0 ? (groupList.reduce((sum, m) => sum + m.score, 0) / totalMembers).toFixed(1) : 0;
-      const qualificationRate = totalMembers > 0 ? ((qualifiedMembers / totalMembers) * 100).toFixed(0) : 0;
-      
-      // Create stats display
-      const statsHtml = `
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 4px; height: 100%; align-items: center;">
-          <div style="text-align: center; display: flex; flex-direction: column; align-items: center; gap: 1px;">
-            <div style="font-size: 10px; color: #666;">👥</div>
-            <div style="font-size: 11px; font-weight: 700; color: #333;">${totalMembers}</div>
-          </div>
-          <div style="text-align: center; display: flex; flex-direction: column; align-items: center; gap: 1px;">
-            <div style="font-size: 10px; color: #22c55e;">✓</div>
-            <div style="font-size: 11px; font-weight: 700; color: #22c55e;">${qualifiedMembers}/${totalMembers}</div>
-          </div>
-          <div style="text-align: center; display: flex; flex-direction: column; align-items: center; gap: 1px;">
-            <div style="font-size: 10px; color: #3b82f6;">📊</div>
-            <div style="font-size: 11px; font-weight: 700; color: #3b82f6;">${avgClasses}</div>
-          </div>
-          <div style="text-align: center; display: flex; flex-direction: column; align-items: center; gap: 1px;">
-            <div style="font-size: 10px; color: #e11d48;">📅</div>
-            <div style="font-size: 11px; font-weight: 700; color: #e11d48;">${avgWeeks}/4</div>
-          </div>
-        </div>
-      `;
-      bonusTd.innerHTML = statsHtml;
       sepRow.appendChild(bonusTd);
     }
 
@@ -2704,15 +2329,9 @@ function refreshBoard() {
         if (di % 7 === 3 && weekNum <= 4) {
           td.style.zIndex = '10'; // elevate above later siblings so badge renders on top
           if (isCompletedWeek) {
-            const weekScore = getWeekScore(m.mi, weekNum);
-            const compensationUsed = weekScore.compensationUsed;
             const badge = document.createElement('div');
             badge.className = 'week-qualified-badge';
-            const compensationIcon = compensationUsed ? ' ✨' : '';
-            badge.textContent = `✓ Qualified${compensationIcon}`;
-            if (compensationUsed) {
-              badge.title = 'Qualified with Bonus Day compensation';
-            }
+            badge.textContent = '✓ Qualified';
             td.appendChild(badge);
           } else if (isNotQualifiedEnded) {
             const badge = document.createElement('div');
@@ -3210,36 +2829,17 @@ function exportToComprehensiveCSV() {
     if (!byLocation[s.location]) byLocation[s.location] = [];
     byLocation[s.location].push(s);
   });
-
-  // Get all class types and organize by interchangeable groups
+  
+  // Get all class types
   const allClassTypes = Array.from(new Set(stats.flatMap(s => Object.keys(s.classTypeCounters))));
   
-  // Define format groups for display
-  const cardioFormats = ['Cardio Barre', 'HIIT', 'Amped Up', 'Cardio Barre Plus', "Trainer's Choice"];
-  const strengthFormats = ['FIT', 'Strength Lab', 'Back Body Blaze'];
-  const specificFormats = allClassTypes.filter(ct => !cardioFormats.includes(ct) && !strengthFormats.includes(ct));
-  
-  // Organize columns: CARDIO (interchangeable), STRENGTH (interchangeable), SPECIFIC formats
-  const orderedClassTypes = [
-    ...allClassTypes.filter(ct => cardioFormats.includes(ct)),
-    ...allClassTypes.filter(ct => strengthFormats.includes(ct)),
-    ...allClassTypes.filter(ct => specificFormats.includes(ct))
-  ];
-  
-  const headers = ['Name', 'Email', 'Location', 'Classes Done/Required', 'Weeks Qualified', 'Status', 'Qualification Method', 'W1', 'W2', 'W3', 'W4', ...orderedClassTypes];
+  const headers = ['Name', 'Email', 'Location', 'Classes Done/Required', 'Weeks Qualified', 'Status', 'Qualification Method', 'W1', 'W2', 'W3', 'W4', ...allClassTypes];
   const rows = [headers];
-  
-  // Add interchangeability guides as comment rows
-  rows.push(['--- INTERCHANGEABLE FORMAT GROUPS ---']);
-  rows.push(['CARDIO (interchangeable): Cardio Barre, HIIT, Amped Up, Cardio Barre Plus, Trainer\'s Choice']);
-  rows.push(['STRENGTH (interchangeable): FIT, Strength Lab, Back Body Blaze']);
-  rows.push(['SPECIFIC FORMATS (non-interchangeable): PowerCycle, Barre 57, Mat 57, Recovery']);
-  rows.push(['']);
   
   Object.entries(byLocation).sort().forEach(([location, members]) => {
     rows.push([`--- ${location} ---`]);
     members.forEach(participant => {
-      const classTypeCells = orderedClassTypes.map(ct => participant.classTypeCounters[ct] || 0);
+      const classTypeCells = allClassTypes.map(ct => participant.classTypeCounters[ct] || 0);
       rows.push([
         participant.name,
         participant.email,
@@ -3445,51 +3045,38 @@ function positionScorePillTooltips() {
     
     pill.addEventListener('mouseenter', () => {
       tooltip.style.display = 'block';
-      tooltip.style.visibility = 'visible';
       setTimeout(() => {
         const pillRect = pill.getBoundingClientRect();
+        const tooltipRect = tooltip.getBoundingClientRect();
         const viewportWidth = window.innerWidth;
-        const viewportHeight = window.innerHeight;
-        const gap = 16;
-        const padding = 10;
+        const gap = 12;
         
-        // Force display to calculate dimensions
-        tooltip.style.display = 'block';
-        const tooltipHeight = tooltip.offsetHeight;
-        const tooltipWidth = tooltip.offsetWidth;
+        // Default position: above, centered
+        let top = pillRect.top - tooltipRect.height - gap;
+        let left = pillRect.left + (pillRect.width - tooltipRect.width) / 2;
         
-        // Always position ABOVE the pill with priority
-        let top = pillRect.top - tooltipHeight - gap;
-        let left = pillRect.left + (pillRect.width - tooltipWidth) / 2;
+        // Check if tooltip overflows right
+        if (left + tooltipRect.width + 10 > viewportWidth) {
+          left = viewportWidth - tooltipRect.width - 10;
+        }
         
-        // If tooltip would go above viewport, move it below instead
-        if (top < padding) {
+        // Check if tooltip overflows left
+        if (left < 10) {
+          left = 10;
+        }
+        
+        // Check if tooltip overflows top
+        if (top < 10) {
           top = pillRect.bottom + gap;
         }
         
-        // Ensure tooltip doesn't overflow left edge
-        if (left < padding) {
-          left = padding;
-        }
-        
-        // Ensure tooltip doesn't overflow right edge
-        if (left + tooltipWidth + padding > viewportWidth) {
-          left = viewportWidth - tooltipWidth - padding;
-        }
-        
-        // Ensure tooltip doesn't overflow bottom (constrain height with scroll if needed)
-        if (top + tooltipHeight + padding > viewportHeight) {
-          top = viewportHeight - tooltipHeight - padding;
-        }
-        
-        tooltip.style.top = Math.max(padding, top) + 'px';
-        tooltip.style.left = Math.max(padding, left) + 'px';
+        tooltip.style.top = top + 'px';
+        tooltip.style.left = left + 'px';
       }, 0);
     });
     
     pill.addEventListener('mouseleave', () => {
       tooltip.style.display = 'none';
-      tooltip.style.visibility = 'hidden';
     });
   });
 }
@@ -3497,6 +3084,13 @@ function positionScorePillTooltips() {
 // ── INIT ──
 restoreQualificationSettings();
 syncQualificationToggle();
+if (qualificationToggleEl) {
+  qualificationToggleEl.addEventListener('change', () => {
+    qualificationSettings.matCountsAsCardio = qualificationToggleEl.checked;
+    saveQualificationSettings();
+    refreshBoard();
+  });
+}
 if (classQualificationToggleEl) {
   classQualificationToggleEl.addEventListener('change', () => {
     qualificationSettings.useClassDifferenceQualification = classQualificationToggleEl.checked;
@@ -3524,404 +3118,6 @@ renderLegend();
 refreshBoard();
 positionScorePillTooltips();
 fetchAndSeedCheckins();
-
-// ── UNIFIED EXPORT SUPPORT ──
-// Function to publish stats to parent window for unified export
-function publishStatsToParent() {
-  const stats = generateParticipantStatsForLevel(
-    MEMBERS,
-    state,
-    days,
-    STICKERS,
-    'Advanced',
-    getScore,
-    getTotalClasses,
-    getTotalClassesRequired,
-    getWeekScore,
-    qualificationSettings
-  );
-  return stats;
-}
-
-// Make stats available to parent window
-window.getAdvancedStats = publishStatsToParent;
-
-// ── FORMAT HELPER FUNCTIONS ──
-function initializeFormatGroups() {
-  const saved = localStorage.getItem('sin30_custom_format_groups_advanced');
-  if (saved) {
-    try {
-      customFormatGroups = JSON.parse(saved);
-    } catch (e) {
-      console.warn('Failed to parse custom format groups, using defaults');
-      createDefaultFormatGroups();
-    }
-  } else {
-    createDefaultFormatGroups();
-  }
-  updateEquivGroupsFromCustomGroups();
-}
-
-function createDefaultFormatGroups() {
-  customFormatGroups = [
-    {
-      id: 'cardio-group',
-      name: 'Cardio Group',
-      formats: ['CB', 'HIIT', 'AMP', 'CBP', 'TC'],
-      active: true
-    },
-    {
-      id: 'strength-group', 
-      name: 'Strength Group',
-      formats: ['FIT', 'LAB', 'BBB'],
-      active: true
-    }
-  ];
-  saveFormatGroups();
-}
-
-function saveFormatGroups() {
-  localStorage.setItem('sin30_custom_format_groups_advanced', JSON.stringify(customFormatGroups));
-}
-
-function updateEquivGroupsFromCustomGroups() {
-  // Clear and rebuild EQUIV_GROUPS from custom groups
-  EQUIV_GROUPS.length = 0;
-  
-  customFormatGroups.forEach(group => {
-    if (group.active && group.formats.length > 1) {
-      EQUIV_GROUPS.push(new Set(group.formats));
-    }
-  });
-}
-
-function openFormatSettingsModal() {
-  const modal = document.getElementById('format-settings-modal');
-  if (modal) {
-    modal.style.display = 'flex';
-    renderFormatGroupsUI();
-  }
-}
-
-function closeFormatSettingsModal() {
-  const modal = document.getElementById('format-settings-modal');
-  if (modal) {
-    modal.style.display = 'none';
-  }
-}
-
-function renderFormatGroupsUI() {
-  const container = document.getElementById('format-groups-container');
-  if (!container) return;
-  
-  container.innerHTML = '';
-  
-  customFormatGroups.forEach((group, index) => {
-    const groupEl = document.createElement('div');
-    groupEl.className = 'format-group-item';
-    groupEl.innerHTML = `
-      <div class="format-group-header">
-        <label class="group-toggle">
-          <input type="checkbox" ${group.active ? 'checked' : ''} 
-                 onchange="toggleFormatGroup(${index})">
-          <input type="text" class="group-name-input" 
-                 value="${group.name}" 
-                 onchange="updateGroupName(${index}, this.value)"
-                 placeholder="Group Name">
-        </label>
-        <button class="delete-group-btn" onclick="deleteFormatGroup(${index})" 
-                title="Delete Group">🗑️</button>
-      </div>
-      <div class="format-selector">
-        <div class="available-formats">
-          <h4>Available Formats:</h4>
-          <div class="format-chips">
-            ${STICKERS.map(sticker => {
-              const isSelected = group.formats.includes(sticker.abbr);
-              return `
-                <div class="format-chip ${isSelected ? 'selected' : ''}" 
-                     onclick="toggleFormatInGroup(${index}, '${sticker.abbr}')">
-                  ${sticker.emoji} ${sticker.abbr}
-                </div>
-              `;
-            }).join('')}
-          </div>
-        </div>
-        <div class="selected-formats">
-          <h4>Selected Formats (${group.formats.length}):</h4>
-          <div class="selected-format-list">
-            ${group.formats.map(abbr => {
-              const sticker = STICKERS.find(s => s.abbr === abbr);
-              return sticker ? `
-                <span class="selected-format-tag">
-                  ${sticker.emoji} ${sticker.label}
-                  <button onclick="removeFormatFromGroup(${index}, '${abbr}')" 
-                          class="remove-format">×</button>
-                </span>
-              ` : '';
-            }).join('')}
-          </div>
-        </div>
-      </div>
-    `;
-    container.appendChild(groupEl);
-  });
-  
-  // Add "New Group" button
-  const newGroupBtn = document.createElement('button');
-  newGroupBtn.className = 'new-group-btn';
-  newGroupBtn.innerHTML = '+ Add New Format Group';
-  newGroupBtn.onclick = addNewFormatGroup;
-  container.appendChild(newGroupBtn);
-}
-
-function toggleFormatGroup(index) {
-  customFormatGroups[index].active = !customFormatGroups[index].active;
-  saveFormatGroups();
-  updateEquivGroupsFromCustomGroups();
-  refreshBoard();
-}
-
-function updateGroupName(index, newName) {
-  customFormatGroups[index].name = newName || `Group ${index + 1}`;
-  saveFormatGroups();
-}
-
-function deleteFormatGroup(index) {
-  if (confirm('Are you sure you want to delete this format group?')) {
-    customFormatGroups.splice(index, 1);
-    saveFormatGroups();
-    updateEquivGroupsFromCustomGroups();
-    renderFormatGroupsUI();
-    refreshBoard();
-  }
-}
-
-function toggleFormatInGroup(groupIndex, formatAbbr) {
-  const group = customFormatGroups[groupIndex];
-  const formatIndex = group.formats.indexOf(formatAbbr);
-  
-  if (formatIndex === -1) {
-    group.formats.push(formatAbbr);
-  } else {
-    group.formats.splice(formatIndex, 1);
-  }
-  
-  saveFormatGroups();
-  updateEquivGroupsFromCustomGroups();
-  renderFormatGroupsUI();
-  refreshBoard();
-}
-
-function removeFormatFromGroup(groupIndex, formatAbbr) {
-  const group = customFormatGroups[groupIndex];
-  const formatIndex = group.formats.indexOf(formatAbbr);
-  
-  if (formatIndex !== -1) {
-    group.formats.splice(formatIndex, 1);
-    saveFormatGroups();
-    updateEquivGroupsFromCustomGroups();
-    renderFormatGroupsUI();
-    refreshBoard();
-  }
-}
-
-function addNewFormatGroup() {
-  const newGroup = {
-    id: `group-${Date.now()}`,
-    name: `Group ${customFormatGroups.length + 1}`,
-    formats: [],
-    active: true
-  };
-  
-  customFormatGroups.push(newGroup);
-  saveFormatGroups();
-  renderFormatGroupsUI();
-}
-
-// Initialize on page load
-initializeFormatRules();
 </script>
-
-<div id="format-settings-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
-  <div style="background: white; border-radius: 12px; padding: 32px; max-width: 800px; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-      <h2 style="font-size: 20px; font-weight: 600; color: #1a1a1a;">Custom Format Groups</h2>
-      <button onclick="closeFormatSettingsModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #888;">✕</button>
-    </div>
-    
-    <div style="margin-bottom: 24px; padding: 16px; background: #f8f9fa; border-radius: 8px;">
-      <h3 style="font-size: 14px; font-weight: 600; color: #495057; margin-bottom: 8px;">🎯 How Format Groups Work</h3>
-      <p style="font-size: 12px; color: #6c757d; line-height: 1.4; margin: 0;">Create custom groups of interchangeable formats. Classes from any format in a group can count toward requirements for other formats in the same group. For example, if CB and HIIT are in the same group, a CB class can satisfy a HIIT requirement.</p>
-    </div>
-    
-    <div id="format-groups-container"></div>
-  </div>
-</div>
-
-<style>
-.format-group-item {
-  border: 2px solid #e9ecef;
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 20px;
-  background: #fff;
-  transition: all 0.15s ease;
-}
-
-.format-group-item:hover {
-  border-color: #007bff;
-  box-shadow: 0 4px 12px rgba(0,123,255,0.1);
-}
-
-.format-group-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #dee2e6;
-}
-
-.group-toggle {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  cursor: pointer;
-  flex: 1;
-}
-
-.group-name-input {
-  font-size: 16px;
-  font-weight: 600;
-  border: 1px solid transparent;
-  background: transparent;
-  padding: 4px 8px;
-  border-radius: 4px;
-  min-width: 200px;
-}
-
-.group-name-input:focus {
-  border-color: #007bff;
-  outline: none;
-  background: #fff;
-}
-
-.delete-group-btn {
-  background: #dc3545;
-  border: none;
-  border-radius: 6px;
-  padding: 6px 10px;
-  cursor: pointer;
-  color: white;
-  font-size: 14px;
-  transition: background 0.15s;
-}
-
-.delete-group-btn:hover {
-  background: #c82333;
-}
-
-.format-selector {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-}
-
-.available-formats h4,
-.selected-formats h4 {
-  font-size: 14px;
-  font-weight: 600;
-  color: #495057;
-  margin-bottom: 12px;
-}
-
-.format-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.format-chip {
-  padding: 8px 12px;
-  border: 2px solid #dee2e6;
-  border-radius: 20px;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 500;
-  background: #fff;
-  transition: all 0.15s;
-}
-
-.format-chip:hover {
-  border-color: #007bff;
-  transform: translateY(-1px);
-}
-
-.format-chip.selected {
-  background: #007bff;
-  border-color: #007bff;
-  color: white;
-}
-
-.selected-format-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.selected-format-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  background: #e3f2fd;
-  border: 1px solid #90caf9;
-  border-radius: 16px;
-  font-size: 12px;
-  font-weight: 500;
-  color: #1565c0;
-}
-
-.remove-format {
-  background: none;
-  border: none;
-  color: #1565c0;
-  cursor: pointer;
-  font-size: 16px;
-  line-height: 1;
-  padding: 0;
-  width: 16px;
-  height: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.remove-format:hover {
-  color: #d32f2f;
-}
-
-.new-group-btn {
-  width: 100%;
-  padding: 16px;
-  border: 2px dashed #6c757d;
-  border-radius: 12px;
-  background: transparent;
-  color: #6c757d;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.new-group-btn:hover {
-  border-color: #007bff;
-  color: #007bff;
-  background: rgba(0,123,255,0.05);
-}
-</style>
-
-<script src="export-utils.js"></script>
 </body>
 </html>

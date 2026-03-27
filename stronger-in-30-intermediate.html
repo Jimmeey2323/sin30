@@ -1884,8 +1884,9 @@ body {
         <span class="toggle-slider"></span>
         <span class="toggle-text">Normalize Formats</span>
       </label>
-      <div class="tolerance-control" style="margin-left: 12px; display: none;">
-        <input type="number" id="class-tolerance-input" min="0" max="20" value="3" style="width: 50px; padding: 6px 8px; border: 1px solid var(--border-strong); border-radius: 6px; font-size: 12px;">
+      <div class="tolerance-control" style="margin-left: 12px; display: none; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--border-strong); border-radius: 999px; background: var(--off);">
+        <span style="font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-muted); white-space: nowrap;">Diff ≤</span>
+        <input type="number" id="class-tolerance-input" min="0" max="20" value="3" aria-label="Qualification class difference" title="Maximum difference between classes done and total required classes to still qualify" style="width: 58px; padding: 6px 8px; border: 1px solid var(--border-strong); border-radius: 8px; font-size: 12px; font-weight: 700; background: white;">
       </div>
     </div>
   </div>
@@ -3423,7 +3424,7 @@ function syncQualificationToggle() {
     toleranceInput.value = qualificationSettings.classToleranceValue || 3;
   }
   if (toleranceControl) {
-    toleranceControl.style.display = qualificationSettings.useClassDifferenceQualification ? 'block' : 'none';
+    toleranceControl.style.display = qualificationSettings.useClassDifferenceQualification ? 'inline-flex' : 'none';
   }
 }
 
@@ -4558,7 +4559,7 @@ if (classQualificationToggleEl) {
     qualificationSettings.useClassDifferenceQualification = classQualificationToggleEl.checked;
     const toleranceCtrl = document.querySelector('.tolerance-control');
     if (toleranceCtrl) {
-      toleranceCtrl.style.display = classQualificationToggleEl.checked ? 'block' : 'none';
+      toleranceCtrl.style.display = classQualificationToggleEl.checked ? 'inline-flex' : 'none';
     }
     saveQualificationSettings();
     refreshBoard();

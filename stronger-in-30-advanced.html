@@ -1896,8 +1896,9 @@ body {
         <span class="toggle-slider"></span>
         <span class="toggle-text">Normalize Formats</span>
       </label>
-      <div class="tolerance-control" style="margin-left: 12px; display: none;">
-        <input type="number" id="class-tolerance-input" min="0" max="20" value="3" style="width: 50px; padding: 6px 8px; border: 1px solid var(--border-strong); border-radius: 6px; font-size: 12px;">
+      <div class="tolerance-control" style="margin-left: 12px; display: none; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--border-strong); border-radius: 999px; background: var(--off);">
+        <span style="font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-muted); white-space: nowrap;">Diff ≤</span>
+        <input type="number" id="class-tolerance-input" min="0" max="20" value="3" aria-label="Qualification class difference" title="Maximum difference between classes done and total required classes to still qualify" style="width: 58px; padding: 6px 8px; border: 1px solid var(--border-strong); border-radius: 8px; font-size: 12px; font-weight: 700; background: white;">
       </div>
     </div>
   </div>
@@ -2190,6 +2191,7 @@ const qualificationSettings = {
   normalizeFormats: false,
 };
 // Toggle removed from dashboard  managed via Settings modal
+const qualificationToggleEl = document.getElementById('mat-as-cardio-toggle');
 const classQualificationToggleEl = document.getElementById('class-diff-qualification-toggle');
 const normalizeFormatsToggleEl = document.getElementById('normalize-formats-toggle');
 let userFormatRules = { ...DEFAULT_FORMAT_RULES };
@@ -3209,7 +3211,7 @@ function syncQualificationToggle() {
     toleranceInput.value = qualificationSettings.classToleranceValue || 3;
   }
   if (toleranceControl) {
-    toleranceControl.style.display = qualificationSettings.useClassDifferenceQualification ? 'block' : 'none';
+    toleranceControl.style.display = qualificationSettings.useClassDifferenceQualification ? 'inline-flex' : 'none';
   }
 }
 
@@ -4314,6 +4316,57 @@ function filterQualified() {
   }
   refreshBoard();
 }
+
+restoreQualificationSettings();
+syncQualificationToggle();
+bindSettingsModalEvents();
+if (qualificationToggleEl) {
+  qualificationToggleEl.addEventListener('change', () => {
+    qualificationSettings.matCountsAsCardio = qualificationToggleEl.checked;
+    saveQualificationSettings();
+    refreshBoard();
+    positionScorePillTooltips();
+  });
+}
+if (classQualificationToggleEl) {
+  classQualificationToggleEl.addEventListener('change', () => {
+    qualificationSettings.useClassDifferenceQualification = classQualificationToggleEl.checked;
+    const toleranceCtrl = document.querySelector('.tolerance-control');
+    if (toleranceCtrl) {
+      toleranceCtrl.style.display = classQualificationToggleEl.checked ? 'inline-flex' : 'none';
+    }
+    saveQualificationSettings();
+    refreshBoard();
+    positionScorePillTooltips();
+  });
+}
+if (normalizeFormatsToggleEl) {
+  normalizeFormatsToggleEl.addEventListener('change', () => {
+    qualificationSettings.normalizeFormats = normalizeFormatsToggleEl.checked;
+    saveQualificationSettings();
+    refreshBoard();
+    positionScorePillTooltips();
+  });
+}
+const toleranceInput = document.getElementById('class-tolerance-input');
+if (toleranceInput) {
+  toleranceInput.addEventListener('change', () => {
+    qualificationSettings.classToleranceValue = parseInt(toleranceInput.value, 10) || 3;
+    saveQualificationSettings();
+    refreshBoard();
+    positionScorePillTooltips();
+  });
+}
+if (restoreStateFromLocalStorage()) {
+  renderLegend();
+  refreshBoard();
+  positionScorePillTooltips();
+}
+const loader = document.getElementById('board-loader');
+if (loader) loader.classList.add('hidden');
+renderLegend();
+refreshBoard();
+positionScorePillTooltips();
 
 window.getAdvancedStats = getAdvancedStats;
 window.getDetailedMemberExportData = getDetailedMemberExportData;

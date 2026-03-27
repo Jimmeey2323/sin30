@@ -2231,6 +2231,37 @@ function refreshBoard() {
       const bonusTd = document.createElement('td');
       bonusTd.colSpan = days.length - 28;
       bonusTd.className = 'location-header-cell';
+      
+      // Calculate group stats
+      const totalMembers = groupList.length;
+      const qualifiedMembers = groupList.filter(m => m.score >= 4).length;
+      const totalClasses = groupList.reduce((sum, m) => sum + getTotalClasses(m.mi), 0);
+      const avgClasses = totalMembers > 0 ? (totalClasses / totalMembers).toFixed(1) : 0;
+      const avgWeeks = totalMembers > 0 ? (groupList.reduce((sum, m) => sum + m.score, 0) / totalMembers).toFixed(1) : 0;
+      const qualificationRate = totalMembers > 0 ? ((qualifiedMembers / totalMembers) * 100).toFixed(0) : 0;
+      
+      // Create stats display
+      const statsHtml = `
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 8px; height: 100%;">
+          <div style="background: rgba(255,255,255,0.7); border-radius: 6px; padding: 8px; text-align: center;">
+            <div style="font-size: 10px; color: #666; font-weight: 600;">Members</div>
+            <div style="font-size: 16px; font-weight: 800; color: #1a1a1a;">${totalMembers}</div>
+          </div>
+          <div style="background: rgba(76, 175, 80, 0.15); border-radius: 6px; padding: 8px; text-align: center;">
+            <div style="font-size: 10px; color: #2e7d32; font-weight: 600;">Qualified</div>
+            <div style="font-size: 16px; font-weight: 800; color: #1b5e20;">${qualifiedMembers}/${totalMembers}</div>
+          </div>
+          <div style="background: rgba(33, 150, 243, 0.15); border-radius: 6px; padding: 8px; text-align: center;">
+            <div style="font-size: 10px; color: #1565c0; font-weight: 600;">Avg Classes</div>
+            <div style="font-size: 16px; font-weight: 800; color: #0d47a1;">${avgClasses}</div>
+          </div>
+          <div style="background: rgba(233, 30, 99, 0.15); border-radius: 6px; padding: 8px; text-align: center;">
+            <div style="font-size: 10px; color: #880e4f; font-weight: 600;">Avg Weeks</div>
+            <div style="font-size: 16px; font-weight: 800; color: #c2185b;">${avgWeeks}/4</div>
+          </div>
+        </div>
+      `;
+      bonusTd.innerHTML = statsHtml;
       sepRow.appendChild(bonusTd);
     }
 

@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stronger in 30 - Master Export</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      margin: 0;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: #1e293b;
+      border-radius: 12px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+    
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+      color: #60a5fa;
+      font-size: 28px;
+      font-weight: 700;
+    }
+    
+    .subtitle {
+      text-align: center;
+      color: #94a3b8;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+    
+    .info-box {
+      background: rgba(96, 165, 250, 0.1);
+      border: 1px solid rgba(96, 165, 250, 0.3);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 24px;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #cbd5e1;
+    }
+    
+    .button-group {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    
+    .level-item {
+      background: rgba(226, 232, 240, 0.05);
+      border: 1px solid rgba(226, 232, 240, 0.1);
+      border-radius: 8px;
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    
+    .level-item h3 {
+      margin: 0;
+      color: #e2e8f0;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    
+    .level-item p {
+      margin: 4px 0 0 0;
+      color: #94a3b8;
+      font-size: 12px;
+    }
+    
+    button {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+    
+    .btn-beginner {
+      background: #10b981;
+      color: white;
+    }
+    
+    .btn-beginner:hover {
+      background: #059669;
+      transform: translateY(-2px);
+    }
+    
+    .btn-intermediate {
+      background: #f59e0b;
+      color: white;
+    }
+    
+    .btn-intermediate:hover {
+      background: #d97706;
+      transform: translateY(-2px);
+    }
+    
+    .btn-advanced {
+      background: #8b5cf6;
+      color: white;
+    }
+    
+    .btn-advanced:hover {
+      background: #7c3aed;
+      transform: translateY(-2px);
+    }
+    
+    .btn-all {
+      background: #3b82f6;
+      color: white;
+      width: 100%;
+      padding: 16px;
+      font-size: 16px;
+      margin-top: 20px;
+    }
+    
+    .btn-all:hover {
+      background: #2563eb;
+      transform: translateY(-2px);
+    }
+    
+    .btn-all:disabled {
+      background: #64748b;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .status-message {
+      text-align: center;
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 6px;
+      background: rgba(59, 130, 246, 0.1);
+      color: #60a5fa;
+      display: none;
+      font-size: 13px;
+    }
+    
+    .status-message.show {
+      display: block;
+    }
+    
+    .status-message.success {
+      background: rgba(16, 185, 129, 0.1);
+      color: #10b981;
+    }
+    
+    .status-message.error {
+      background: rgba(239, 68, 68, 0.1);
+      color: #ef4444;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎯 Stronger in 30</h1>
+    <p class="subtitle">Master Export - Combine All Levels</p>
+    
+    <div class="info-box">
+      <strong>📊 Export Options:</strong><br>
+      • Export individual level details with day-by-day breakdowns<br>
+      • Combine all three levels into a single comprehensive CSV
+    </div>
+    
+    <div>
+      <h2 style="color: #cbd5e1; font-size: 16px; margin-top: 0; margin-bottom: 16px;">Individual Level Exports</h2>
+      
+      <div class="level-item">
+        <div>
+          <h3>🟢 Beginner Level</h3>
+          <p>31 Members</p>
+        </div>
+        <button class="btn-beginner" onclick="exportSingleLevel('beginner')">Export</button>
+      </div>
+      
+      <div class="level-item">
+        <div>
+          <h3>🟠 Intermediate Level</h3>
+          <p>48 Members</p>
+        </div>
+        <button class="btn-intermediate" onclick="exportSingleLevel('intermediate')">Export</button>
+      </div>
+      
+      <div class="level-item">
+        <div>
+          <h3>🟣 Advanced Level</h3>
+          <p>9 Members</p>
+        </div>
+        <button class="btn-advanced" onclick="exportSingleLevel('advanced')">Export</button>
+      </div>
+      
+      <button class="btn-all" onclick="exportAllLevels()" id="combined-export-btn">📥 Export All Levels Combined</button>
+    </div>
+    
+    <div class="status-message" id="status-message"></div>
+  </div>
+
+  <script>
+    // Data structure to hold combined export data
+    let combinedData = {
+      beginner: null,
+      intermediate: null,
+      advanced: null
+    };
+    
+    // Base URLs for the three boards
+    const BOARD_URLS = {
+      beginner: './stronger-in-30-beginner.html',
+      intermediate: './stronger-in-30-intermediate.html',
+      advanced: './stronger-in-30-advanced.html'
+    };
+    
+    // Simulate getting data from each board (in real implementation, these would be iframes or API calls)
+    async function loadDataFromBoard(level) {
+      showStatus(`Loading ${level} data...`, 'loading', false);
+      
+      try {
+        // Create an iframe to load the board and extract data
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = BOARD_URLS[level];
+        document.body.appendChild(iframe);
+        
+        // Wait for iframe to load
+        await new Promise((resolve) => {
+          iframe.onload = () => {
+            try {
+              // Try to access the data from the iframe's window
+              const iframeWindow = iframe.contentWindow;
+              
+              // Check if the board has loaded
+              if (iframeWindow.getDetailedMemberExportData) {
+                const data = iframeWindow.getDetailedMemberExportData();
+                combinedData[level] = data;
+                showStatus(`✓ ${level.charAt(0).toUpperCase() + level.slice(1)} data loaded (${data.length} members)`, 'success', false);
+              } else {
+                showStatus(`✗ Could not load ${level} data - function not found`, 'error', true);
+              }
+            } catch (e) {
+              console.log(`Note: Cross-origin access limited. Using fallback for ${level}.`);
+              combinedData[level] = generateFallbackData(level);
+              showStatus(`✓ ${level.charAt(0).toUpperCase() + level.slice(1)} data prepared (fallback mode)`, 'success', false);
+            }
+            setTimeout(() => resolve(), 100);
+          };
+        });
+        
+        document.body.removeChild(iframe);
+      } catch (error) {
+        console.error(`Error loading ${level} data:`, error);
+        showStatus(`✗ Error loading ${level} data: ${error.message}`, 'error', true);
+      }
+    }
+    
+    // Fallback data generator (returns placeholder message)
+    function generateFallbackData(level) {
+      return [{
+        name: 'Note',
+        location: `Export ${level} individually for detailed data`,
+        level: level.toUpperCase(),
+        qualification: 'See individual export',
+        score: '-',
+        disqualReason: 'Cross-origin limitation',
+        totalClasses: '-',
+        totalRequired: '-',
+        bonusClassesUsed: '-',
+        dayByDayBreakdown: 'Please export from individual level board',
+        email: '-',
+        week1: '-',
+        week2: '-',
+        week3: '-',
+        week4: '-'
+      }];
+    }
+    
+    function exportSingleLevel(level) {
+      showStatus(`Opening ${level} board export...`, 'loading', false);
+      
+      // Open the board in a new window/tab positioned at the export button
+      window.open(BOARD_URLS[level], `${level}_board`);
+      
+      setTimeout(() => {
+        showStatus(`✓ ${level.charAt(0).toUpperCase() + level.slice(1)} board opened - click Export button to download CSV`, 'success', true);
+      }, 500);
+    }
+    
+    async function exportAllLevels() {
+      const btn = document.getElementById('combined-export-btn');
+      btn.disabled = true;
+      showStatus('Preparing combined export from all levels...', 'loading', false);
+      
+      try {
+        // Load data from all three boards
+        await Promise.all([
+          loadDataFromBoard('beginner'),
+          loadDataFromBoard('intermediate'),
+          loadDataFromBoard('advanced')
+        ]);
+        
+        // Combine data
+        const allData = [
+          ...(combinedData.beginner || []),
+          ...(combinedData.intermediate || []),
+          ...(combinedData.advanced || [])
+        ];
+        
+        if (allData.length === 0) {
+          showStatus('✗ No data available for export', 'error', true);
+          btn.disabled = false;
+          return;
+        }
+        
+        // Generate combined CSV
+        const csv = generateCombinedCSV(allData);
+        
+        // Download
+        const timestamp = new Date().toISOString().split('T')[0];
+        const filename = `sin30-all-levels-combined-${timestamp}.csv`;
+        
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', filename);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        showStatus(`✓ Downloaded: ${filename} (${allData.length} members)`, 'success', true);
+      } catch (error) {
+        console.error('Error exporting all levels:', error);
+        showStatus(`✗ Error: ${error.message}`, 'error', true);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+    
+    function generateCombinedCSV(data) {
+      if (!data || data.length === 0) return '';
+      
+      // Sort data: Location first, then Level, then Name
+      const sortedData = data.sort((a, b) => {
+        if (a.location !== b.location) {
+          return a.location.localeCompare(b.location);
+        }
+        if (a.level !== b.level) {
+          return a.level.localeCompare(b.level);
+        }
+        return a.name.localeCompare(b.name);
+      });
+      
+      // Build dynamic headers: all day columns + qualifications
+      const baseHeaders = [
+        'Location', 'Name', 'Email', 'Level', 'Qualification Status', 'Score',
+        'Week 1 Qualified', 'Week 2 Qualified', 'Week 3 Qualified', 'Week 4 Qualified',
+        'Qualification Criteria', 'Total Classes Done', 'Total Classes Required',
+        'Bonus Classes Used', 'Disqualification Reason'
+      ];
+      
+      const dayHeaders = [];
+      for (let i = 1; i <= 33; i++) {
+        dayHeaders.push(`Day ${i}`);
+      }
+      
+      const headers = [...baseHeaders, ...dayHeaders];
+      
+      const rows = sortedData.map(m => {
+        const baseRow = [
+          `"${m.location || ''}"`,
+          `"${m.name || ''}"`,
+          `"${m.email || ''}"`,
+          `"${m.level || ''}"`,
+          m.qualification || '-',
+          m.score || '-',
+          m.week1Status || '-',
+          m.week2Status || '-',
+          m.week3Status || '-',
+          m.week4Status || '-',
+          `"${m.qualificationCriteria || ''}"`,
+          m.totalClasses || '-',
+          m.totalRequired || '-',
+          `"${m.bonusClassesUsed || ''}"`,
+          `"${m.disqualReason || ''}"`,
+        ];
+        
+        const dayRow = [];
+        for (let i = 1; i <= 33; i++) {
+          const dayKey = `Day${i}`;
+          const dayValue = m[dayKey] || '-';
+          dayRow.push(dayValue);
+        }
+        
+        return [...baseRow, ...dayRow];
+      });
+      
+      return [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    }
+    
+    function showStatus(message, type = 'info', sticky = false) {
+      const statusEl = document.getElementById('status-message');
+      statusEl.textContent = message;
+      statusEl.className = `status-message show ${type}`;
+      
+      if (!sticky) {
+        setTimeout(() => {
+          statusEl.classList.remove('show');
+        }, 3000);
+      }
+    }
+  </script>
+</body>
+</html>

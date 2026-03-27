@@ -1046,6 +1046,214 @@ td.day-td.week-not-qualified .sticker-slot:hover {
   color: #ef4444;
 }
 
+/* Enhanced Tooltip Styles */
+.tooltip-section {
+  margin-bottom: 12px;
+}
+
+.tooltip-section-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  border-left: 3px solid #64b5ff;
+}
+
+.tooltip-format-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tooltip-format-item {
+  display: grid;
+  grid-template-columns: 45px 1fr 50px 20px;
+  gap: 8px;
+  align-items: center;
+  padding: 6px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 4px;
+  border-left: 3px solid rgba(255, 255, 255, 0.1);
+}
+
+.tooltip-format-item.matched {
+  border-left-color: #22c55e;
+  background: rgba(34, 197, 94, 0.08);
+}
+
+.tooltip-format-item.missing {
+  border-left-color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.tooltip-format-label {
+  font-weight: 700;
+  font-size: 10px;
+  color: #f0f9ff;
+}
+
+.tooltip-format-bar {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.tooltip-format-bar-fill {
+  height: 100%;
+  background: #64b5ff;
+  transition: width 0.2s;
+}
+
+.tooltip-format-bar-fill.matched {
+  background: #22c55e;
+}
+
+.tooltip-format-bar-fill.missing {
+  background: #ef4444;
+}
+
+.tooltip-format-count {
+  font-weight: 600;
+  font-size: 10px;
+  text-align: right;
+  color: #cbd5e1;
+}
+
+.tooltip-format-icon {
+  font-weight: 700;
+  font-size: 12px;
+  text-align: center;
+}
+
+.tooltip-format-icon.matched {
+  color: #22c55e;
+}
+
+.tooltip-format-icon.missing {
+  color: #ef4444;
+}
+
+.tooltip-bonus-section {
+  background: rgba(245, 158, 11, 0.1);
+  border-radius: 6px;
+  border-left: 3px solid #f59e0b;
+  padding: 8px;
+}
+
+.tooltip-bonus-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #d97706;
+  margin-bottom: 6px;
+}
+
+.tooltip-bonus-items {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 10px;
+  color: #92400e;
+}
+
+.tooltip-bonus-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.tooltip-progress-section {
+  background: rgba(100, 181, 255, 0.08);
+  border-radius: 6px;
+  border-left: 3px solid #64b5ff;
+  padding: 8px;
+}
+
+.tooltip-progress-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #7dd3fc;
+  margin-bottom: 6px;
+}
+
+.tooltip-progress-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tooltip-progress-bar-main {
+  flex: 1;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.tooltip-progress-bar-main-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #64b5ff, #60a5fa);
+  border-radius: 3px;
+  transition: width 0.3s;
+}
+
+.tooltip-progress-text {
+  font-weight: 700;
+  font-size: 11px;
+  color: #64b5ff;
+  min-width: 55px;
+  text-align: right;
+}
+
+.tooltip-footer-status {
+  padding: 10px 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  text-align: center;
+  font-weight: 800;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.tooltip-footer-status.qualified {
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+  border-left: 3px solid #22c55e;
+}
+
+.tooltip-footer-status.not-qualified {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border-left: 3px solid #ef4444;
+}
 
 
 /* score */
@@ -1661,6 +1869,7 @@ tr.data-row.hidden { display: none; }
     <button onclick="fetchAndSeedCheckins()" id="refresh-btn" class="refresh-btn">↻ Refresh</button>
     <button onclick="openSettingsModal()" id="settings-btn" class="refresh-btn settings-btn">⚙ Settings</button>
     <button onclick="exportQualifiedMembers()" class="refresh-btn" title="Export qualified members as CSV">📥 Export</button>
+    <button onclick="window.open('./export-all-levels.html', 'master_export')" class="refresh-btn" title="Export all levels combined" style="background: #3b82f6; color: white;">🌐 All Levels</button>
     <div class="qualification-toggle">
       <label class="toggle-pill" for="mat-as-cardio-toggle">
         <input type="checkbox" id="mat-as-cardio-toggle">
@@ -2715,11 +2924,14 @@ function buildWeekQualificationTooltip(mi, weekNum) {
 
   let html = '<div class="tooltip-wrapper">';
   html += `<div class="tooltip-head">📋 Week ${weekNum} Qualification</div>`;
-  html += '<div class="tooltip-section-label">Format Breakdown</div>';
+  
+  // Format breakdown section
+  html += '<div class="tooltip-section">';
+  html += '<div class="tooltip-section-header" style="border-left-color: #64b5ff; color: #64b5ff;">📊 Format Requirements</div>';
+  html += '<div class="tooltip-format-list">';
   
   let totalRequired = 0;
   let totalDone = 0;
-  const rows = [];
   
   Object.entries(requirements)
     .sort((a, b) => {
@@ -2738,75 +2950,71 @@ function buildWeekQualificationTooltip(mi, weekNum) {
       } else {
         available = counts[reqAbbr] || 0;
       }
-      totalDone += Math.min(available, required);
-
+      
+      const done = Math.min(available, required);
+      totalDone += done;
       const isMatched = available >= required;
       const fillPercent = Math.min(100, (available / required) * 100);
-      const rowClass = isMatched ? 'matched' : 'missing';
-      const statusIcon = isMatched ? '✓' : '✗';
-      const statusClass = isMatched ? 'status-matched' : 'status-missing';
-      const fillClass = isMatched ? 'matched' : 'missing';
       
-      rows.push({
-        html: `<div class="format-row ${rowClass}">
-          <div class="format-name">${reqAbbr}</div>
-          <div class="format-progress">
-            <div class="progress-bar">
-              <div class="progress-fill ${fillClass}" style="width: ${fillPercent}%"></div>
-            </div>
-          </div>
-          <div class="format-count">${available}/${required}</div>
-          <div class="format-status ${statusClass}">${statusIcon}</div>
-        </div>`,
-        isMatched
-      });
+      html += `<div class="tooltip-format-item ${isMatched ? 'matched' : 'missing'}">`;
+      html += `<div class="tooltip-format-label">${reqAbbr}</div>`;
+      html += `<div class="tooltip-format-bar"><div class="tooltip-format-bar-fill ${isMatched ? 'matched' : 'missing'}" style="width: ${fillPercent}%"></div></div>`;
+      html += `<div class="tooltip-format-count">${available}/${required}</div>`;
+      html += `<div class="tooltip-format-icon ${isMatched ? 'matched' : 'missing'}">${isMatched ? '✓' : '✗'}</div>`;
+      html += '</div>';
     });
   
-  rows.forEach(row => html += row.html);
+  html += '</div></div>';
   
-  // Show bonus compensation info if applicable
+  // Bonus compensation section
   if (isCompensated) {
-    html += '<div class="tooltip-section-label" style="margin-top: 8px; color: #f59e0b;">🎁 Bonus Compensation</div>';
+    html += '<div class="tooltip-bonus-section">';
+    html += '<div class="tooltip-bonus-header">🎁 Bonus Compensation Used</div>';
+    html += '<div class="tooltip-bonus-items">';
     
-    // Calculate which classes from bonus are being used
-    let bonusUsedCount = 0;
-    const bonusFormats = [];
+    let bonusFound = false;
     for (let i = 0; i < STICKERS.length; i++) {
       const abbr = STICKERS[i].abbr;
       const bonusCount = plan.remainingBonus[abbr] || 0;
       const originalBonus = getBonusWeekClasses(mi)[abbr] || 0;
       const used = originalBonus - bonusCount;
       if (used > 0) {
-        bonusUsedCount += used;
-        bonusFormats.push(`${used}× ${abbr}`);
+        bonusFound = true;
+        html += `<div class="tooltip-bonus-item">`;
+        html += `<span style="font-weight: 700;">${abbr}</span>`;
+        html += `<span style="opacity: 0.8;">→ ${used} class${used !== 1 ? 'es' : ''} used</span>`;
+        html += `</div>`;
       }
     }
     
-    if (bonusFormats.length > 0) {
-      html += `<div style="padding: 6px; background: rgba(245, 158, 11, 0.1); border-radius: 4px; border-left: 3px solid #f59e0b;">`;
-      html += `<div style="font-size: 9px; color: #d97706; margin-bottom: 4px; font-weight: 600;">Classes Used from Bonus:</div>`;
-      html += `<div style="font-size: 10px; color: #92400e;">${bonusFormats.join(', ')}</div>`;
-      html += `</div>`;
+    if (!bonusFound) {
+      html += `<div style="font-size: 10px; color: #92400e; opacity: 0.6;">No bonus classes needed for this week</div>`;
     }
+    
+    html += '</div></div>';
   }
   
-  html += '<div class="tooltip-section-label">Overall Progress</div>';
+  // Overall progress section
+  html += '<div class="tooltip-progress-section">';
+  html += '<div class="tooltip-progress-header">📈 Week Overall Progress</div>';
   const overallPercent = Math.min(100, (totalDone / totalRequired) * 100);
-  html += `<div style="padding: 6px; background: rgba(255,255,255,0.03); border-radius: 4px; border-left: 3px solid #64b5ff;">`;
-  html += `<div style="font-size: 9px; color: #b0b4b8; margin-bottom: 4px;">Total Classes Attended</div>`;
-  html += `<div style="display: flex; align-items: center; gap: 6px;">`;
-  html += `<div class="progress-bar" style="flex: 1;"><div class="progress-fill" style="width: ${overallPercent}%; background: #64b5ff;"></div></div>`;
-  html += `<div style="font-weight: 700; color: #64b5ff; min-width: 50px; text-align: right;">${totalDone}/${totalRequired}</div>`;
-  html += `</div></div>`;
+  html += '<div class="tooltip-progress-container">';
+  html += `<div class="tooltip-progress-bar-main"><div class="tooltip-progress-bar-main-fill" style="width: ${overallPercent}%"></div></div>`;
+  html += `<div class="tooltip-progress-text">${totalDone}/${totalRequired}</div>`;
+  html += '</div></div>';
   
-  let statusText = completed ? '✓ QUALIFIED' : '✗ NOT QUALIFIED';
+  // Status footer
+  const statusClass = completed ? 'qualified' : 'not-qualified';
+  const statusIcon = completed ? '✓' : '✗';
+  let statusText = completed ? 'QUALIFIED' : 'NOT QUALIFIED';
   if (isCompensated) statusText += ' (with Bonus)';
   
-  html += `<div class="tooltip-footer ${completed ? 'qualified-status' : 'not-qualified-status'}">`;
-  html += statusText;
+  html += `<div class="tooltip-footer-status ${statusClass}">`;
+  html += `<span style="font-size: 14px;">${statusIcon}</span>`;
+  html += `<span>${statusText}</span>`;
   html += '</div>';
+  
   html += '</div>';
-
   return html;
 }
 
@@ -4036,6 +4244,249 @@ refreshBoard();
 positionScorePillTooltips();
 
 // ── EXPORT FUNCTIONALITY ──
+// Helper: Get bonus classes by format for a member
+function getBonusWeekClasses(mi) {
+  const counts = {};
+  days.slice(28, 33).forEach(day => {
+    const emoji = state[mi][day.key];
+    if (!emoji) return;
+    const abbr = getStickerAbbr(emoji);
+    if (!abbr) return;
+    counts[abbr] = (counts[abbr] || 0) + 1;
+  });
+  return counts;
+}
+
+// Helper: Get a member's day-by-day attendance with bonus/normalization tracking
+function getDayByDayBreakdown(mi) {
+  const member = MEMBERS[mi];
+  const memberStates = state[mi];
+  const plan = getMemberWeekPlan(mi);
+  const bonusPool = getBonusWeekClasses(mi);
+  
+  const dayRows = [];
+  
+  days.forEach((day) => {
+    if (day.num > 32) return; // Skip after bonus week
+    
+    const emoji = memberStates[day.key];
+    const isBonus = day.num >= 28;
+    const classAbbr = emoji ? getStickerAbbr(emoji) : '-';
+    const isConsumedBonus = emoji && isBonus && plan.consumedBonusDayKeys[day.key];
+    const qualifiesWeek = isConsumedBonus ? plan.consumedBonusDayKeys[day.key] : 
+                         (day.num >= 1 && day.num <= 7) ? 1 :
+                         (day.num >= 8 && day.num <= 14) ? 2 :
+                         (day.num >= 15 && day.num <= 21) ? 3 :
+                         (day.num >= 22 && day.num <= 27) ? 4 : 0;
+    
+    dayRows.push({
+      dayNum: day.num,
+      dayLabel: day.label,
+      class: classAbbr,
+      isBonus: isBonus,
+      bonusUsedForWeek: isConsumedBonus ? `Week ${isConsumedBonus}` : '-'
+    });
+  });
+  
+  return dayRows;
+}
+
+// Helper: Determine why a member is disqualified
+function getDisqualificationReason(mi) {
+  const score = getScore(mi);
+  if (score >= 4) return '';
+  
+  const plan = getMemberWeekPlan(mi);
+  const reasons = [];
+  
+  for (let w = 1; w <= 4; w++) {
+    if (!plan.weeks[w] || plan.weeks[w].finalQualified) continue;
+    const week = plan.weeks[w];
+    const missing = [];
+    Object.entries(week.requirements).forEach(([fmt, req]) => {
+      const group = getEquivGroup(fmt);
+      let available = 0;
+      if (group) {
+        group.forEach(f => available += week.counts[f] || 0);
+      } else {
+        available = week.counts[fmt] || 0;
+      }
+      if (available < req) {
+        missing.push(`${fmt}: ${available}/${req}`);
+      }
+    });
+    if (missing.length > 0) {
+      reasons.push(`Week ${w}: ${missing.join(', ')}`);
+    }
+  }
+  
+  return reasons.join(' | ') || 'Insufficient classes across weeks';
+}
+
+// Enhanced: Get all member data with detailed breakdown
+function getDetailedMemberExportData() {
+  const allData = [];
+  
+  MEMBERS.forEach((m, mi) => {
+    const score = getScore(mi);
+    const plan = getMemberWeekPlan(mi);
+    const bonusClasses = getBonusWeekClasses(mi);
+    const dayByDay = getDayByDayBreakdown(mi);
+    const status = score >= 4 ? 'QUALIFIED' : 'DISQUALIFIED';
+    const disqualReason = score < 4 ? getDisqualificationReason(mi) : '';
+    
+    // Summarize bonus usage
+    let bonusUsedSummary = '';
+    const usedFormats = [];
+    Object.entries(bonusClasses).forEach(([fmt, total]) => {
+      const remaining = plan.remainingBonus[fmt] || 0;
+      const used = total - remaining;
+      if (used > 0) {
+        usedFormats.push(`${fmt}(${used})`);
+      }
+    });
+    bonusUsedSummary = usedFormats.length > 0 ? usedFormats.join(', ') : 'None';
+    
+    const totalClasses = getTotalClasses(mi);
+    const required = getTotalClassesRequired(mi);
+    
+    // Build week-by-week qualification criteria
+    const loc = MEMBERS[mi] ? MEMBERS[mi].loc : 'KC';
+    const reqs = (loc === 'Bandra') ? WEEKLY_REQUIREMENTS_BANDRA : (loc === 'KH') ? WEEKLY_REQUIREMENTS_KH : (loc === 'CNC') ? WEEKLY_REQUIREMENTS_CNC : WEEKLY_REQUIREMENTS_KC;
+    
+    let qualifCriteria = '';
+    for (let week = 1; week <= 4; week++) {
+      if (reqs[week]) {
+        const reqList = Object.entries(reqs[week]).map(([fmt, cnt]) => `${fmt}×${cnt}`).join(',');
+        qualifCriteria += `Week${week}:(${reqList})|`;
+      }
+    }
+    qualifCriteria = qualifCriteria.slice(0, -1);
+    
+    // Build day-by-day columns object
+    const dayColumns = {};
+    dayByDay.forEach(d => {
+      const dayKey = `Day${d.dayNum}`;
+      if (d.class !== '-') {
+        // Format: "FIT" or "FIT*" for bonus
+        if (d.isBonus && d.bonusUsedForWeek !== '-') {
+          dayColumns[dayKey] = `${d.class}*Week${d.bonusUsedForWeek.substring(5)}`; // Extract week number
+        } else {
+          dayColumns[dayKey] = d.class;
+        }
+      } else {
+        dayColumns[dayKey] = '-';
+      }
+    });
+    
+    allData.push({
+      name: `${m.first} ${m.last}`,
+      location: m.loc,
+      level: 'Intermediate',
+      email: m.email || '',
+      qualification: status,
+      score: score,
+      qualificationCriteria: qualifCriteria,
+      week1Status: plan.weeks[1]?.finalQualified ? '✓' : '✗',
+      week2Status: plan.weeks[2]?.finalQualified ? '✓' : '✗',
+      week3Status: plan.weeks[3]?.finalQualified ? '✓' : '✗',
+      week4Status: plan.weeks[4]?.finalQualified ? '✓' : '✗',
+      totalClasses: totalClasses,
+      totalRequired: required,
+      bonusClassesUsed: bonusUsedSummary,
+      disqualReason: disqualReason,
+      ...dayColumns
+    });
+  });
+  
+  return allData;
+}
+
+function generateDetailedCSV(data) {
+  if (!data || data.length === 0) return '';
+  
+  // Sort data: Location first, then Level, then Name
+  const sortedData = data.sort((a, b) => {
+    if (a.location !== b.location) {
+      return a.location.localeCompare(b.location);
+    }
+    if (a.level !== b.level) {
+      return a.level.localeCompare(b.level);
+    }
+    return a.name.localeCompare(b.name);
+  });
+  
+  // Build dynamic headers: all day columns + qualifications
+  const baseHeaders = [
+    'Location', 'Name', 'Email', 'Level', 'Qualification Status', 'Score',
+    'Week 1 Qualified', 'Week 2 Qualified', 'Week 3 Qualified', 'Week 4 Qualified',
+    'Qualification Criteria', 'Total Classes Done', 'Total Classes Required',
+    'Bonus Classes Used', 'Disqualification Reason'
+  ];
+  
+  const dayHeaders = [];
+  for (let i = 1; i <= 33; i++) {
+    dayHeaders.push(`Day ${i}`);
+  }
+  
+  const headers = [...baseHeaders, ...dayHeaders];
+  
+  const rows = sortedData.map(m => {
+    const baseRow = [
+      `"${m.location}"`,
+      `"${m.name}"`,
+      `"${m.email}"`,
+      `"${m.level}"`,
+      m.qualification,
+      m.score,
+      m.week1Status,
+      m.week2Status,
+      m.week3Status,
+      m.week4Status,
+      `"${m.qualificationCriteria}"`,
+      m.totalClasses,
+      m.totalRequired,
+      `"${m.bonusClassesUsed}"`,
+      `"${m.disqualReason}"`,
+    ];
+    
+    const dayRow = [];
+    for (let i = 1; i <= 33; i++) {
+      const dayKey = `Day${i}`;
+      const dayValue = m[dayKey] || '-';
+      dayRow.push(dayValue);
+    }
+    
+    return [...baseRow, ...dayRow];
+  });
+  
+  return [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+}
+
+function exportDetailedReport() {
+  const data = getDetailedMemberExportData();
+  
+  if (data.length === 0) {
+    alert('No member data to export');
+    return;
+  }
+  
+  const csv = generateDetailedCSV(data);
+  const timestamp = new Date().toISOString().split('T')[0];
+  const filename = `detailed-report-intermediate-${timestamp}.csv`;
+  
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+// Legacy functions for backward compatibility
 function getQualifiedMembersData() {
   const qualified = [];
   MEMBERS.forEach((m, mi) => {
@@ -4075,26 +4526,7 @@ function generateCSV(data, level = 'Intermediate') {
 }
 
 function exportQualifiedMembers(format = 'csv') {
-  const qualified = getQualifiedMembersData();
-  
-  if (qualified.length === 0) {
-    alert('No qualified members to export');
-    return;
-  }
-  
-  const csv = generateCSV(qualified);
-  const timestamp = new Date().toISOString().split('T')[0];
-  const filename = `qualified-members-intermediate-${timestamp}.csv`;
-  
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  const url = URL.createObjectURL(blob);
-  link.setAttribute('href', url);
-  link.setAttribute('download', filename);
-  link.style.visibility = 'hidden';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  exportDetailedReport();
 }
 
 function exportQualifiedMembersJSON() {

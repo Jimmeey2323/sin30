@@ -1857,7 +1857,7 @@ function buildWeeklyRequirementBreakdown(requirements) {
 function buildQualifiedFormatBreakdown(qualificationAnalysis) {
   const lines = ['Formats Breakdown:'];
   ['CARDIO', 'STRENGTH'].forEach(displayKey => {
-    const done = qualificationAnalysis.rawQualifiedDoneByDisplay[displayKey] || 0;
+    const done = qualificationAnalysis.completedByDisplay[displayKey] || 0;
     const required = qualificationAnalysis.requiredByDisplay[displayKey] || 0;
     const emoji = getQualifiedDisplayEmoji(displayKey);
     const label = getQualifiedDisplayLabel(displayKey);

@@ -842,6 +842,26 @@ td.day-td.week-not-qualified .sticker-slot:hover {
   background: #f0ede6;
 }
 
+/* Bonus class consumption highlighting */
+.sticker-slot.bonus-used {
+  text-decoration: line-through;
+  opacity: 0.5;
+  background: rgba(254, 243, 199, 0.6);
+  border: 1px solid #f59e0b;
+}
+
+.sticker-slot.bonus-compensated {
+  background: linear-gradient(135deg, #fef3c7, #fde68a) !important;
+  border: 2px solid #f59e0b !important;
+  color: #d97706;
+  font-weight: 700;
+}
+
+.day-td.bonus-week-compensated {
+  background: linear-gradient(135deg, rgba(254, 243, 199, 0.4), rgba(253, 230, 138, 0.4)) !important;
+  outline: 2px solid #f59e0b;
+}
+
 /* Qualifying sticker highlight */
 /* Qualifying sticker — no tick badges; week-level gray wash is the signal */
 
@@ -1802,25 +1822,263 @@ function getStickerAbbr(emoji) {
 }
 
 const BOARD_SETTINGS_KEY = 'sin30_intermediate_settings';
+const FORMAT_RULES_KEY = 'sin30_format_rules_intermediate';
+const DEFAULT_FORMAT_RULES = {
+  CB_HIIT: true,
+  CB_AMP: true,
+  CB_CBP: true,
+  CB_TC: true,
+  FIT_LAB: true,
+  FIT_BBB: true,
+  LAB_BBB: true,
+  PC_interchangeable: false,
+  B57_interchangeable: false,
+  Mat_interchangeable: false,
+  REC_interchangeable: false,
+};
 const qualificationSettings = {
   matCountsAsCardio: false,
   useClassDifferenceQualification: false,
   classToleranceValue: 3,
+  useBonusWeekCompensation: true,
 };
 const qualificationToggleEl = document.getElementById('mat-as-cardio-toggle');
 const classQualificationToggleEl = document.getElementById('class-diff-qualification-toggle');
 const CARDIO_QUALIFICATION_FORMATS = ['CB', 'CBP', 'HIIT', 'PC', 'BBB', 'AMP'];
 const STRENGTH_QUALIFICATION_FORMATS = ['LAB', 'FIT'];
 const QUALIFIED_DISPLAY_ORDER = ['CARDIO', 'STRENGTH'];
+let userFormatRules = { ...DEFAULT_FORMAT_RULES };
 
 // ── CLASS EQUIVALENCY GROUPS ──
-const EQUIV_GROUPS = [
-  new Set(['FIT', 'LAB']),
-  new Set(['CB', 'BBB', 'HIIT', 'AMP', 'CBP', 'PC']),
-];
+let EQUIV_GROUPS = [];
 
 function getEquivGroup(abbr) {
   return EQUIV_GROUPS.find(g => g.has(abbr)) || null;
+}
+
+function initializeFormatRules() {
+  try {
+    const saved = localStorage.getItem(FORMAT_RULES_KEY);
+    if (saved) {
+      userFormatRules = { ...DEFAULT_FORMAT_RULES, ...JSON.parse(saved) };
+    }
+  } catch (e) {
+    console.warn('Failed to restore format rules:', e);
+    userFormatRules = { ...DEFAULT_FORMAT_RULES };
+  }
+
+  if (typeof userFormatRules.Mat_interchangeable !== 'boolean') {
+    userFormatRules.Mat_interchangeable = !!qualificationSettings.matCountsAsCardio;
+  }
+
+  qualificationSettings.matCountsAsCardio = !!userFormatRules.Mat_interchangeable;
+  updateEquivGroupsFromRules();
+}
+
+function saveFormatRules() {
+  try {
+    localStorage.setItem(FORMAT_RULES_KEY, JSON.stringify(userFormatRules));
+  } catch (e) {
+    console.warn('Failed to save format rules:', e);
+  }
+}
+
+function updateEquivGroupsFromRules() {
+  const cardio = new Set(['CB']);
+  const strength = new Set(['FIT']);
+
+  if (userFormatRules.CB_HIIT) cardio.add('HIIT');
+  if (userFormatRules.CB_AMP) cardio.add('AMP');
+  if (userFormatRules.CB_CBP) cardio.add('CBP');
+  if (userFormatRules.CB_TC) cardio.add('TC');
+  if (userFormatRules.PC_interchangeable) cardio.add('PC');
+  if (userFormatRules.B57_interchangeable) cardio.add('B57');
+  if (userFormatRules.Mat_interchangeable || qualificationSettings.matCountsAsCardio) cardio.add('Mat');
+
+  if (userFormatRules.FIT_LAB) strength.add('LAB');
+  if (userFormatRules.FIT_BBB) strength.add('BBB');
+  if (userFormatRules.LAB_BBB) strength.add('BBB');
+  if (userFormatRules.REC_interchangeable) strength.add('REC');
+
+  EQUIV_GROUPS = [cardio, strength];
+}
+
+function isRuleEnabled(ruleKey) {
+  return !!userFormatRules[ruleKey];
+}
+
+function setFormatRule(ruleKey, value) {
+  userFormatRules[ruleKey] = !!value;
+  if (ruleKey === 'Mat_interchangeable') {
+    qualificationSettings.matCountsAsCardio = !!value;
+  }
+  updateEquivGroupsFromRules();
+  saveFormatRules();
+  saveQualificationSettings();
+  syncQualificationToggle();
+  syncSettingsModal();
+  refreshBoard();
+  positionScorePillTooltips();
+}
+
+function toggleFormatRule(ruleKey) {
+  setFormatRule(ruleKey, !isRuleEnabled(ruleKey));
+}
+
+function getFormatRuleLabel(ruleKey) {
+  const labels = {
+    CB_HIIT: 'Cardio Barre ↔ HIIT',
+    CB_AMP: 'Cardio Barre ↔ Amped Up',
+    CB_CBP: 'Cardio Barre ↔ Cardio Barre Plus',
+    CB_TC: "Cardio Barre ↔ Trainer's Choice",
+    FIT_LAB: 'FIT ↔ Strength Lab',
+    FIT_BBB: 'FIT ↔ Back Body Blaze',
+    LAB_BBB: 'Strength Lab ↔ Back Body Blaze',
+    PC_interchangeable: 'PowerCycle ↔ Cardio formats',
+    B57_interchangeable: 'Barre 57 ↔ Cardio formats',
+    Mat_interchangeable: 'Mat 57 ↔ Cardio formats',
+    REC_interchangeable: 'Recovery ↔ Strength formats',
+  };
+  return labels[ruleKey] || ruleKey;
+}
+
+function getFormatRuleDescription(ruleKey) {
+  const descriptions = {
+    CB_HIIT: 'Lets HIIT satisfy Cardio Barre requirements and vice-versa.',
+    CB_AMP: 'Lets Amped Up count for Cardio Barre slots.',
+    CB_CBP: 'Lets Cardio Barre Plus count for Cardio Barre slots.',
+    CB_TC: "Treats Trainer's Choice as part of the cardio exchange set.",
+    FIT_LAB: 'Keeps FIT and Strength Lab interchangeable.',
+    FIT_BBB: 'Allows Back Body Blaze to flow into the strength group.',
+    LAB_BBB: 'Makes Strength Lab and Back Body Blaze interchangeable directly.',
+    PC_interchangeable: 'Lets PowerCycle compensate cardio requirements.',
+    B57_interchangeable: 'Lets Barre 57 compensate cardio requirements.',
+    Mat_interchangeable: 'Lets Mat 57 compensate cardio requirements.',
+    REC_interchangeable: 'Lets Recovery compensate strength requirements.',
+  };
+  return descriptions[ruleKey] || '';
+}
+
+function getSettingsModal() {
+  return document.getElementById('settings-modal');
+}
+
+function openSettingsModal() {
+  syncSettingsModal();
+  const modal = getSettingsModal();
+  if (modal) modal.classList.add('open');
+}
+
+function closeSettingsModal() {
+  const modal = getSettingsModal();
+  if (modal) modal.classList.remove('open');
+}
+
+function renderFormatRulesSettings() {
+  const list = document.getElementById('settings-format-rules');
+  if (!list) return;
+  list.innerHTML = '';
+  Object.keys(DEFAULT_FORMAT_RULES).forEach(ruleKey => {
+    const item = document.createElement('label');
+    item.className = 'settings-rule-item';
+    item.innerHTML = `
+      <span class="rule-copy">
+        <span class="rule-title">${getFormatRuleLabel(ruleKey)}</span>
+        <span class="rule-desc">${getFormatRuleDescription(ruleKey)}</span>
+      </span>
+      <input type="checkbox" data-format-rule="${ruleKey}">
+    `;
+    const input = item.querySelector('input');
+    input.checked = isRuleEnabled(ruleKey);
+    input.addEventListener('change', () => setFormatRule(ruleKey, input.checked));
+    list.appendChild(item);
+  });
+}
+
+function buildGoalSummaryHTML() {
+  const locationMap = [
+    ['Kemps Corner', WEEKLY_REQUIREMENTS_KC],
+    ['Supreme HQ, Bandra', WEEKLY_REQUIREMENTS_BANDRA],
+    ['Kenkere House', WEEKLY_REQUIREMENTS_KH],
+    ['C & C', WEEKLY_REQUIREMENTS_CNC],
+  ];
+  return locationMap.map(([label, reqs]) => {
+    const goalCards = [];
+    for (let week = 1; week <= 4; week++) {
+      const req = reqs[week];
+      if (!req) continue;
+      const goal = Object.entries(req).map(([abbr, n]) => `${n}×${abbr}`).join(' · ');
+      goalCards.push(`<div class="settings-goal-card"><div class="goal-label">Week ${week}</div><div class="goal-lines"><div>${goal}</div><div style="color: var(--ink-muted);">${label}</div></div></div>`);
+    }
+    return goalCards.join('');
+  }).join('');
+}
+
+function syncSettingsModal() {
+  const matCardio = document.getElementById('settings-mat-cardio');
+  const bonusComp = document.getElementById('settings-bonus-comp');
+  const classDiff = document.getElementById('settings-class-diff');
+  const tolerance = document.getElementById('settings-class-tolerance');
+  const toleranceWrap = document.getElementById('settings-class-tolerance-wrap');
+  if (matCardio) matCardio.checked = !!qualificationSettings.matCountsAsCardio;
+  if (bonusComp) bonusComp.checked = !!qualificationSettings.useBonusWeekCompensation;
+  if (classDiff) classDiff.checked = !!qualificationSettings.useClassDifferenceQualification;
+  if (tolerance) tolerance.value = qualificationSettings.classToleranceValue || 3;
+  if (toleranceWrap) toleranceWrap.style.display = qualificationSettings.useClassDifferenceQualification ? 'flex' : 'none';
+  const goalSummary = document.getElementById('settings-goal-summary');
+  if (goalSummary) goalSummary.innerHTML = buildGoalSummaryHTML();
+  renderFormatRulesSettings();
+}
+
+function bindSettingsModalEvents() {
+  const matCardio = document.getElementById('settings-mat-cardio');
+  const bonusComp = document.getElementById('settings-bonus-comp');
+  const classDiff = document.getElementById('settings-class-diff');
+  const tolerance = document.getElementById('settings-class-tolerance');
+  const toleranceWrap = document.getElementById('settings-class-tolerance-wrap');
+
+  if (matCardio) {
+    matCardio.addEventListener('change', () => {
+      qualificationSettings.matCountsAsCardio = matCardio.checked;
+      userFormatRules.Mat_interchangeable = matCardio.checked;
+      updateEquivGroupsFromRules();
+      saveFormatRules();
+      saveQualificationSettings();
+      syncQualificationToggle();
+      syncSettingsModal();
+      refreshBoard();
+      positionScorePillTooltips();
+    });
+  }
+
+  if (bonusComp) {
+    bonusComp.addEventListener('change', () => {
+      qualificationSettings.useBonusWeekCompensation = bonusComp.checked;
+      saveQualificationSettings();
+      refreshBoard();
+      positionScorePillTooltips();
+    });
+  }
+
+  if (classDiff) {
+    classDiff.addEventListener('change', () => {
+      qualificationSettings.useClassDifferenceQualification = classDiff.checked;
+      if (toleranceWrap) toleranceWrap.style.display = classDiff.checked ? 'flex' : 'none';
+      saveQualificationSettings();
+      syncSettingsModal();
+      refreshBoard();
+      positionScorePillTooltips();
+    });
+  }
+
+  if (tolerance) {
+    tolerance.addEventListener('change', () => {
+      qualificationSettings.classToleranceValue = parseInt(tolerance.value, 10) || 3;
+      saveQualificationSettings();
+      refreshBoard();
+      positionScorePillTooltips();
+    });
+  }
 }
 
 function getQualifiedDisplayKey(abbr) {
@@ -1855,13 +2113,85 @@ function getQualifiedDisplaySortValue(displayKey) {
 
 function getRequirementEligibleActualAbbrs(reqAbbr) {
   if (reqAbbr === 'TC') return STICKERS.map(s => s.abbr);
-  if (STRENGTH_QUALIFICATION_FORMATS.includes(reqAbbr)) return [...STRENGTH_QUALIFICATION_FORMATS];
-  if (CARDIO_QUALIFICATION_FORMATS.includes(reqAbbr)) {
-    return qualificationSettings.matCountsAsCardio
-      ? [...CARDIO_QUALIFICATION_FORMATS, 'Mat']
-      : [...CARDIO_QUALIFICATION_FORMATS];
-  }
+  const group = getEquivGroup(reqAbbr);
+  if (group) return Array.from(group);
   return [reqAbbr];
+}
+
+function getBonusWeekClasses(mi) {
+  const bonusDays = days.slice(28);
+  const bonusCounts = {};
+  bonusDays.forEach(day => {
+    const emoji = state[mi][day.key];
+    if (!emoji) return;
+    const abbr = getStickerAbbr(emoji);
+    if (!abbr) return;
+    bonusCounts[abbr] = (bonusCounts[abbr] || 0) + 1;
+  });
+  return bonusCounts;
+}
+
+function getTotalBonusClasses(mi) {
+  return Object.values(getBonusWeekClasses(mi)).reduce((sum, count) => sum + count, 0);
+}
+
+function computeBonusCompensationWeek(mi, weekNum) {
+  if (!qualificationSettings.useBonusWeekCompensation || weekNum < 1 || weekNum > 4) {
+    return { canCompensate: false, bonusCounts: {}, combinedCounts: {} };
+  }
+
+  const base = getWeekScore(mi, weekNum);
+  if (base.completed) {
+    return { canCompensate: false, bonusCounts: {}, combinedCounts: base.counts };
+  }
+
+  const bonusCounts = getBonusWeekClasses(mi);
+  const combinedCounts = { ...base.counts };
+  Object.entries(bonusCounts).forEach(([abbr, count]) => {
+    combinedCounts[abbr] = (combinedCounts[abbr] || 0) + count;
+  });
+
+  const compensationAnalysis = buildQualificationAnalysis(combinedCounts, base.requirements);
+  return {
+    canCompensate: !!compensationAnalysis.completed,
+    bonusCounts,
+    combinedCounts,
+    compensationAnalysis,
+  };
+}
+
+function getBonusStatsHTML(mi) {
+  const bonusCounts = getBonusWeekClasses(mi);
+  const totalBonus = getTotalBonusClasses(mi);
+  const compensatedWeeks = [];
+  for (let week = 1; week <= 4; week++) {
+    const base = getWeekScore(mi, week);
+    if (!base.completed) {
+      const check = computeBonusCompensationWeek(mi, week);
+      if (check.canCompensate) compensatedWeeks.push(week);
+    }
+  }
+
+  if (!totalBonus) {
+    return '<div style="font-size: 11px; color: var(--ink-muted); text-align: center; padding: 8px 4px;">—</div>';
+  }
+
+  const cardioBonus = Object.entries(bonusCounts).reduce((sum, [abbr, count]) => {
+    return sum + (getActualQualifiedDisplayKey(abbr) === 'CARDIO' ? count : 0);
+  }, 0);
+  const strengthBonus = Object.entries(bonusCounts).reduce((sum, [abbr, count]) => {
+    return sum + (getActualQualifiedDisplayKey(abbr) === 'STRENGTH' ? count : 0);
+  }, 0);
+
+  let html = '<div style="font-size: 10px; text-align: center; padding: 6px 4px; line-height: 1.35;">';
+  html += `<div style="font-weight: 800; margin-bottom: 3px;">${totalBonus} bonus</div>`;
+  if (cardioBonus > 0) html += `<div style="color: #e63946;">🫀 ${cardioBonus}</div>`;
+  if (strengthBonus > 0) html += `<div style="color: #6d6875;">🏋️ ${strengthBonus}</div>`;
+  if (compensatedWeeks.length) {
+    html += `<div style="margin-top: 4px; padding-top: 4px; border-top: 1px solid var(--ink-light); color: #16a34a; font-size: 9px; font-weight: 700;">✓ W${compensatedWeeks.join(', W')}</div>`;
+  }
+  html += '</div>';
+  return html;
 }
 
 function buildRequirementSlots(requirements) {
@@ -1971,7 +2301,7 @@ function getWeekScore(mi, weekNum) {
   if (!weekDays) return { completed: false, counts: {} };
 
   const loc = MEMBERS[mi] ? MEMBERS[mi].loc : 'KC';
-  const reqs = loc === 'Bandra' ? WEEKLY_REQUIREMENTS_BANDRA : loc === 'KH' ? WEEKLY_REQUIREMENTS_KH : loc === 'CNC' ? WEEKLY_REQUIREMENTS_CNC : WEEKLY_REQUIREMENTS_KC;
+  const reqs = (loc === 'Bandra') ? WEEKLY_REQUIREMENTS_BANDRA : WEEKLY_REQUIREMENTS_KC;
   const requirements = reqs[weekNum];
   if (!requirements) return { completed: false, counts: {} };
 
@@ -2101,18 +2431,93 @@ function buildWeekQualificationTooltip(mi, weekNum) {
   const { completed, counts, requirements, qualificationAnalysis } = getWeekScore(mi, weekNum);
   if (!requirements) return '';
 
-  const result = completed ? '✓ QUALIFIED' : '✗ NOT QUALIFIED';
+  // Format requirements as "1B57, 2CB, 1FIT, 2PC"
+  const requiredList = [];
+  Object.entries(requirements)
+    .sort((a, b) => {
+      const order = [...STICKERS.map(s => s.abbr), 'CBP', 'TC'];
+      return order.indexOf(a[0]) - order.indexOf(b[0]);
+    })
+    .forEach(([abbr, count]) => {
+      requiredList.push(`${count}${abbr}`);
+    });
+  
+  // Format completed as "2CB, 1FIT, 1AU, 1HIIT"
+  const completedList = [];
+  STICKERS.forEach(({ abbr }) => {
+    const count = counts[abbr] || 0;
+    if (count > 0) {
+      completedList.push(`${count}${abbr}`);
+    }
+  });
+  
+  // Format qualified - showing what matched requirements with alternates in parentheses
+  const qualifiedList = [];
+  const matched = {};
+  
+  // For each requirement, find what format satisfied it
+  Object.entries(requirements)
+    .sort((a, b) => {
+      const order = [...STICKERS.map(s => s.abbr), 'CBP', 'TC'];
+      return order.indexOf(a[0]) - order.indexOf(b[0]);
+    })
+    .forEach(([reqAbbr, required]) => {
+      const group = getEquivGroup(reqAbbr);
+      if (!group) {
+        // No equivalency group, check if exact match exists in counts
+        if ((counts[reqAbbr] || 0) > 0) {
+          qualifiedList.push(`${required}${reqAbbr}`);
+          matched[reqAbbr] = required;
+        } else {
+          qualifiedList.push(`MISSING: ${required}${reqAbbr}`);
+        }
+        return;
+      }
+      
+      // Count how many from this group we have
+      let groupCount = 0;
+      const usedFromGroup = [];
+      group.forEach(fmt => {
+        const avail = counts[fmt] || 0;
+        if (avail > 0) {
+          usedFromGroup.push(`${avail}${fmt}`);
+          groupCount += avail;
+        }
+      });
+      
+      if (groupCount >= required) {
+        if (usedFromGroup.length === 1 && usedFromGroup[0].endsWith(reqAbbr)) {
+          // Exact match only
+          qualifiedList.push(`${required}${reqAbbr}`);
+        } else if (usedFromGroup.length === 1) {
+          // Different format in group
+          qualifiedList.push(`${required}${reqAbbr}(${usedFromGroup[0]})`);
+        } else {
+          // Multiple formats used
+          qualifiedList.push(`${required}${reqAbbr}(${usedFromGroup.join(', ')})`);
+        }
+      } else {
+        // Not enough in group, show shortfall
+        const shortfall = required - groupCount;
+        if (usedFromGroup.length > 0) {
+          qualifiedList.push(`${required}${reqAbbr}(${usedFromGroup.join(', ')})-${shortfall}short`);
+        } else {
+          qualifiedList.push(`MISSING: ${required}${reqAbbr}`);
+        }
+      }
+    });
+  
+  const compensation = completed ? null : computeBonusCompensationWeek(mi, weekNum);
+  const bonusNote = !completed && compensation && compensation.canCompensate 
+    ? ' (Bonus available)' 
+    : '';
   
   const lines = [
-    `WEEK ${weekNum}: ${result}`,
+    `FORMATS REQUIRED - ${requiredList.join(', ')}`,
+    `FORMATS COMPLETED - ${completedList.length > 0 ? completedList.join(', ') : 'None'}`,
+    `FORMATS QUALIFIED - ${qualifiedList.join(', ')}${bonusNote}`,
     '',
-    ...buildWeeklyClassBreakdown(counts),
-    '',
-    ...buildWeeklyRequirementBreakdown(requirements),
-    '',
-    ...buildQualifiedFormatBreakdown(qualificationAnalysis),
-    '',
-    `Setting: Mat counts as Cardio is ${qualificationSettings.matCountsAsCardio ? 'ON' : 'OFF'}`
+    `Qualification: ${completed ? '✓ QUALIFIED' : '✗ NOT QUALIFIED'}`
   ];
 
   return lines.join('\n');
@@ -2848,7 +3253,7 @@ function exportToCSV() {
   
   // Data rows
   stats.forEach(participant => {
-    const weekStatuses = participant.weekDetails.map(w => w.qualified ? 'QUALIFIED' : 'NOT QUALIFIED').join(',');
+    const weekStatuses = participant.weekDetails.map(w => w.qualified ? '✓' : '✗' ).join('');
     rows.push([
       participant.name,
       participant.email,
@@ -2918,12 +3323,13 @@ function exportToPDF() {
         tr:nth-child(even) { background-color: #f8f9fa; }
         .status-qualified::before { content: '✓ '; color: #27ae60; font-weight: bold; }
         .status-not-qualified::before { content: '✗ '; color: #e74c3c; font-weight: bold; }
-        .summary { margin-top: 20px; padding: 12px; background-color: #ecf0f1; border-left: 3px solid #34495e; }
-        h2 { margin: 0 0 8px 0; color: #2c3e50; font-size: 12px; }
-        .summary-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
-        .summary-item { }
-        .summary-label { font-size: 9px; color: #7f8c8d; font-weight: 500; }
-        .summary-value { font-size: 14px; font-weight: 600; color: #2c3e50; }
+        .center{text-align:center};
+        .summary{background:#fff;padding:20px;margin-top:30px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1)};
+        .summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-top:15px};
+        .summary-card{padding:15px;background:#f9f9f9;border-radius:5px;border-left:4px solid #1d4ed8};
+        .summary-label{font-size:12px;color:#666;font-weight:bold};
+        .summary-value{font-size:24px;font-weight:bold;color:#1d4ed8;margin-top:5px};
+        .meta{text-align:center;color:#999;font-size:11px;margin:15px 0};
       </style>
     </head>
     <body>
@@ -3243,8 +3649,10 @@ function positionScorePillTooltips() {
 }
 
 // ── INIT ──
+initializeFormatRules();
 restoreQualificationSettings();
 syncQualificationToggle();
+bindSettingsModalEvents();
 if (qualificationToggleEl) {
   qualificationToggleEl.addEventListener('change', () => {
     qualificationSettings.matCountsAsCardio = qualificationToggleEl.checked;

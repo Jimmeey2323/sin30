@@ -840,6 +840,26 @@ td.day-td.week-not-qualified .sticker-slot:hover {
   background: #f0ede6;
 }
 
+/* Bonus class consumption highlighting */
+.sticker-slot.bonus-used {
+  text-decoration: line-through;
+  opacity: 0.5;
+  background: rgba(254, 243, 199, 0.6);
+  border: 1px solid #f59e0b;
+}
+
+.sticker-slot.bonus-compensated {
+  background: linear-gradient(135deg, #fef3c7, #fde68a) !important;
+  border: 2px solid #f59e0b !important;
+  color: #d97706;
+  font-weight: 700;
+}
+
+.day-td.bonus-week-compensated {
+  background: linear-gradient(135deg, rgba(254, 243, 199, 0.4), rgba(253, 230, 138, 0.4)) !important;
+  outline: 2px solid #f59e0b;
+}
+
 /* Qualifying sticker highlight */
 /* Qualifying sticker — no tick badges; week-level gray wash is the signal */
 
@@ -2470,21 +2490,93 @@ function buildWeekQualificationTooltip(mi, weekNum) {
   const { completed, counts, requirements, qualificationAnalysis } = getWeekScore(mi, weekNum);
   if (!requirements) return '';
 
-  const result = completed ? '✓ QUALIFIED' : '✗ NOT QUALIFIED';
+  // Format requirements as "1B57, 2CB, 1FIT, 2PC"
+  const requiredList = [];
+  Object.entries(requirements)
+    .sort((a, b) => {
+      const order = [...STICKERS.map(s => s.abbr), 'CBP', 'TC'];
+      return order.indexOf(a[0]) - order.indexOf(b[0]);
+    })
+    .forEach(([abbr, count]) => {
+      requiredList.push(`${count}${abbr}`);
+    });
+  
+  // Format completed as "2CB, 1FIT, 1AU, 1HIIT"
+  const completedList = [];
+  STICKERS.forEach(({ abbr }) => {
+    const count = counts[abbr] || 0;
+    if (count > 0) {
+      completedList.push(`${count}${abbr}`);
+    }
+  });
+  
+  // Format qualified - showing what matched requirements with alternates in parentheses
+  const qualifiedList = [];
+  const matched = {};
+  
+  // For each requirement, find what format satisfied it
+  Object.entries(requirements)
+    .sort((a, b) => {
+      const order = [...STICKERS.map(s => s.abbr), 'CBP', 'TC'];
+      return order.indexOf(a[0]) - order.indexOf(b[0]);
+    })
+    .forEach(([reqAbbr, required]) => {
+      const group = getEquivGroup(reqAbbr);
+      if (!group) {
+        // No equivalency group, check if exact match exists in counts
+        if ((counts[reqAbbr] || 0) > 0) {
+          qualifiedList.push(`${required}${reqAbbr}`);
+          matched[reqAbbr] = required;
+        } else {
+          qualifiedList.push(`MISSING: ${required}${reqAbbr}`);
+        }
+        return;
+      }
+      
+      // Count how many from this group we have
+      let groupCount = 0;
+      const usedFromGroup = [];
+      group.forEach(fmt => {
+        const avail = counts[fmt] || 0;
+        if (avail > 0) {
+          usedFromGroup.push(`${avail}${fmt}`);
+          groupCount += avail;
+        }
+      });
+      
+      if (groupCount >= required) {
+        if (usedFromGroup.length === 1 && usedFromGroup[0].endsWith(reqAbbr)) {
+          // Exact match only
+          qualifiedList.push(`${required}${reqAbbr}`);
+        } else if (usedFromGroup.length === 1) {
+          // Different format in group
+          qualifiedList.push(`${required}${reqAbbr}(${usedFromGroup[0]})`);
+        } else {
+          // Multiple formats used
+          qualifiedList.push(`${required}${reqAbbr}(${usedFromGroup.join(', ')})`);
+        }
+      } else {
+        // Not enough in group, show shortfall
+        const shortfall = required - groupCount;
+        if (usedFromGroup.length > 0) {
+          qualifiedList.push(`${required}${reqAbbr}(${usedFromGroup.join(', ')})-${shortfall}short`);
+        } else {
+          qualifiedList.push(`MISSING: ${required}${reqAbbr}`);
+        }
+      }
+    });
+  
   const compensation = completed ? null : computeBonusCompensationWeek(mi, weekNum);
+  const bonusNote = !completed && compensation && compensation.canCompensate 
+    ? ' (Bonus available)' 
+    : '';
   
   const lines = [
-    `WEEK ${weekNum}: ${result}`,
+    `FORMATS REQUIRED - ${requiredList.join(', ')}`,
+    `FORMATS COMPLETED - ${completedList.length > 0 ? completedList.join(', ') : 'None'}`,
+    `FORMATS QUALIFIED - ${qualifiedList.join(', ')}${bonusNote}`,
     '',
-    ...buildWeeklyClassBreakdown(counts),
-    '',
-    ...buildWeeklyRequirementBreakdown(requirements),
-    '',
-    ...buildQualifiedFormatBreakdown(qualificationAnalysis),
-    '',
-    !completed && compensation.canCompensate ? 'Bonus classes can compensate this week.' : 'Bonus compensation: unavailable',
-    '',
-    `Setting: Mat counts as Cardio is ${qualificationSettings.matCountsAsCardio ? 'ON' : 'OFF'}`
+    `Qualification: ${completed ? '✓ QUALIFIED' : '✗ NOT QUALIFIED'}`
   ];
 
   return lines.join('\n');
@@ -2776,56 +2868,31 @@ function refreshBoard() {
         const weekNum = Math.floor(di / 7) + 1;
         const isCompletedWeek = weekNum <= 4 && getWeekScore(m.mi, weekNum).completed;
         const weekTooltipText = weekNum <= 4 ? buildWeekQualificationTooltip(m.mi, weekNum) : '';
-        const today = new Date(); today.setHours(0,0,0,0);
-        const weekLastDay = weekNum <= 4 ? weekChunks[weekNum - 1][weekChunks[weekNum - 1].length - 1].fullDate : null;
-        const isWeekEnded = weekLastDay ? (weekLastDay <= today) : false;
-        const isNotQualifiedEnded = isWeekEnded && !isCompletedWeek && weekNum <= 4;
 
-        td.className = 'day-td' + (d.isWeekend ? ' weekend' : '') + (isCompletedWeek ? ' week-completed' : '') + (isNotQualifiedEnded ? ' week-not-qualified' : '');
-
-        if (di % 7 === 3 && weekNum <= 4) {
-          td.style.zIndex = '10';
-          if (isCompletedWeek) {
-            const badge = document.createElement('div');
-            badge.className = 'week-qualified-badge';
-            badge.textContent = '✓ Qualified';
-            td.appendChild(badge);
-          } else if (isNotQualifiedEnded) {
-            const badge = document.createElement('div');
-            badge.className = 'week-not-qualified-badge';
-            badge.textContent = '✗ Not Qualified';
-            td.appendChild(badge);
+        // Check for bonus compensation
+        if (weekNum <= 4) {
+          const bonusCompensation = computeBonusCompensationWeek(m.mi, weekNum);
+          if (bonusCompensation.canCompensate) {
+            td.classList.add('bonus-week-compensated');
           }
         }
 
-        if (weekTooltipText) {
-          td.addEventListener('mouseenter', () => showCellTooltip(weekTooltipText, td));
-          td.addEventListener('mouseleave', hideCellTooltip);
-        }
-        if (di > 0 && di % 7 === 0) td.style.borderLeft = '2px solid var(--border-strong)';
-
-        const stickerVal   = state[m.mi][d.key];
-        const stickerAbbr  = stickerVal ? getStickerAbbr(stickerVal) : null;
-        const stickerLabel = stickerVal ? (STICKERS.find(s => s.emoji === stickerVal)?.label || '') : '';
+        const stickerVal = state[m.mi][d.key];
+        const stickerAbbr = stickerVal ? getStickerAbbr(stickerVal) : null;
         const slot = document.createElement('div');
         slot.className = 'sticker-slot' + (stickerVal ? ' has-sticker' : '');
         slot.textContent = stickerVal || '';
+
+        // Highlight consumed bonus classes
+        if (stickerAbbr && di >= 28) {
+          const bonusCompensation = computeBonusCompensationWeek(m.mi, weekNum);
+          if (bonusCompensation.bonusCounts[stickerAbbr]) {
+            slot.classList.add('bonus-used');
+          }
+        }
+
         slot.dataset.mi = m.mi;
         slot.dataset.dk = d.key;
-        if (stickerLabel) slot.dataset.label = stickerLabel;
-
-        slot.addEventListener('mouseenter', () => {
-          if (stickerAbbr && weekNum <= 4) {
-            showCellTooltip(buildSlotTooltip(stickerAbbr, stickerLabel, m.mi, weekNum, m.loc), slot);
-          } else if (stickerLabel) {
-            showCellTooltip(stickerLabel, slot);
-          }
-        });
-        slot.addEventListener('mouseleave', () => {
-          if (weekTooltipText) showCellTooltip(weekTooltipText, td);
-          else hideCellTooltip();
-        });
-
         td.appendChild(slot);
         row.appendChild(td);
       });

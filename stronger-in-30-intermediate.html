@@ -915,13 +915,71 @@ td.score-td {
   margin-bottom: 8px;
   background: var(--ink);
   color: white;
-  padding: 12px 14px;
+  padding: 0;
   border-radius: 10px;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 500;
-  white-space: nowrap;
+  white-space: pre-wrap;
+  word-wrap: break-word;
   z-index: 100;
   box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  max-width: 280px;
+  line-height: 1.5;
+}
+
+.score-tooltip-content {
+  padding: 12px 14px;
+}
+
+.score-tooltip-header {
+  background: linear-gradient(135deg, #2d5a27 0%, #3a7035 100%);
+  padding: 8px 14px;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  border-radius: 10px 10px 0 0;
+  text-align: center;
+}
+
+.score-tooltip-section {
+  margin-bottom: 8px;
+}
+
+.score-tooltip-section-header {
+  font-weight: 700;
+  color: #fff;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+  display: inline-block;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+
+.score-tooltip-item {
+  margin-left: 8px;
+  font-weight: 400;
+  color: #e8e8e8;
+}
+
+.score-tooltip-status {
+  font-weight: 700;
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 3px;
+  margin-left: 4px;
+}
+
+.score-tooltip-status.done {
+  background: rgba(46, 213, 115, 0.3);
+  color: #6eff95;
+}
+
+.score-tooltip-status.short {
+  background: rgba(255, 107, 107, 0.3);
+  color: #ff8888;
 }
 
 .score-pill:hover .score-tooltip {
@@ -981,6 +1039,16 @@ td.score-td {
   justify-content: space-between;
   padding: 0 48px 40px;
   gap: 20px;
+}
+
+.board-footer > div:first-child {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.board-footer button:hover {
+  background: #1d4ba8 !important;
 }
 
 .footer-note {
@@ -1239,6 +1307,14 @@ tr.data-row.hidden { display: none; }
         <span class="toggle-slider"></span>
         <span class="toggle-text">Count Mat 57 as Cardio</span>
       </label>
+      <label class="toggle-pill" for="class-diff-qualification-toggle" style="margin-left: 12px;">
+        <input type="checkbox" id="class-diff-qualification-toggle">
+        <span class="toggle-slider"></span>
+        <span class="toggle-text">Qualify within Classes: </span>
+      </label>
+      <div class="tolerance-control" style="margin-left: 12px; display: none;">
+        <input type="number" id="class-tolerance-input" min="0" max="20" value="3" style="width: 50px; padding: 6px 8px; border: 1px solid var(--border-strong); border-radius: 6px; font-size: 12px;">
+      </div>
     </div>
   </div>
 </div>
@@ -1261,7 +1337,11 @@ tr.data-row.hidden { display: none; }
 
 <!-- FOOTER -->
 <div class="board-footer">
-  <div class="footer-note">Stickers auto-populated from Google Sheets check-ins</div>
+  <div>
+    <button onclick="showExportOptions()" style="font-size: 9px; font-weight: 600; letter-spacing: 0.06em; background: #1d4ed8; color: white; border: none; border-radius: 5px; padding: 5px 14px; cursor: pointer; margin-right: 12px; font-family: 'Syne', sans-serif; transition: background 0.15s;">📊 Export Stats (CSV/PDF)</button>
+    <button onclick="showComprehensiveExportOptions()" style="font-size: 9px; font-weight: 600; letter-spacing: 0.06em; background: #8b5cf6; color: white; border: none; border-radius: 5px; padding: 5px 14px; cursor: pointer; margin-right: 12px; font-family: 'Syne', sans-serif; transition: background 0.15s;">📊 Export All Levels (CSV/PDF)</button>
+    <span class="footer-note">Stickers auto-populated from Google Sheets check-ins</span>
+  </div>
   <div class="footer-logo">Physique 57</div>
 </div>
 
@@ -1398,7 +1478,7 @@ const WEEKLY_REQUIREMENTS_CNC = {
 const days = [];
 const DAYS_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const start = new Date(2026, 1, 23); // Feb 23 2026
-for (let i = 0; i < 30; i++) {
+for (let i = 0; i < 33; i++) {
   const d = new Date(start);
   d.setDate(start.getDate() + i);
   const dow = d.getDay();
@@ -1470,8 +1550,11 @@ function getStickerAbbr(emoji) {
 const BOARD_SETTINGS_KEY = 'sin30_intermediate_settings';
 const qualificationSettings = {
   matCountsAsCardio: false,
+  useClassDifferenceQualification: false,
+  classToleranceValue: 3,
 };
 const qualificationToggleEl = document.getElementById('mat-as-cardio-toggle');
+const classQualificationToggleEl = document.getElementById('class-diff-qualification-toggle');
 const CARDIO_QUALIFICATION_FORMATS = ['CB', 'CBP', 'HIIT', 'PC', 'BBB', 'AMP'];
 const STRENGTH_QUALIFICATION_FORMATS = ['LAB', 'FIT'];
 const QUALIFIED_DISPLAY_ORDER = ['CARDIO', 'STRENGTH'];
@@ -1656,6 +1739,17 @@ function getWeekScore(mi, weekNum) {
 }
 
 function getScore(mi) {
+  // Check alternative qualification: within configurable classes of required
+  if (qualificationSettings.useClassDifferenceQualification) {
+    const completed = getTotalClasses(mi);
+    const required = getTotalClassesRequired(mi);
+    if (required - completed <= qualificationSettings.classToleranceValue) {
+      return 4; // Fully qualified
+    }
+    return 0; // Not qualified
+  }
+  
+  // Original logic: count qualified weeks
   let score = 0;
   for (let week = 1; week <= 4; week++) {
     const { completed } = getWeekScore(mi, week);
@@ -1677,6 +1771,18 @@ function getTotalClasses(mi) {
   return days.reduce((sum, d) => sum + (state[mi][d.key] ? 1 : 0), 0);
 }
 
+function getTotalClassesRequired(mi) {
+  const loc = MEMBERS[mi] ? MEMBERS[mi].loc : 'KC';
+  const reqs = (loc === 'Bandra') ? WEEKLY_REQUIREMENTS_BANDRA : WEEKLY_REQUIREMENTS_KC;
+  let total = 0;
+  for (let week = 1; week <= 4; week++) {
+    if (reqs[week]) {
+      total += Object.values(reqs[week]).reduce((sum, count) => sum + count, 0);
+    }
+  }
+  return total;
+}
+
 function reqToStr(req) {
   return Object.entries(req).map(([cls, n]) => `${n}×${cls}`).join(' · ');
 }
@@ -1686,25 +1792,27 @@ function getRequirementLabel(abbr) {
 }
 
 function buildWeeklyClassBreakdown(counts) {
-  const lines = [];
+  const lines = ['Classes Attended:'];
   let total = 0;
 
   STICKERS.forEach(({ abbr, emoji, label }) => {
     const count = counts[abbr] || 0;
     if (!count) return;
     total += count;
-    lines.push(`• ${emoji} ${label}: ${count}`);
+    lines.push(`${emoji} ${label}: ${count}`);
   });
 
-  if (!lines.length) {
-    return ['Classes done:', '• No classes logged'];
+  if (lines.length === 1) {
+    lines.push('None logged');
+  } else {
+    lines.push(`—— Total: ${total}`);
   }
 
-  return ['Classes done:', ...lines, `Total classes: ${total}`];
+  return lines;
 }
 
 function buildWeeklyRequirementBreakdown(requirements) {
-  const lines = [];
+  const lines = ['Format Requirements:'];
   [...Object.keys(requirements)].sort((a, b) => {
     const order = [...STICKERS.map(s => s.abbr), 'CBP', 'TC'];
     return order.indexOf(a) - order.indexOf(b);
@@ -1712,21 +1820,26 @@ function buildWeeklyRequirementBreakdown(requirements) {
     const required = requirements[reqAbbr];
     const emoji = STICKER_LABEL[reqAbbr]?.emoji || '•';
     const label = getRequirementLabel(reqAbbr);
-    lines.push(`• ${emoji} ${label}: ${required}`);
+    lines.push(`${emoji} ${label}: ${required}`);
   });
-  return ['Formats required:', ...lines];
+  return lines;
 }
 
 function buildQualifiedFormatBreakdown(qualificationAnalysis) {
-  const lines = [];
+  const lines = ['Formats Completed:'];
   ['CARDIO', 'STRENGTH'].forEach(displayKey => {
     const done = qualificationAnalysis.rawQualifiedDoneByDisplay[displayKey] || 0;
     const required = qualificationAnalysis.requiredByDisplay[displayKey] || 0;
     const emoji = getQualifiedDisplayEmoji(displayKey);
     const label = getQualifiedDisplayLabel(displayKey);
-    lines.push(`• ${emoji} ${label}: ${done}/${required}${done >= required ? ' ✓' : ''}`);
+    const shortfall = required - done;
+    if (done >= required) {
+      lines.push(`${emoji} ${label}: ✓ DONE`);
+    } else {
+      lines.push(`${emoji} ${label}: ✗ ${shortfall} short`);
+    }
   });
-  return ['Qualified formats completed vs required:', ...lines];
+  return lines;
 }
 
 function buildWeekQualificationTooltip(mi, weekNum) {
@@ -1734,12 +1847,18 @@ function buildWeekQualificationTooltip(mi, weekNum) {
   const { completed, counts, requirements, qualificationAnalysis } = getWeekScore(mi, weekNum);
   if (!requirements) return '';
 
+  const result = completed ? '✓ QUALIFIED' : '✗ NOT QUALIFIED';
+  
   const lines = [
-    `W${weekNum}: ${completed ? 'Qualified ✓' : 'Not qualified ✗'}`,
-    `Mat 57 counts as Cardio: ${qualificationSettings.matCountsAsCardio ? 'ON' : 'OFF'}`,
+    `WEEK ${weekNum}: ${result}`,
+    '',
     ...buildWeeklyClassBreakdown(counts),
+    '',
     ...buildWeeklyRequirementBreakdown(requirements),
-    ...buildQualifiedFormatBreakdown(qualificationAnalysis)
+    '',
+    ...buildQualifiedFormatBreakdown(qualificationAnalysis),
+    '',
+    `Setting: Mat counts as Cardio is ${qualificationSettings.matCountsAsCardio ? 'ON' : 'OFF'}`
   ];
 
   return lines.join('\n');
@@ -1822,6 +1941,8 @@ function restoreQualificationSettings() {
     if (!saved) return;
     const parsed = JSON.parse(saved);
     qualificationSettings.matCountsAsCardio = !!parsed.matCountsAsCardio;
+    qualificationSettings.useClassDifferenceQualification = !!parsed.useClassDifferenceQualification;
+    qualificationSettings.classToleranceValue = parsed.classToleranceValue || 3;
   } catch (e) {
     console.warn('Failed to restore qualification settings:', e);
   }
@@ -1830,6 +1951,17 @@ function restoreQualificationSettings() {
 function syncQualificationToggle() {
   if (qualificationToggleEl) {
     qualificationToggleEl.checked = qualificationSettings.matCountsAsCardio;
+  }
+  if (classQualificationToggleEl) {
+    classQualificationToggleEl.checked = qualificationSettings.useClassDifferenceQualification;
+  }
+  const toleranceInput = document.getElementById('class-tolerance-input');
+  const toleranceControl = document.querySelector('.tolerance-control');
+  if (toleranceInput) {
+    toleranceInput.value = qualificationSettings.classToleranceValue || 3;
+  }
+  if (toleranceControl) {
+    toleranceControl.style.display = qualificationSettings.useClassDifferenceQualification ? 'block' : 'none';
   }
 }
 
@@ -2070,9 +2202,10 @@ function refreshBoard() {
       const streakHtml = m.streak >= 3
         ? `<span class="streak-flame show">🔥 ${m.streak}</span>`
         : `<span class="streak-flame"></span>`;
+      const totalRequired = getTotalClassesRequired(m.mi);
       nameTd.innerHTML = `
         <div class="member-name">${m.first} ${m.last}</div>
-        <div class="member-sub">${streakHtml}<span class="member-total-classes">${m.total} class${m.total !== 1 ? 'es' : ''}</span></div>
+        <div class="member-sub">${streakHtml}<span class="member-total-classes">${m.total}/${totalRequired} classes</span></div>
       `;
       row.appendChild(nameTd);
 
@@ -2150,14 +2283,30 @@ function refreshBoard() {
       const sc = m.score;
       const pillClass = sc === 0 ? '' : sc >= 4 ? ' maxed' : ' lit';
 
-      // Build weekly status for tooltip
-      let tooltipHTML = '<div class="weekly-status">';
+      // Build comprehensive tooltip for score pill
+      let tooltipHTML = '<div class="score-tooltip-header">';
+      tooltipHTML += sc >= 4 ? '👑 FULLY QUALIFIED' : 'QUALIFICATION STATUS';
+      tooltipHTML += '</div><div class="score-tooltip-content">';
+      
+      // Week status section
+      tooltipHTML += '<div class="score-tooltip-section">';
+      tooltipHTML += '<div class="score-tooltip-section-header">📅 Weeks Qualified</div>';
       for (let week = 1; week <= 4; week++) {
         const { completed } = getWeekScore(m.mi, week);
-        const badgeClass = completed ? ' complete' : '';
-        const icon = completed ? '✓' : '○';
-        tooltipHTML += `<div class="week-badge${badgeClass}">W${week} ${icon}</div>`;
+        const icon = completed ? '✓' : '✗';
+        const iconColor = completed ? '#6eff95' : '#ff8888';
+        tooltipHTML += `<div class="score-tooltip-item"><span style="color: ${iconColor}; font-weight: bold;">${icon}</span> Week ${week}: ${completed ? 'Qualified' : 'Not Qualified'}</div>`;
       }
+      tooltipHTML += '</div>';
+      
+      // Total classes section
+      const totalClasses = getTotalClasses(m.mi);
+      const classesRequired = getTotalClassesRequired(m.mi);
+      tooltipHTML += '<div class="score-tooltip-section">';
+      tooltipHTML += '<div class="score-tooltip-section-header">📊 Classes</div>';
+      tooltipHTML += `<div class="score-tooltip-item">Done: ${totalClasses} / Required: ${classesRequired}</div>`;
+      tooltipHTML += '</div>';
+      
       tooltipHTML += '</div>';
 
       scoreTd.innerHTML = `
@@ -2326,12 +2475,391 @@ async function fetchAndSeedCheckins() {
   }
 }
 
+// ── EXPORT FUNCTIONS ──
+function getParticipantStatsEnhanced() {
+  const stats = [];
+  MEMBERS.forEach((m, mi) => {
+    const score = getScore(mi);
+    const total = getTotalClasses(mi);
+    const required = getTotalClassesRequired(mi);
+    const isFullyQualified = score >= 4;
+    const qualificationMethod = qualificationSettings.useClassDifferenceQualification ? 'Within 3 Classes' : 'Week-Based';
+    
+    // Count classes by type
+    const classTypeCounters = {};
+    STICKERS.forEach(sticker => {
+      classTypeCounters[sticker.emoji + ' ' + sticker.label] = 0;
+    });
+    
+    for (let dayKey in state[mi]) {
+      if (state[mi][dayKey] && state[mi][dayKey].length > 0) {
+        state[mi][dayKey].forEach(stickerIdx => {
+          if (stickerIdx < STICKERS.length) {
+            const stickerKey = STICKERS[stickerIdx].emoji + ' ' + STICKERS[stickerIdx].label;
+            classTypeCounters[stickerKey] = (classTypeCounters[stickerKey] || 0) + 1;
+          }
+        });
+      }
+    }
+    
+    const weekDetails = [];
+    for (let week = 1; week <= 4; week++) {
+      const { completed } = getWeekScore(mi, week);
+      weekDetails.push({
+        week,
+        qualified: completed
+      });
+    }
+    
+    stats.push({
+      name: `${m.first} ${m.last}`,
+      email: m.email,
+      location: m.loc,
+      classesCompleted: total,
+      classesRequired: required,
+      weeksQualified: score,
+      fullyQualified: isFullyQualified,
+      status: isFullyQualified ? 'QUALIFIED' : 'NOT QUALIFIED',
+      qualificationMethod,
+      classTypeCounters,
+      weekDetails
+    });
+  });
+  return stats;
+}
+
+function getParticipantStats() {
+  const stats = [];
+  MEMBERS.forEach((m, mi) => {
+    const score = getScore(mi);
+    const total = getTotalClasses(mi);
+    const required = getTotalClassesRequired(mi);
+    const isFullyQualified = score >= 4;
+    
+    const weekDetails = [];
+    for (let week = 1; week <= 4; week++) {
+      const { completed } = getWeekScore(mi, week);
+      weekDetails.push({
+        week,
+        qualified: completed
+      });
+    }
+    
+    stats.push({
+      name: `${m.first} ${m.last}`,
+      email: m.email,
+      location: m.loc,
+      classesCompleted: total,
+      classesRequired: required,
+      weeksQualified: score,
+      fullyQualified: isFullyQualified,
+      status: isFullyQualified ? 'QUALIFIED' : 'NOT QUALIFIED',
+      weekDetails
+    });
+  });
+  return stats;
+}
+
+function exportToCSV() {
+  const stats = getParticipantStats();
+  
+  // Header row
+  const headers = ['Name', 'Email', 'Location', 'Classes Completed', 'Classes Required', 'Weeks Qualified', 'Total Status', 'Week 1', 'Week 2', 'Week 3', 'Week 4'];
+  const rows = [headers];
+  
+  // Data rows
+  stats.forEach(participant => {
+    const weekStatuses = participant.weekDetails.map(w => w.qualified ? 'QUALIFIED' : 'NOT QUALIFIED').join(',');
+    rows.push([
+      participant.name,
+      participant.email,
+      participant.location,
+      participant.classesCompleted,
+      participant.classesRequired,
+      participant.weeksQualified,
+      participant.status,
+      ...participant.weekDetails.map(w => w.qualified ? '✓' : '✗')
+    ]);
+  });
+  
+  // Convert to CSV format
+  const csv = rows.map(row => 
+    row.map(cell => {
+      // Escape quotes and wrap in quotes if contains comma or quote
+      const str = String(cell);
+      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+        return `"${str.replace(/"/g, '""')}`;
+      }
+      return str;
+    }).join(',')
+  ).join('\n');
+  
+  // Download
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  link.setAttribute('href', url);
+  link.setAttribute('download', `stronger-in-30-participants-${new Date().toISOString().split('T')[0]}.csv`);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+function exportToPDF() {
+  const stats = getParticipantStats();
+  
+  // Create a simple HTML table for printing
+  let html = `
+    <html>
+    <head>
+      <title>Stronger in 30 - Participant Stats</title>
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 15px; color: #333; }
+        h1 { text-align: center; color: #2c3e50; font-size: 18px; margin: 0 0 5px 0; }
+        .meta { text-align: center; color: #7f8c8d; margin-bottom: 15px; font-size: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { background-color: #34495e; color: white; padding: 8px; text-align: left; font-weight: 600; font-size: 10px; border: 1px solid #bdc3c7; }
+        td { padding: 8px; border: 1px solid #ecf0f1; font-size: 10px; }
+        tr:nth-child(even) { background-color: #f8f9fa; }
+        .status-qualified::before { content: '✓ '; color: #27ae60; font-weight: bold; }
+        .status-not-qualified::before { content: '✗ '; color: #e74c3c; font-weight: bold; }
+        .summary { margin-top: 20px; padding: 12px; background-color: #ecf0f1; border-left: 3px solid #34495e; }
+        h2 { margin: 0 0 8px 0; color: #2c3e50; font-size: 12px; }
+        .summary-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        .summary-item { }
+        .summary-label { font-size: 9px; color: #7f8c8d; font-weight: 500; }
+        .summary-value { font-size: 14px; font-weight: 600; color: #2c3e50; }
+      </style>
+    </head>
+    <body>
+      <h1>Stronger in 30 — Participant Qualification Stats</h1>
+      <div class="meta">Intermediate Board | Generated ${new Date().toLocaleDateString()}</div>
+      
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Location</th>
+            <th style="text-align: center;">Classes Done</th>
+            <th style="text-align: center;">Required</th>
+            <th style="text-align: center;">Weeks Qualified</th>
+            <th style="text-align: center;">W1</th>
+            <th style="text-align: center;">W2</th>
+            <th style="text-align: center;">W3</th>
+            <th style="text-align: center;">W4</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+  
+  const qualifiedCount = stats.filter(s => s.fullyQualified).length;
+  const notQualifiedCount = stats.length - qualifiedCount;
+  
+  stats.forEach(participant => {
+    const statusClass = participant.fullyQualified ? 'status-qualified' : 'status-not-qualified';
+    const weekCells = participant.weekDetails.map(w => 
+      `<td style="text-align: center;">${w.qualified ? '✓' : '✗'}</td>`
+    ).join('');
+    
+    html += `
+      <tr>
+        <td>${participant.name}</td>
+        <td>${participant.location}</td>
+        <td style="text-align: center;">${participant.classesCompleted}</td>
+        <td style="text-align: center;">${participant.classesRequired}</td>
+        <td style="text-align: center; font-weight: 600;">${participant.weeksQualified}/4</td>
+        ${weekCells}
+        <td class="${statusClass}">${participant.status}</td>
+      </tr>
+    `;
+  });
+  
+  html += `
+        </tbody>
+      </table>
+      
+      <div class="summary">
+        <h2>Summary</h2>
+        <div class="summary-row">
+          <div class="summary-item">
+            <div class="summary-label">Total Participants</div>
+            <div class="summary-value">${stats.length}</div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-label">Fully Qualified</div>
+            <div class="summary-value">${qualifiedCount}</div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-label">Not Qualified</div>
+            <div class="summary-value">${notQualifiedCount}</div>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+  
+  // Open print dialog
+  const printWindow = window.open('', '', 'height=800,width=1000');
+  printWindow.document.write(html);
+  printWindow.document.close();
+  printWindow.focus();
+  
+  // Auto-print if desired, or user can manually print/save as PDF
+  setTimeout(() => {
+    printWindow.print();
+  }, 250);
+}
+
+function showExportOptions() {
+  const choice = confirm('Select export format:\nOK = CSV | Cancel = PDF');
+  if (choice) {
+    exportToCSV();
+  } else {
+    exportToPDF();
+  }
+}
+
+function exportToComprehensiveCSV() {
+  const stats = getParticipantStatsEnhanced();
+  
+  let csv = 'Name,Email,Location,Level,Classes Done,Classes Required,Weeks Qualified,Qualification Method,Status';
+  Object.keys(stats[0].classTypeCounters).forEach(ct => {
+    csv += ',' + ct;
+  });
+  csv += '\n';
+  
+  stats.forEach(p => {
+    csv += `"${p.name}","${p.email}","${p.location}","Intermediate",${p.classesCompleted},${p.classesRequired},${p.weeksQualified},${p.qualificationMethod},"${p.status}"`;
+    
+    Object.values(p.classTypeCounters).forEach(count => {
+      csv += ',' + count;
+    });
+    csv += '\n';
+  });
+  
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'all-levels-export-' + new Date().getTime() + '.csv';
+  a.click();
+  window.URL.revokeObjectURL(url);
+}
+
+function exportToComprehensivePDF() {
+  const stats = getParticipantStatsEnhanced();
+  
+  // Group by location
+  const byLocation = {};
+  stats.forEach(s => {
+    if (!byLocation[s.location]) byLocation[s.location] = [];
+    byLocation[s.location].push(s);
+  });
+  
+  const allClassTypes = Array.from(new Set(stats.flatMap(s => Object.keys(s.classTypeCounters))));
+  const qualifiedCount = stats.filter(s => s.fullyQualified).length;
+  const totalCount = stats.length;
+  
+  let html = '<html><head><title>Stronger in 30 - Comprehensive Report</title><style>';
+  html += 'body{font-family:"Segoe UI",Tahoma,Geneva,Verdana,sans-serif;margin:20px;background:#f5f5f5}';
+  html += '.header{text-align:center;margin-bottom:30px;border-bottom:3px solid #1d4ed8;padding-bottom:15px}';
+  html += 'h1{color:#1a1a1a;margin:10px 0;font-size:28px}';
+  html += 'h2{color:#1d4ed8;border-bottom:2px solid #1d4ed8;padding-bottom:10px}';
+  html += '.level-section{background:#fff;margin:20px 0;padding:20px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1)}';
+  html += '.location-title{font-size:16px;font-weight:bold;color:#333;margin-top:15px;margin-bottom:10px;background:#f9f9f9;padding:8px;border-left:4px solid #1d4ed8}';
+  html += 'table{width:100%;border-collapse:collapse;margin-bottom:20px}';
+  html += 'th{background-color:#1d4ed8;color:white;padding:12px;text-align:left;font-weight:bold;border:1px solid #999;font-size:12px}';
+  html += 'td{padding:10px;border:1px solid #ddd;font-size:12px}';
+  html += 'tr:nth-child(even){background-color:#fafafa}';
+  html += '.qualified{background-color:#d4edda;font-weight:bold}';
+  html += '.not-qualified{background-color:#f8d7da;font-weight:bold}';
+  html += '.center{text-align:center}';
+  html += '.summary{background:#fff;padding:20px;margin-top:30px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1)}';
+  html += '.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-top:15px}';
+  html += '.summary-card{padding:15px;background:#f9f9f9;border-radius:5px;border-left:4px solid #1d4ed8}';
+  html += '.summary-label{font-size:12px;color:#666;font-weight:bold}';
+  html += '.summary-value{font-size:24px;font-weight:bold;color:#1d4ed8;margin-top:5px}';
+  html += '.meta{text-align:center;color:#999;font-size:11px;margin:15px 0}';
+  html += '</style></head><body>';
+  html += '<div class="header"><h1>Stronger in 30 - Comprehensive Report</h1>';
+  html += '<div class="meta">Intermediate Level • Generated on ' + new Date().toLocaleString() + '</div></div>';
+  
+  Object.entries(byLocation).sort().forEach(([location, members]) => {
+    html += '<div class="level-section"><div class="location-title">📍 ' + location + '</div>';
+    html += '<table><thead><tr><th>Name</th><th class="center">Done</th><th class="center">Req.</th><th class="center">Weeks</th><th class="center">Method</th>';
+    
+    allClassTypes.forEach(ct => {
+      html += '<th class="center">' + ct.substring(0, 10) + '</th>';
+    });
+    
+    html += '<th class="center">Status</th></tr></thead><tbody>';
+    
+    members.forEach(p => {
+      html += '<tr><td><strong>' + p.name + '</strong></td>';
+      html += '<td class="center">' + p.classesCompleted + '</td>';
+      html += '<td class="center">' + p.classesRequired + '</td>';
+      html += '<td class="center">' + p.weeksQualified + '/4</td>';
+      html += '<td class="center" style="font-size:11px;">' + p.qualificationMethod + '</td>';
+      
+      allClassTypes.forEach(ct => {
+        html += '<td class="center">' + (p.classTypeCounters[ct] || 0) + '</td>';
+      });
+      
+      const statusClass = p.fullyQualified ? 'qualified' : 'not-qualified';
+      html += '<td class="center ' + statusClass + '">' + p.status + '</td></tr>';
+    });
+    
+    html += '</tbody></table></div>';
+  });
+  
+  html += '<div class="summary"><h2>Summary</h2><div class="summary-grid">';
+  html += '<div class="summary-card"><div class="summary-label">Total Participants</div><div class="summary-value">' + totalCount + '</div></div>';
+  html += '<div class="summary-card"><div class="summary-label">Fully Qualified</div><div class="summary-value" style="color:#28a745;">' + qualifiedCount + '</div></div>';
+  html += '<div class="summary-card"><div class="summary-label">Not Qualified</div><div class="summary-value" style="color:#dc3545;">' + (totalCount - qualifiedCount) + '</div></div>';
+  html += '<div class="summary-card"><div class="summary-label">Qualification Rate</div><div class="summary-value">' + ((qualifiedCount / totalCount) * 100).toFixed(1) + '%</div></div>';
+  html += '</div></div></body></html>';
+  
+  const printWindow = window.open('', '', 'height=900,width=1200');
+  printWindow.document.write(html);
+  printWindow.document.close();
+  printWindow.focus();
+  setTimeout(() => printWindow.print(), 250);
+}
+
+function showComprehensiveExportOptions() {
+  const choice = confirm('Select export format:\nOK = CSV | Cancel = PDF');
+  if (choice) {
+    exportToComprehensiveCSV();
+  } else {
+    exportToComprehensivePDF();
+  }
+}
+
 // ── INIT ──
 restoreQualificationSettings();
 syncQualificationToggle();
 if (qualificationToggleEl) {
   qualificationToggleEl.addEventListener('change', () => {
     qualificationSettings.matCountsAsCardio = qualificationToggleEl.checked;
+    saveQualificationSettings();
+    refreshBoard();
+  });
+}
+if (classQualificationToggleEl) {
+  classQualificationToggleEl.addEventListener('change', () => {
+    qualificationSettings.useClassDifferenceQualification = classQualificationToggleEl.checked;
+    document.querySelector('.tolerance-control').style.display = classQualificationToggleEl.checked ? 'block' : 'none';
+    saveQualificationSettings();
+    refreshBoard();
+  });
+}
+const toleranceInput = document.getElementById('class-tolerance-input');
+if (toleranceInput) {
+  toleranceInput.addEventListener('change', () => {
+    qualificationSettings.classToleranceValue = parseInt(toleranceInput.value) || 3;
     saveQualificationSettings();
     refreshBoard();
   });

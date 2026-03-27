@@ -52,6 +52,9 @@ function applyBonusClasses(weekData, bonusClasses) {
         weekStats.bonusUsed += 1;
         weekStats.qualified += 1;
         bonus.used = true;
+
+        // Debugging log to confirm bonus application
+        console.log(`Applied bonus class for format: ${format} in week: ${week}`);
       }
     });
   });
@@ -61,7 +64,12 @@ function calculateMissingFormats(weekStats) {
   const requiredFormats = ['Cardio', 'Strength', 'Flexibility']; // Example formats
   const completedFormats = weekStats.completedFormats || [];
 
-  return requiredFormats.filter(format => !completedFormats.includes(format));
+  const missingFormats = requiredFormats.filter(format => !completedFormats.includes(format));
+
+  // Debugging log to identify missing formats
+  console.log(`Missing formats for week: ${missingFormats.join(', ')}`);
+
+  return missingFormats;
 }
 
 // Export updated CSV

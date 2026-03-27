@@ -1892,8 +1892,12 @@ tr.data-row.hidden {
 <!-- FOOTER -->
 <div class="board-footer">
   <div>
-    <button onclick="showExportOptions()" style="font-size: 9px; font-weight: 600; letter-spacing: 0.06em; background: #b91c1c; color: white; border: none; border-radius: 5px; padding: 5px 14px; cursor: pointer; margin-right: 12px; font-family: 'Syne', sans-serif; transition: background 0.15s;">📊 Export Stats (CSV/PDF)</button>
-    <button onclick="showComprehensiveExportOptions()" style="font-size: 9px; font-weight: 600; letter-spacing: 0.06em; background: #8b5cf6; color: white; border: none; border-radius: 5px; padding: 5px 14px; cursor: pointer; margin-right: 12px; font-family: 'Syne', sans-serif; transition: background 0.15s;">📊 Export All Levels (CSV/PDF)</button>
+    <button onclick="showExportOptions()" style="font-size: 9px; font-weight: 600; letter-spacing: 0.06em; background: #b91c1c; color: white; border: none; border-radius: 5px; padding: 5px 14px; cursor: pointer; margin-right: 12px; font-family: 'Syne', sans-serif; transition: background 0.15s;">
+      📊 Export Stats (CSV/PDF)
+    </button>
+    <button onclick="showComprehensiveExportOptions()" style="font-size: 9px; font-weight: 600; letter-spacing: 0.06em; background: #8b5cf6; color: white; border: none; border-radius: 5px; padding: 5px 14px; cursor: pointer; margin-right: 12px; font-family: 'Syne', sans-serif; transition: background 0.15s;">
+      📊 Export All Levels (CSV/PDF)
+    </button>
     <span class="footer-note">Stickers auto-populated from Google Sheets check-ins</span>
   </div>
   <div class="footer-logo">Physique 57</div>
@@ -3693,7 +3697,7 @@ function exportToPDF() {
       </style>
     </head>
     <body>
-      <h1>Stronger in 30 — Participant Qualification Stats</h1>
+      <h1>Stronger in 30 — Participant Stats</h1>
       <div class="meta">Advanced Board | Generated ${new Date().toLocaleDateString()}</div>
       
       ${locSummaryHTML}

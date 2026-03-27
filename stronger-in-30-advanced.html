@@ -1532,6 +1532,7 @@ const qualificationSettings = {
   matCountsAsCardio: false,
   useClassDifferenceQualification: false,
   classToleranceValue: 3,
+  useBonusCompensation: true,  // Enable bonus class compensation for qualification shortfalls
 };
 const qualificationToggleEl = document.getElementById('mat-as-cardio-toggle');
 const classQualificationToggleEl = document.getElementById('class-diff-qualification-toggle');
@@ -1678,6 +1679,68 @@ function areWeeklyRequirementsMet(counts, requirements) {
   return buildQualificationAnalysis(counts, requirements).completed;
 }
 
+// ── BONUS WEEK COMPENSATION ──
+function getBonusWeekClasses(mi) {
+  // Bonus days are indices 28-32 (Mar 23-27)
+  const bonusDays = days.slice(28, 33);
+  const bonusCounts = {};
+  bonusDays.forEach(day => {
+    const emoji = state[mi][day.key];
+    if (emoji) {
+      const abbr = getStickerAbbr(emoji);
+      if (abbr) {
+        bonusCounts[abbr] = (bonusCounts[abbr] || 0) + 1;
+      }
+    }
+  });
+  return bonusCounts;
+}
+
+function getTotalBonusClasses(mi) {
+  const bonusCounts = getBonusWeekClasses(mi);
+  return Object.values(bonusCounts).reduce((sum, count) => sum + count, 0);
+}
+
+// Check if bonus classes can compensate for week shortfalls
+function checkBonusCompensation(mi, weekNum) {
+  if (!qualificationSettings.useBonusCompensation) {
+    return { canCompensate: false, compensationAnalysis: null };
+  }
+
+  const weekScore = getWeekScore(mi, weekNum);
+  if (weekScore.completed) {
+    return { canCompensate: false, compensationAnalysis: null }; // Already qualified
+  }
+
+  const requirements = weekScore.requirements;
+  const weekCounts = weekScore.counts;
+  
+  // Find what's missing
+  const slots = buildRequirementSlots(requirements);
+  const available = Object.fromEntries(
+    Object.entries(weekCounts).filter(([, count]) => count > 0)
+  );
+
+  // Get bonus classes
+  const bonusCounts = getBonusWeekClasses(mi);
+  
+  // Try to fill gaps with bonus classes
+  const combined = { ...available };
+  Object.entries(bonusCounts).forEach(([abbr, count]) => {
+    combined[abbr] = (combined[abbr] || 0) + count;
+  });
+
+  const compensationAnalysis = buildQualificationAnalysis(combined, requirements);
+  
+  return {
+    canCompensate: compensationAnalysis.completed && !weekScore.completed,
+    compensationAnalysis,
+    usedBonusClasses: bonusCounts,
+    missingInWeek: weekScore.qualificationAnalysis
+  };
+}
+
+
 // Returns true if the given sticker abbr counts toward any requirement in weekNum for a given location
 function isStickerQualifying(abbr, weekNum, loc) {
   const reqs = (loc === 'Bandra') ? WEEKLY_REQUIREMENTS_BANDRA : WEEKLY_REQUIREMENTS_KC;
@@ -1729,11 +1792,17 @@ function getScore(mi) {
     return 0; // Not qualified
   }
   
-  // Original logic: count qualified weeks
+  // Original logic: count qualified weeks (with bonus compensation)
   let score = 0;
   for (let week = 1; week <= 4; week++) {
     const { completed } = getWeekScore(mi, week);
-    if (completed) score++;
+    if (completed) {
+      score++;
+    } else if (qualificationSettings.useBonusCompensation) {
+      // Check if bonus classes can compensate
+      const { canCompensate } = checkBonusCompensation(mi, week);
+      if (canCompensate) score++;
+    }
   }
   return score;
 }
@@ -1970,13 +2039,48 @@ function getQualifiedMembersCount() {
   return MEMBERS.filter(m => getScore(MEMBERS.indexOf(m)) >= 4).length;
 }
 
-function getLocationStats(locationAbbr) {
-  // Get members for this location
-  const membersAtLoc = MEMBERS.map((m, idx) => ({ m, idx })).filter(({ m }) => m.loc === locationAbbr);
-  const totalCount = membersAtLoc.length;
-  const qualifiedCount = membersAtLoc.filter(({ idx }) => getScore(idx) >= 4).length;
-  return { total: totalCount, qualified: qualifiedCount };
+function getBonusStatsHTML(mi) {
+  const bonusCounts = getBonusWeekClasses(mi);
+  const totalBonus = getTotalBonusClasses(mi);
+  
+  if (totalBonus === 0) {
+    return '<div style="font-size: 11px; color: var(--ink-muted); text-align: center; padding: 8px 4px;">—</div>';
+  }
+  
+  // Categorize bonus classes
+  let cardioBonus = 0, strengthBonus = 0;
+  Object.entries(bonusCounts).forEach(([abbr, count]) => {
+    if (CARDIO_QUALIFICATION_FORMATS.includes(abbr)) cardioBonus += count;
+    else if (STRENGTH_QUALIFICATION_FORMATS.includes(abbr)) strengthBonus += count;
+  });
+  
+  let html = '<div style="font-size: 10px; text-align: center; padding: 6px 4px;">';
+  html += `<div style="font-weight: bold; margin-bottom: 3px;">${totalBonus} bonus</div>`;
+  if (cardioBonus > 0) html += `<div style="color: #e63946;">🫀 ${cardioBonus}</div>`;
+  if (strengthBonus > 0) html += `<div style="color: #6d6875;">🏋️ ${strengthBonus}</div>`;
+  
+  // Show if bonus can compensate any week
+  let compensating = false;
+  let compWeeks = [];
+  for (let week = 1; week <= 4; week++) {
+    const { completed } = getWeekScore(mi, week);
+    if (!completed) {
+      const { canCompensate } = checkBonusCompensation(mi, week);
+      if (canCompensate) {
+        compensating = true;
+        compWeeks.push(week);
+      }
+    }
+  }
+  
+  if (compensating && qualificationSettings.useBonusCompensation) {
+    html += `<div style="margin-top: 3px; padding-top: 3px; border-top: 1px solid var(--ink-light); color: #6eff95; font-size: 9px; font-weight: 600;">✓ Comp W${compWeeks.join(',')}</div>`;
+  }
+  
+  html += '</div>';
+  return html;
 }
+
 
 // ── BUILD / REFRESH TABLE ──
 function refreshBoard() {
@@ -2074,7 +2178,11 @@ function refreshBoard() {
     weekRow.appendChild(bonusTh);
   }
 
-  // Empty cell for score column
+  // Empty cells for bonus and score columns
+  const weekBonusTh = document.createElement('th');
+  weekBonusTh.className = 'score-h';
+  weekRow.appendChild(weekBonusTh);
+
   const weekScoreTh = document.createElement('th');
   weekScoreTh.className = 'score-h';
   weekRow.appendChild(weekScoreTh);
@@ -2113,8 +2221,14 @@ function refreshBoard() {
   // Score
   const scoreTh = document.createElement('th');
   scoreTh.className = 'score-h';
-  scoreTh.innerHTML = `<span class="col-label">Weeks</span>`;
+  scoreTh.innerHTML = `<span class="col-label">Bonus</span>`;
   headRow.appendChild(scoreTh);
+
+  // Weeks
+  const weeksTh = document.createElement('th');
+  weeksTh.className = 'score-h';
+  weeksTh.innerHTML = `<span class="col-label">Weeks</span>`;
+  headRow.appendChild(weeksTh);
 
   thead.appendChild(headRow);
 
@@ -2170,6 +2284,11 @@ function refreshBoard() {
       bonusTd.className = 'location-header-cell';
       sepRow.appendChild(bonusTd);
     }
+
+    // Bonus stats cell
+    const bonusStatsTd = document.createElement('td');
+    bonusStatsTd.className = 'location-header-cell';
+    sepRow.appendChild(bonusStatsTd);
 
     // Score column td
     const scoreTd = document.createElement('td');
@@ -2273,6 +2392,12 @@ function refreshBoard() {
         td.appendChild(slot);
         row.appendChild(td);
       });
+
+      // Bonus stats cell
+      const bonusStatsTd = document.createElement('td');
+      bonusStatsTd.className = 'score-td bonus-stats-td';
+      bonusStatsTd.innerHTML = getBonusStatsHTML(m.mi);
+      row.appendChild(bonusStatsTd);
 
       // Score cell
       const scoreTd = document.createElement('td');

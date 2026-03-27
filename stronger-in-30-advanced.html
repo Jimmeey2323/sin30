@@ -2767,17 +2767,36 @@ function exportToComprehensiveCSV() {
     if (!byLocation[s.location]) byLocation[s.location] = [];
     byLocation[s.location].push(s);
   });
-  
-  // Get all class types
+
+  // Get all class types and organize by interchangeable groups
   const allClassTypes = Array.from(new Set(stats.flatMap(s => Object.keys(s.classTypeCounters))));
   
-  const headers = ['Name', 'Email', 'Location', 'Classes Done/Required', 'Weeks Qualified', 'Status', 'Qualification Method', 'W1', 'W2', 'W3', 'W4', ...allClassTypes];
+  // Define format groups for display
+  const cardioFormats = ['Cardio Barre', 'HIIT', 'Amped Up', 'Cardio Barre Plus', "Trainer's Choice"];
+  const strengthFormats = ['FIT', 'Strength Lab', 'Back Body Blaze'];
+  const specificFormats = allClassTypes.filter(ct => !cardioFormats.includes(ct) && !strengthFormats.includes(ct));
+  
+  // Organize columns: CARDIO (interchangeable), STRENGTH (interchangeable), SPECIFIC formats
+  const orderedClassTypes = [
+    ...allClassTypes.filter(ct => cardioFormats.includes(ct)),
+    ...allClassTypes.filter(ct => strengthFormats.includes(ct)),
+    ...allClassTypes.filter(ct => specificFormats.includes(ct))
+  ];
+  
+  const headers = ['Name', 'Email', 'Location', 'Classes Done/Required', 'Weeks Qualified', 'Status', 'Qualification Method', 'W1', 'W2', 'W3', 'W4', ...orderedClassTypes];
   const rows = [headers];
+  
+  // Add interchangeability guides as comment rows
+  rows.push(['--- INTERCHANGEABLE FORMAT GROUPS ---']);
+  rows.push(['CARDIO (interchangeable): Cardio Barre, HIIT, Amped Up, Cardio Barre Plus, Trainer\'s Choice']);
+  rows.push(['STRENGTH (interchangeable): FIT, Strength Lab, Back Body Blaze']);
+  rows.push(['SPECIFIC FORMATS (non-interchangeable): PowerCycle, Barre 57, Mat 57, Recovery']);
+  rows.push(['']);
   
   Object.entries(byLocation).sort().forEach(([location, members]) => {
     rows.push([`--- ${location} ---`]);
     members.forEach(participant => {
-      const classTypeCells = allClassTypes.map(ct => participant.classTypeCounters[ct] || 0);
+      const classTypeCells = orderedClassTypes.map(ct => participant.classTypeCounters[ct] || 0);
       rows.push([
         participant.name,
         participant.email,
@@ -3069,6 +3088,29 @@ renderLegend();
 refreshBoard();
 positionScorePillTooltips();
 fetchAndSeedCheckins();
+
+// ── UNIFIED EXPORT SUPPORT ──
+// Function to publish stats to parent window for unified export
+function publishStatsToParent() {
+  const stats = generateParticipantStatsForLevel(
+    MEMBERS,
+    state,
+    days,
+    STICKERS,
+    'Advanced',
+    getScore,
+    getTotalClasses,
+    getTotalClassesRequired,
+    getWeekScore,
+    qualificationSettings
+  );
+  return stats;
+}
+
+// Make stats available to parent window
+window.getAdvancedStats = publishStatsToParent;
 </script>
+
+<script src="export-utils.js"></script>
 </body>
 </html>

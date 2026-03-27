@@ -3074,6 +3074,29 @@ renderLegend();
 refreshBoard();
 positionScorePillTooltips();
 fetchAndSeedCheckins();
+
+// ── UNIFIED EXPORT SUPPORT ──
+// Function to publish stats to parent window for unified export
+function publishStatsToParent() {
+  const stats = generateParticipantStatsForLevel(
+    MEMBERS,
+    state,
+    days,
+    STICKERS,
+    'Beginner',
+    getScore,
+    getTotalClasses,
+    getTotalClassesRequired,
+    getWeekScore,
+    qualificationSettings
+  );
+  return stats;
+}
+
+// Make stats available to parent window
+window.getBeginnerStats = publishStatsToParent;
 </script>
+
+<script src="export-utils.js"></script>
 </body>
 </html>

@@ -4352,6 +4352,20 @@ function normalizeName(s) {
   return (s || '').trim().toLowerCase().replace(/\s+/g, ' ');
 }
 
+function getClassTypeCountersForMember(mi) {
+  const classTypeCounters = {};
+  STICKERS.forEach(s => { classTypeCounters[s.label] = 0; });
+
+  days.forEach(d => {
+    const emoji = state[mi][d.key];
+    if (!emoji) return;
+    const sticker = STICKERS.find(s => s.emoji === emoji);
+    if (sticker) classTypeCounters[sticker.label]++;
+  });
+
+  return classTypeCounters;
+}
+
 async function getAccessToken() {
   // Check if credentials are properly configured
   const cfg = window.GOOGLE_SHEETS_CONFIG;
@@ -4502,6 +4516,7 @@ function getParticipantStats() {
     const total = getTotalClasses(mi);
     const required = getTotalClassesRequired(mi);
     const isFullyQualified = score >= 4;
+    const classTypeCounters = getClassTypeCountersForMember(mi);
     
     const weekDetails = [];
     for (let week = 1; week <= 4; week++) {
@@ -4706,18 +4721,7 @@ function getParticipantStatsEnhanced() {
     const total = getTotalClasses(mi);
     const required = getTotalClassesRequired(mi);
     const isFullyQualified = score >= 4;
-    
-    // Count classes by type
-    const classTypeCounters = {};
-    STICKERS.forEach(s => classTypeCounters[s.label] = 0);
-    
-    days.forEach(d => {
-      const emoji = state[mi][d.key];
-      if (emoji) {
-        const sticker = STICKERS.find(s => s.emoji === emoji);
-        if (sticker) classTypeCounters[sticker.label]++;
-      }
-    });
+    const classTypeCounters = getClassTypeCountersForMember(mi);
     
     const weekDetails = [];
     for (let week = 1; week <= 4; week++) {

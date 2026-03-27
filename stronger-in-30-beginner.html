@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Stronger in 30 — Beginner Board</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root {
   --white: #ffffff;
@@ -2567,74 +2567,119 @@ tr.data-row.hidden {
   line-height: 1.45;
   color: var(--ink-muted);
 }
+.settings-select {
+  width: 150px;
+  padding: 7px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  font-size: 12px;
+  background: #fff;
+  color: var(--ink);
+}
+.settings-section-subgrid {
+  display: grid;
+  gap: 10px;
+}
+.compact-board td.name-td,
+.compact-board td.day-td,
+.compact-board td.rank-td,
+.compact-board td.score-td {
+  height: 44px;
+}
+.compact-board .member-name,
+.compact-board .member-sub,
+.compact-board .member-total-classes,
+.compact-board .streak-flame {
+  font-size: 10px;
+}
 
 /* ── BOARD LOADER ── */
 #board-loader {
   position: fixed;
   inset: 0;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(26,26,26,0.18);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
-  z-index: 200;
-  transition: opacity 0.25s;
-}
-#board-loader.hidden {
-  opacity: 0;
-  pointer-events: none;
-}
-.loader-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  background: var(--white);
-  border-radius: 16px;
-  padding: 32px 40px;
-  box-shadow: 0 12px 40px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.08);
-}
-.loader-text {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-muted);
-}
-.board-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid var(--border);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: loaderSpin 0.7s linear infinite;
-}
-@keyframes loaderSpin { to { transform: rotate(360deg); } }
+  .member-detail-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 7000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
 
-/* ── PROFESSIONAL POLISH OVERRIDES ── */
-:root {
-  --paper: #ffffff;
-  --surface-soft: rgba(255, 255, 255, 0.88);
-}
-
-body {
-  background:
-    radial-gradient(circle at top left, rgba(124, 58, 237, 0.08), transparent 32%),
-    linear-gradient(180deg, #fcfbff 0%, #f6f4fb 100%);
-}
-
-.masthead {
-  margin: 18px 18px 0;
-  padding: 28px 30px 24px;
-  border: 1px solid rgba(124, 58, 237, 0.12);
-  border-radius: 24px;
-  background: linear-gradient(135deg, rgba(255,255,255,0.96) 0%, rgba(250,245,255,0.96) 100%);
-  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
-  align-items: stretch;
-}
-
-.masthead-right {
+  .member-detail-modal.open { display: flex; }
+  .member-detail-backdrop { position: absolute; inset: 0; background: rgba(15, 23, 42, 0.56); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+  .member-detail-panel {
+    position: relative;
+    width: min(1120px, 100%);
+    max-height: min(88vh, 980px);
+    overflow: auto;
+    background: linear-gradient(180deg, rgba(255,255,255,0.99) 0%, rgba(248,245,255,0.98) 100%);
+    border: 1px solid rgba(124, 58, 237, 0.12);
+    border-radius: 24px;
+    box-shadow: 0 32px 80px rgba(15, 23, 42, 0.28);
+  }
+  .member-detail-panel,
+  .member-detail-panel * {
+    font-family: 'Roboto', sans-serif;
+    font-size: 12px;
+    line-height: 1.45;
+  }
+  .member-detail-shell { padding: 16px; display: grid; gap: 12px; }
+  .member-detail-topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .member-detail-title-wrap { display: grid; gap: 4px; }
+  .member-detail-eyebrow { font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-muted); }
+  .member-detail-name { font-size: 12px; font-weight: 700; letter-spacing: 0.02em; color: var(--ink); }
+  .member-detail-subtitle { display: flex; flex-wrap: wrap; gap: 8px; color: var(--ink-muted); }
+  .member-detail-close { border: 1px solid rgba(124, 58, 237, 0.12); background: rgba(255,255,255,0.92); color: var(--ink); border-radius: 12px; width: 34px; height: 34px; cursor: pointer; font-size: 12px; box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08); }
+  .member-detail-status-strip { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 12px; border-radius:14px; border:1px solid rgba(124, 58, 237, 0.08); background: rgba(255,255,255,0.92); }
+  .member-detail-status-pill { display: inline-flex; align-items: center; gap: 8px; padding: 5px 10px; border-radius: 999px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+  .member-detail-status-pill.qualified { background: rgba(34, 197, 94, 0.12); color: #15803d; }
+  .member-detail-status-pill.not-qualified { background: rgba(239, 68, 68, 0.12); color: #b91c1c; }
+  .member-detail-summary-text { color: var(--ink); }
+  .member-detail-tabs { display:flex; flex-wrap:wrap; gap:8px; }
+  .member-detail-tab { border:1px solid rgba(124,58,237,0.12); background:#fff; color:var(--ink-muted); padding:7px 10px; border-radius:999px; cursor:pointer; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; }
+  .member-detail-tab.active { background: var(--accent-light); color: var(--accent); border-color: rgba(124,58,237,0.2); }
+  .member-detail-tab-panels { display:grid; gap:12px; }
+  .member-detail-tab-panel { display:none; }
+  .member-detail-tab-panel.active { display:grid; gap:12px; }
+  .member-detail-card { background: rgba(255,255,255,0.94); border: 1px solid rgba(124, 58, 237, 0.08); border-radius: 16px; padding: 12px; box-shadow: 0 12px 24px rgba(15, 23, 42, 0.05); }
+  .member-detail-section-title { font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 8px; }
+  .member-detail-grid-2 { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:12px; }
+  .member-detail-table { width:100%; border-collapse:collapse; }
+  .member-detail-table th,
+  .member-detail-table td { padding:8px 10px; border-bottom:1px solid rgba(148,163,184,0.14); text-align:left; vertical-align:top; }
+  .member-detail-table th { width:34%; color:var(--ink-muted); font-weight:700; text-transform:uppercase; letter-spacing:0.08em; background: rgba(15,23,42,0.03); }
+  .member-detail-table.compact th,
+  .member-detail-table.compact td { padding:7px 8px; }
+  .member-detail-note-list { display:grid; gap:8px; }
+  .member-detail-reason-item { padding: 9px 10px; border-radius: 12px; background: rgba(255,255,255,0.9); border: 1px solid rgba(124, 58, 237, 0.08); color: var(--ink); }
+  .member-detail-week-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .member-week-card { padding: 12px; border-radius: 16px; background: rgba(255,255,255,0.95); border: 1px solid rgba(124, 58, 237, 0.08); box-shadow: 0 10px 20px rgba(15, 23, 42, 0.05); display: grid; gap: 10px; }
+  .member-week-card.qualified { border-color: rgba(34, 197, 94, 0.18); }
+  .member-week-card.not-qualified { border-color: rgba(239, 68, 68, 0.16); }
+  .member-week-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .member-week-title { font-weight: 700; color: var(--ink); }
+  .member-week-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 8px; border-radius: 999px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+  .member-week-badge.qualified { background: rgba(34, 197, 94, 0.12); color: #15803d; }
+  .member-week-badge.not-qualified { background: rgba(239, 68, 68, 0.12); color: #b91c1c; }
+  .member-week-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  .member-week-stat { padding: 8px; border-radius: 12px; background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%); border: 1px solid rgba(148, 163, 184, 0.16); }
+  .member-week-stat-label { font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 4px; font-size: 11px; }
+  .member-week-stat-value { font-weight: 700; color: var(--ink); }
+  .member-week-body { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .member-week-list, .member-week-table, .member-week-reason-box { padding: 10px; border-radius: 14px; background: rgba(15, 23, 42, 0.03); border: 1px solid rgba(148, 163, 184, 0.14); }
+  .member-week-box-title { font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 8px; }
+  .member-week-table table { width: 100%; border-collapse: collapse; }
+  .member-week-table th, .member-week-table td { padding: 6px 4px; border-bottom: 1px solid rgba(148, 163, 184, 0.12); text-align: left; }
+  .member-week-table th { font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-muted); }
+  @media (max-width: 900px) {
+    .member-detail-grid-2,
+    .member-detail-week-grid,
+    .member-week-body { grid-template-columns: 1fr; }
+    .member-week-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -2899,6 +2944,91 @@ body {
           <input type="number" id="settings-class-tolerance" min="0" max="20" value="3">
         </div>
         <div class="settings-note">Bonus compensation applies first to the week that is short, then uses the bonus area to fill the missing requirement.</div>
+      </section>
+
+      <section class="settings-section">
+        <h3>Board display</h3>
+        <div class="settings-section-subgrid">
+          <div class="settings-inline-field">
+            <div class="field-copy">
+              <div class="field-title">Compact rows</div>
+              <div class="field-desc">Tighten table row height and secondary text.</div>
+            </div>
+            <label class="toggle-pill" for="settings-compact-rows"><input type="checkbox" id="settings-compact-rows"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="settings-inline-field">
+            <div class="field-copy">
+              <div class="field-title">Show streak badges</div>
+              <div class="field-desc">Display the 🔥 streak indicator in the member row.</div>
+            </div>
+            <label class="toggle-pill" for="settings-show-streaks"><input type="checkbox" id="settings-show-streaks"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="settings-inline-field">
+            <div class="field-copy">
+              <div class="field-title">Show class-count chips</div>
+              <div class="field-desc">Display total classes vs required in each row.</div>
+            </div>
+            <label class="toggle-pill" for="settings-show-total-badge"><input type="checkbox" id="settings-show-total-badge"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="settings-inline-field">
+            <div class="field-copy">
+              <div class="field-title">Row animations</div>
+              <div class="field-desc">Animate member rows when the board refreshes.</div>
+            </div>
+            <label class="toggle-pill" for="settings-animate-rows"><input type="checkbox" id="settings-animate-rows"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="settings-inline-field">
+            <div class="field-copy">
+              <div class="field-title">Auto-collapse groups</div>
+              <div class="field-desc">Start each location group collapsed after refresh.</div>
+            </div>
+            <label class="toggle-pill" for="settings-auto-collapse"><input type="checkbox" id="settings-auto-collapse"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="settings-inline-field">
+            <div class="field-copy">
+              <div class="field-title">Default filter</div>
+              <div class="field-desc">Choose which members show after loading the board.</div>
+            </div>
+            <select id="settings-default-filter" class="settings-select">
+              <option value="all">All members</option>
+              <option value="qualified">Qualified only</option>
+              <option value="not-qualified">Not qualified only</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <section class="settings-section">
+        <h3>Detail modal</h3>
+        <div class="settings-section-subgrid">
+          <div class="settings-inline-field">
+            <div class="field-copy">
+              <div class="field-title">Default tab</div>
+              <div class="field-desc">Open the member modal on your preferred tab.</div>
+            </div>
+            <select id="settings-modal-default-tab" class="settings-select">
+              <option value="overview">Overview</option>
+              <option value="weeks">Weeks</option>
+              <option value="reasoning">Reasoning</option>
+              <option value="attendance">Attendance</option>
+            </select>
+          </div>
+          <div class="settings-inline-field">
+            <div class="field-copy">
+              <div class="field-title">Show reasoning tab</div>
+              <div class="field-desc">Keep the disqualification and bonus reasoning in a dedicated tab.</div>
+            </div>
+            <label class="toggle-pill" for="settings-show-reasoning"><input type="checkbox" id="settings-show-reasoning"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="settings-inline-field">
+            <div class="field-copy">
+              <div class="field-title">Show attendance tab</div>
+              <div class="field-desc">Include a compact day-by-day attendance table.</div>
+            </div>
+            <label class="toggle-pill" for="settings-show-attendance"><input type="checkbox" id="settings-show-attendance"><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+        <div class="settings-note">The member detail modal now stays compact, uses 12px Roboto text, and opens in the tab you choose here.</div>
       </section>
 
       <section class="settings-section wide">
@@ -3171,6 +3301,7 @@ function getStickerAbbr(emoji) {
 }
 
 const BOARD_SETTINGS_KEY = 'sin30_beginner_settings';
+const BOARD_DISPLAY_SETTINGS_KEY = 'sin30_beginner_display_settings';
 const FORMAT_RULES_KEY = 'sin30_format_rules_beginner';
 const DEFAULT_FORMAT_RULES = {
   CB_HIIT: true,
@@ -3190,6 +3321,17 @@ const qualificationSettings = {
   useClassDifferenceQualification: false,
   classToleranceValue: 3,
   useBonusWeekCompensation: true,
+};
+const boardDisplaySettings = {
+  compactRows: false,
+  showStreaks: true,
+  showTotalClassBadge: true,
+  animateRows: true,
+  autoCollapseGroups: false,
+  defaultFilter: 'all',
+  modalDefaultTab: 'overview',
+  showReasoningTab: true,
+  showAttendanceTab: true,
 };
 // mat toggle removed from dashboard — managed via Settings modal
 const classQualificationToggleEl = document.getElementById('class-diff-qualification-toggle');
@@ -3373,9 +3515,53 @@ function syncSettingsModal() {
   if (classDiff) classDiff.checked = !!qualificationSettings.useClassDifferenceQualification;
   if (tolerance) tolerance.value = qualificationSettings.classToleranceValue || 3;
   if (toleranceWrap) toleranceWrap.style.display = qualificationSettings.useClassDifferenceQualification ? 'flex' : 'none';
+  const compactRows = document.getElementById('settings-compact-rows');
+  const showStreaks = document.getElementById('settings-show-streaks');
+  const showTotalBadge = document.getElementById('settings-show-total-badge');
+  const animateRows = document.getElementById('settings-animate-rows');
+  const autoCollapse = document.getElementById('settings-auto-collapse');
+  const defaultFilter = document.getElementById('settings-default-filter');
+  const modalDefaultTab = document.getElementById('settings-modal-default-tab');
+  const showReasoning = document.getElementById('settings-show-reasoning');
+  const showAttendance = document.getElementById('settings-show-attendance');
+  if (compactRows) compactRows.checked = !!boardDisplaySettings.compactRows;
+  if (showStreaks) showStreaks.checked = !!boardDisplaySettings.showStreaks;
+  if (showTotalBadge) showTotalBadge.checked = !!boardDisplaySettings.showTotalClassBadge;
+  if (animateRows) animateRows.checked = !!boardDisplaySettings.animateRows;
+  if (autoCollapse) autoCollapse.checked = !!boardDisplaySettings.autoCollapseGroups;
+  if (defaultFilter) defaultFilter.value = boardDisplaySettings.defaultFilter || 'all';
+  if (modalDefaultTab) modalDefaultTab.value = boardDisplaySettings.modalDefaultTab || 'overview';
+  if (showReasoning) showReasoning.checked = !!boardDisplaySettings.showReasoningTab;
+  if (showAttendance) showAttendance.checked = !!boardDisplaySettings.showAttendanceTab;
   const goalSummary = document.getElementById('settings-goal-summary');
   if (goalSummary) goalSummary.innerHTML = buildGoalSummaryHTML();
   renderFormatRulesSettings();
+}
+
+function applyBoardDisplaySettings() {
+  document.body.classList.toggle('compact-board', !!boardDisplaySettings.compactRows);
+}
+
+function saveBoardDisplaySettings() {
+  try {
+    localStorage.setItem(BOARD_DISPLAY_SETTINGS_KEY, JSON.stringify(boardDisplaySettings));
+  } catch (e) {
+    console.warn('Failed to save board display settings:', e);
+  }
+}
+
+function restoreBoardDisplaySettings() {
+  try {
+    const saved = localStorage.getItem(BOARD_DISPLAY_SETTINGS_KEY);
+    if (!saved) return;
+    const parsed = JSON.parse(saved);
+    Object.assign(boardDisplaySettings, {
+      ...boardDisplaySettings,
+      ...parsed,
+    });
+  } catch (e) {
+    console.warn('Failed to restore board display settings:', e);
+  }
 }
 
 function bindSettingsModalEvents() {
@@ -3427,6 +3613,29 @@ function bindSettingsModalEvents() {
       positionScorePillTooltips();
     });
   }
+
+  const displayBindings = [
+    ['settings-compact-rows', 'compactRows', 'checked'],
+    ['settings-show-streaks', 'showStreaks', 'checked'],
+    ['settings-show-total-badge', 'showTotalClassBadge', 'checked'],
+    ['settings-animate-rows', 'animateRows', 'checked'],
+    ['settings-auto-collapse', 'autoCollapseGroups', 'checked'],
+    ['settings-show-reasoning', 'showReasoningTab', 'checked'],
+    ['settings-show-attendance', 'showAttendanceTab', 'checked'],
+    ['settings-default-filter', 'defaultFilter', 'value'],
+    ['settings-modal-default-tab', 'modalDefaultTab', 'value'],
+  ];
+
+  displayBindings.forEach(([id, key, prop]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('change', () => {
+      boardDisplaySettings[key] = prop === 'checked' ? !!el.checked : el.value;
+      saveBoardDisplaySettings();
+      applyBoardDisplaySettings();
+      refreshBoard();
+    });
+  });
 }
 
 function getBonusWeekClasses(mi) {
@@ -3923,7 +4132,7 @@ function getWeekScore(mi, weekNum) {
   if (!weekDays) return { completed: false, counts: {} };
 
   const loc = MEMBERS[mi] ? MEMBERS[mi].loc : 'KC';
-  const reqs = (loc === 'Bandra') ? WEEKLY_REQUIREMENTS_BANDRA : WEEKLY_REQUIREMENTS_KC;
+  const reqs = getRequirementsForLocation(loc);
   const requirements = reqs[weekNum];
   if (!requirements) return { completed: false, counts: {} };
 
@@ -3979,7 +4188,7 @@ function getTotalClasses(mi) {
 
 function getTotalClassesRequired(mi) {
   const loc = MEMBERS[mi] ? MEMBERS[mi].loc : 'KC';
-  const reqs = (loc === 'Bandra') ? WEEKLY_REQUIREMENTS_BANDRA : WEEKLY_REQUIREMENTS_KC;
+  const reqs = getRequirementsForLocation(loc);
   let total = 0;
   for (let week = 1; week <= 4; week++) {
     if (reqs[week]) {
@@ -4300,11 +4509,54 @@ function buildMemberDetailModalHTML(mi) {
   const bonusClasses = getTotalBonusClasses(mi);
   const qualifiedWeeks = [1,2,3,4].filter(weekNum => plan.weeks[weekNum]?.finalQualified).length;
   const reasons = buildMemberDetailReasonItems(plan);
-  const dayCards = days.map(day => { const emoji = state[mi][day.key] || ''; const consumedWeek = plan.consumedBonusDayKeys?.[day.key]; return `<div class="member-day-chip ${emoji ? 'filled' : ''} ${consumedWeek ? 'consumed' : ''}"><div class="member-day-label">${escapeTooltipHtml(day.dayName)} ${escapeTooltipHtml(day.num)}</div><div class="member-day-value">${emoji || '—'}</div>${consumedWeek ? `<div class="member-day-note">Bonus → W${consumedWeek}</div>` : ''}</div>`; }).join('');
-  return `<div class="member-detail-topbar"><div class="member-detail-title-wrap"><div class="member-detail-eyebrow">Member qualification details</div><h2 id="member-detail-title" class="member-detail-name">${escapeTooltipHtml(member.first)} ${escapeTooltipHtml(member.last)}</h2><div class="member-detail-subtitle"><span>${escapeTooltipHtml(member.loc)}</span><span>•</span><span>${escapeTooltipHtml(member.email || 'No email on file')}</span></div></div><button type="button" class="member-detail-close" onclick="closeMemberDetailModal()">✕</button></div><div class="member-detail-hero"><section class="member-detail-card member-detail-status-card"><div class="member-detail-status-pill ${score >= 4 ? 'qualified' : 'not-qualified'}">${score >= 4 ? 'Qualified' : 'Needs Attention'}</div><div class="member-detail-summary-text">${score >= 4 ? `This member has qualified ${qualifiedWeeks}/4 weeks and cleared the challenge criteria.` : `This member has qualified ${qualifiedWeeks}/4 weeks and still needs ${Math.max(totalRequired - totalClasses, 0)} more class${Math.max(totalRequired - totalClasses, 0) === 1 ? '' : 'es'} against the board rules.`}</div></section><section class="member-detail-card"><div class="member-detail-stat-grid"><div class="member-detail-stat"><div class="member-detail-stat-label">Weeks Qualified</div><div class="member-detail-stat-value">${qualifiedWeeks}/4</div><div class="member-detail-stat-sub">Board score: ${score}/4</div></div><div class="member-detail-stat"><div class="member-detail-stat-label">Classes Logged</div><div class="member-detail-stat-value">${totalClasses}</div><div class="member-detail-stat-sub">Required total: ${totalRequired}</div></div><div class="member-detail-stat"><div class="member-detail-stat-label">Bonus Classes</div><div class="member-detail-stat-value">${bonusClasses}</div><div class="member-detail-stat-sub">Available in bonus week</div></div><div class="member-detail-stat"><div class="member-detail-stat-label">Qualification Mode</div><div class="member-detail-stat-value" style="font-size:18px;">${escapeTooltipHtml(qualificationSettings.useClassDifferenceQualification ? 'Tolerance' : 'Weekly')}</div><div class="member-detail-stat-sub">${qualificationSettings.useClassDifferenceQualification ? `Diff ≤ ${qualificationSettings.classToleranceValue}` : 'Week-by-week'}</div></div></div></section></div><section class="member-detail-card"><div class="member-detail-section-title">Qualification reasoning</div><div class="member-detail-reasons">${reasons.length ? reasons.map(reason => `<div class="member-detail-reason-item">${escapeTooltipHtml(reason)}</div>`).join('') : '<div class="member-detail-reason-item">All weekly requirements were satisfied with the recorded classes.</div>'}</div></section><section class="member-detail-card"><div class="member-detail-section-title">Weekly breakdown</div><div class="member-detail-week-grid">${[1,2,3,4].map(weekNum => buildMemberWeekCardHtml(mi, weekNum, plan.weeks[weekNum])).join('')}</div></section><section class="member-detail-card"><div class="member-detail-section-title">Attendance timeline</div><div class="member-day-grid">${dayCards}</div></section>`;
+  const overviewRows = [
+    ['Member', `${member.first} ${member.last}`],
+    ['Location', member.loc],
+    ['Email', member.email || 'No email on file'],
+    ['Weeks Qualified', `${qualifiedWeeks}/4`],
+    ['Board Score', `${score}/4`],
+    ['Classes Logged', totalClasses],
+    ['Classes Required', totalRequired],
+    ['Bonus Classes', bonusClasses],
+    ['Qualification Mode', qualificationSettings.useClassDifferenceQualification ? `Tolerance (Diff ≤ ${qualificationSettings.classToleranceValue})` : 'Weekly'],
+  ].map(([label, value]) => `<tr><th>${escapeTooltipHtml(label)}</th><td>${escapeTooltipHtml(value)}</td></tr>`).join('');
+  const weekSummaryRows = [1,2,3,4].map(weekNum => {
+    const weekPlan = plan.weeks[weekNum];
+    const bonusUsed = Object.values(weekPlan?.bonusUsage || {}).reduce((sum, count) => sum + count, 0);
+    return `<tr><th>Week ${weekNum}</th><td>${weekPlan?.finalQualified ? (weekPlan.compensated ? 'Qualified + Bonus' : 'Qualified') : 'Not Qualified'}</td><td>${Object.values(weekPlan?.counts || {}).reduce((sum, count) => sum + count, 0)}</td><td>${bonusUsed}</td></tr>`;
+  }).join('');
+  const attendanceRows = days.map(day => {
+    const emoji = state[mi][day.key] || '—';
+    const consumedWeek = plan.consumedBonusDayKeys?.[day.key];
+    return `<tr><th>${escapeTooltipHtml(`${day.dayName} ${day.num} ${day.mon}`)}</th><td>${escapeTooltipHtml(emoji)}</td><td>${consumedWeek ? `Bonus → Week ${consumedWeek}` : '—'}</td></tr>`;
+  }).join('');
+  const reasoningHtml = reasons.length
+    ? reasons.map(reason => `<div class="member-detail-reason-item">${escapeTooltipHtml(reason)}</div>`).join('')
+    : '<div class="member-detail-reason-item">All weekly requirements were satisfied with the recorded classes.</div>';
+  const tabs = [
+    ['overview', 'Overview', true],
+    ['weeks', 'Weeks', true],
+    ['reasoning', 'Reasoning', !!boardDisplaySettings.showReasoningTab],
+    ['attendance', 'Attendance', !!boardDisplaySettings.showAttendanceTab],
+  ].filter(([, , enabled]) => enabled);
+  return `<div class="member-detail-topbar"><div class="member-detail-title-wrap"><div class="member-detail-eyebrow">Member qualification details</div><h2 id="member-detail-title" class="member-detail-name">${escapeTooltipHtml(member.first)} ${escapeTooltipHtml(member.last)}</h2><div class="member-detail-subtitle"><span>${escapeTooltipHtml(member.loc)}</span><span>•</span><span>${escapeTooltipHtml(member.email || 'No email on file')}</span></div></div><button type="button" class="member-detail-close" onclick="closeMemberDetailModal()">✕</button></div><div class="member-detail-status-strip"><div class="member-detail-status-pill ${score >= 4 ? 'qualified' : 'not-qualified'}">${score >= 4 ? 'Qualified' : 'Needs Attention'}</div><div class="member-detail-summary-text">${score >= 4 ? `Qualified ${qualifiedWeeks}/4 weeks with ${totalClasses} logged classes.` : `Qualified ${qualifiedWeeks}/4 weeks and still short by ${Math.max(totalRequired - totalClasses, 0)} class${Math.max(totalRequired - totalClasses, 0) === 1 ? '' : 'es'}.`}</div></div><div class="member-detail-tabs">${tabs.map(([key, label]) => `<button type="button" class="member-detail-tab" data-member-tab="${key}">${label}</button>`).join('')}</div><div class="member-detail-tab-panels"><section class="member-detail-tab-panel" data-member-panel="overview"><div class="member-detail-grid-2"><div class="member-detail-card"><div class="member-detail-section-title">Member snapshot</div><table class="member-detail-table">${overviewRows}</table></div><div class="member-detail-card"><div class="member-detail-section-title">Week summary</div><table class="member-detail-table compact"><thead><tr><th>Week</th><th>Status</th><th>Done</th><th>Bonus</th></tr></thead><tbody>${weekSummaryRows}</tbody></table></div></div></section><section class="member-detail-tab-panel" data-member-panel="weeks"><section class="member-detail-card"><div class="member-detail-section-title">Weekly breakdown</div><div class="member-detail-week-grid">${[1,2,3,4].map(weekNum => buildMemberWeekCardHtml(mi, weekNum, plan.weeks[weekNum])).join('')}</div></section></section>${boardDisplaySettings.showReasoningTab ? `<section class="member-detail-tab-panel" data-member-panel="reasoning"><section class="member-detail-card"><div class="member-detail-section-title">Qualification reasoning</div><div class="member-detail-note-list">${reasoningHtml}</div></section></section>` : ''}${boardDisplaySettings.showAttendanceTab ? `<section class="member-detail-tab-panel" data-member-panel="attendance"><section class="member-detail-card"><div class="member-detail-section-title">Attendance timeline</div><table class="member-detail-table compact"><tbody>${attendanceRows}</tbody></table></section></section>` : ''}</div>`;
 }
 
-function openMemberDetailModal(mi) { const modal = document.getElementById('member-detail-modal'); const body = document.getElementById('member-detail-body'); if (!modal || !body) return; body.innerHTML = buildMemberDetailModalHTML(mi); modal.classList.add('open'); modal.setAttribute('aria-hidden', 'false'); }
+function initializeMemberDetailTabs(body) {
+  const tabs = Array.from(body.querySelectorAll('[data-member-tab]'));
+  const panels = Array.from(body.querySelectorAll('[data-member-panel]'));
+  if (!tabs.length || !panels.length) return;
+  function activate(tabKey) {
+    const fallbackKey = panels[0]?.dataset.memberPanel;
+    const nextKey = panels.some(panel => panel.dataset.memberPanel === tabKey) ? tabKey : fallbackKey;
+    tabs.forEach(tab => tab.classList.toggle('active', tab.dataset.memberTab === nextKey));
+    panels.forEach(panel => panel.classList.toggle('active', panel.dataset.memberPanel === nextKey));
+  }
+  tabs.forEach(tab => tab.addEventListener('click', () => activate(tab.dataset.memberTab)));
+  activate(boardDisplaySettings.modalDefaultTab || 'overview');
+}
+
+function openMemberDetailModal(mi) { const modal = document.getElementById('member-detail-modal'); const body = document.getElementById('member-detail-body'); if (!modal || !body) return; body.innerHTML = buildMemberDetailModalHTML(mi); initializeMemberDetailTabs(body); modal.classList.add('open'); modal.setAttribute('aria-hidden', 'false'); }
 function closeMemberDetailModal() { const modal = document.getElementById('member-detail-modal'); if (!modal) return; modal.classList.remove('open'); modal.setAttribute('aria-hidden', 'true'); }
 
 function buildSlotTooltip(abbr, label, mi, weekNum, loc) {
@@ -4674,7 +4926,8 @@ function refreshBoard() {
       const animDelay = rank * 0.04;
       const row = document.createElement('tr');
       row.className = 'data-row';
-      row.style.animationDelay = animDelay + 's';
+      row.style.animationDelay = boardDisplaySettings.animateRows ? animDelay + 's' : '0s';
+      if (!boardDisplaySettings.animateRows) row.style.animation = 'none';
       row.tabIndex = 0;
       row.setAttribute('role', 'button');
       row.setAttribute('aria-label', `Open details for ${m.first} ${m.last}`);
@@ -4693,13 +4946,13 @@ function refreshBoard() {
 
       const nameTd = document.createElement('td');
       nameTd.className = 'name-td';
-      const streakHtml = m.streak >= 3
+      const streakHtml = boardDisplaySettings.showStreaks && m.streak >= 3
         ? `<span class="streak-flame show">🔥 ${m.streak}</span>`
         : `<span class="streak-flame"></span>`;
       const totalRequired = getTotalClassesRequired(m.mi);
       nameTd.innerHTML = `
         <div class="member-name">${m.first} ${m.last}</div>
-        <div class="member-sub">${streakHtml}<span class="member-total-classes">${m.total}/${totalRequired} classes</span></div>
+        <div class="member-sub">${streakHtml}${boardDisplaySettings.showTotalClassBadge ? `<span class="member-total-classes">${m.total}/${totalRequired} classes</span>` : ''}</div>
       `;
       row.appendChild(nameTd);
 
@@ -4803,6 +5056,7 @@ function refreshBoard() {
   renderGroupRows(bandraSorted, '📍  Supreme HQ, Bandra', 'Bandra');
   renderGroupRows(khSorted, '📍  Kenkere House', 'KH');
   renderGroupRows(cncSorted, '📍  C & C', 'CNC');
+  if (boardDisplaySettings.autoCollapseGroups) collapseAllGroups();
 }
 
 // ── GOOGLE SHEETS CONFIG ──
@@ -4996,7 +5250,9 @@ function positionScorePillTooltips() {
 
 // ── INIT ──
 restoreQualificationSettings();
+restoreBoardDisplaySettings();
 initializeFormatRules();
+applyBoardDisplaySettings();
 
 // ── NORMALIZATION TOGGLE ──
 let normalizationEnabled = false;

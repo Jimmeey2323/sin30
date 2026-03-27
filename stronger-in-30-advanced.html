@@ -855,6 +855,13 @@ td.day-td.week-not-qualified .sticker-slot:hover {
   background: rgba(254, 243, 199, 0.6);
   border: 1px solid #f59e0b;
 }
+.sticker-slot.bonus-consumed {
+  text-decoration: line-through;
+  opacity: 0.35;
+  filter: grayscale(1);
+  background: rgba(148, 163, 184, 0.18);
+  border: 1px solid rgba(100, 116, 139, 0.45);
+}
 
 .sticker-slot.bonus-compensated {
   background: linear-gradient(135deg, #fef3c7, #fde68a) !important;
@@ -864,8 +871,15 @@ td.day-td.week-not-qualified .sticker-slot:hover {
 }
 
 .day-td.bonus-week-compensated {
-  background: linear-gradient(135deg, rgba(254, 243, 199, 0.4), rgba(253, 230, 138, 0.4)) !important;
-  outline: 2px solid #f59e0b;
+  /* Removed: Only individual slots should be highlighted, not the full week */
+  /* Original styling applied to entire week - removed to prevent over-highlighting */
+  background: transparent !important;
+  outline: none;
+}
+.day-td.week-qualified-compensated {
+  /* Removed: Only individual slots should be highlighted, not the full week */
+  background: transparent !important;
+  outline: none;
 }
 
 /* Qualifying sticker — no extra decoration; week-level gray wash is the signal */
@@ -875,20 +889,113 @@ td.day-td.week-not-qualified .sticker-slot:hover {
   display: none;
   position: fixed;
   z-index: 9999;
-  background: var(--ink);
+  background: rgba(26, 26, 26, 0.98);
   color: #fff;
-  font-family: 'Syne', sans-serif;
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
   white-space: pre-line;
-  line-height: 1.45;
-  max-width: 260px;
-  padding: 7px 9px;
-  border-radius: 6px;
+  line-height: 1.6;
+  max-width: 350px;
+  padding: 10px 12px;
+  border-radius: 7px;
   pointer-events: none;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.22);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.28);
   transform: translateX(-50%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#cell-tooltip .tooltip-section {
+  margin-bottom: 8px;
+}
+
+#cell-tooltip .tooltip-label {
+  font-weight: 700;
+  color: #ffd700;
+  margin-bottom: 3px;
+  font-size: 9px;
+  opacity: 0.9;
+  letter-spacing: 0.08em;
+}
+
+#cell-tooltip .tooltip-item {
+  margin: 2px 0;
+  padding-left: 8px;
+}
+
+.tooltip-table-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tooltip-header {
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #e5e7eb;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.tooltip-table {
+  border-collapse: collapse;
+  width: 100%;
+  white-space: nowrap;
+}
+
+.tooltip-table thead {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.tooltip-table th {
+  padding: 4px 6px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 9px;
+  color: #d1d5db;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.tooltip-table td {
+  padding: 4px 6px;
+  font-size: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.tooltip-table .format-name {
+  font-weight: 600;
+  min-width: 50px;
+}
+
+.tooltip-table .format-required {
+  text-align: center;
+  min-width: 35px;
+  color: #b4b4b8;
+}
+
+.tooltip-table .format-done {
+  text-align: center;
+  min-width: 60px;
+}
+
+.tooltip-table .format-status {
+  text-align: center;
+  min-width: 30px;
+  font-size: 11px;
+}
+
+.tooltip-footer {
+  padding-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  text-align: center;
+  font-weight: 700;
+  font-size: 11px;
+  margin-top: 4px;
 }
 
 
@@ -1264,7 +1371,7 @@ tr.data-row.hidden {
 .settings-modal {
   position: fixed;
   inset: 0;
-  z-index: 260;
+  z-index: 5000;
   display: none;
   align-items: center;
   justify-content: center;
@@ -1544,6 +1651,11 @@ tr.data-row.hidden {
         <span class="toggle-slider"></span>
         <span class="toggle-text">Qualify within Classes: </span>
       </label>
+      <label class="toggle-pill" for="normalize-formats-toggle" style="margin-left: 12px;">
+        <input type="checkbox" id="normalize-formats-toggle">
+        <span class="toggle-slider"></span>
+        <span class="toggle-text">Normalize Formats</span>
+      </label>
       <div class="tolerance-control" style="margin-left: 12px; display: none;">
         <input type="number" id="class-tolerance-input" min="0" max="20" value="3" style="width: 50px; padding: 6px 8px; border: 1px solid var(--border-strong); border-radius: 6px; font-size: 12px;">
       </div>
@@ -1764,7 +1876,12 @@ const state = MEMBERS.map(() => ({}));
 const cellTooltip = document.getElementById('cell-tooltip');
 function showCellTooltip(text, anchorEl) {
   if (!text) return;
-  cellTooltip.textContent = text;
+  // Check if text is HTML (contains table elements)
+  if (text.includes('<table') || text.includes('tooltip-')) {
+    cellTooltip.innerHTML = text;
+  } else {
+    cellTooltip.textContent = text;
+  }
   cellTooltip.style.display = 'block';
   const r = anchorEl.getBoundingClientRect();
   const tooltipHeight = cellTooltip.offsetHeight;
@@ -1815,12 +1932,11 @@ const qualificationSettings = {
   useClassDifferenceQualification: false,
   classToleranceValue: 3,
   useBonusWeekCompensation: true,
+  normalizeFormats: false,
 };
 const qualificationToggleEl = document.getElementById('mat-as-cardio-toggle');
 const classQualificationToggleEl = document.getElementById('class-diff-qualification-toggle');
-const CARDIO_QUALIFICATION_FORMATS = ['CB', 'CBP', 'HIIT', 'PC', 'BBB', 'AMP'];
-const STRENGTH_QUALIFICATION_FORMATS = ['LAB', 'FIT'];
-const QUALIFIED_DISPLAY_ORDER = ['CARDIO', 'STRENGTH'];
+const normalizeFormatsToggleEl = document.getElementById('normalize-formats-toggle');
 let userFormatRules = { ...DEFAULT_FORMAT_RULES };
 
 // ── CLASS EQUIVALENCY GROUPS ──
@@ -2053,36 +2169,6 @@ function bindSettingsModalEvents() {
   }
 }
 
-function getQualifiedDisplayKey(abbr) {
-  if (CARDIO_QUALIFICATION_FORMATS.includes(abbr)) return 'CARDIO';
-  if (STRENGTH_QUALIFICATION_FORMATS.includes(abbr)) return 'STRENGTH';
-  return null;
-}
-
-function getActualQualifiedDisplayKey(abbr) {
-  if (STRENGTH_QUALIFICATION_FORMATS.includes(abbr)) return 'STRENGTH';
-  if (CARDIO_QUALIFICATION_FORMATS.includes(abbr)) return 'CARDIO';
-  if (qualificationSettings.matCountsAsCardio && abbr === 'Mat') return 'CARDIO';
-  return null;
-}
-
-function getQualifiedDisplayLabel(displayKey) {
-  if (displayKey === 'CARDIO') return 'Cardio';
-  if (displayKey === 'STRENGTH') return 'Strength';
-  return STICKER_LABEL[displayKey]?.label || displayKey;
-}
-
-function getQualifiedDisplayEmoji(displayKey) {
-  if (displayKey === 'CARDIO') return '🫀';
-  if (displayKey === 'STRENGTH') return '🏋️';
-  return STICKER_LABEL[displayKey]?.emoji || '•';
-}
-
-function getQualifiedDisplaySortValue(displayKey) {
-  const idx = QUALIFIED_DISPLAY_ORDER.indexOf(displayKey);
-  return idx === -1 ? QUALIFIED_DISPLAY_ORDER.length : idx;
-}
-
 function getRequirementEligibleActualAbbrs(reqAbbr) {
   if (reqAbbr === 'TC') return STICKERS.map(s => s.abbr);
   const group = getEquivGroup(reqAbbr);
@@ -2091,7 +2177,7 @@ function getRequirementEligibleActualAbbrs(reqAbbr) {
 }
 
 function getBonusWeekClasses(mi) {
-  const bonusDays = days.slice(28);
+  const bonusDays = days.slice(28, 33);
   const bonusCounts = {};
   bonusDays.forEach(day => {
     const emoji = state[mi][day.key];
@@ -2107,72 +2193,12 @@ function getTotalBonusClasses(mi) {
   return Object.values(getBonusWeekClasses(mi)).reduce((sum, count) => sum + count, 0);
 }
 
-function computeBonusCompensationWeek(mi, weekNum) {
-  if (!qualificationSettings.useBonusWeekCompensation || weekNum < 1 || weekNum > 4) {
-    return { canCompensate: false, bonusCounts: {}, combinedCounts: {} };
-  }
-
-  const base = getWeekScore(mi, weekNum);
-  if (base.completed) {
-    return { canCompensate: false, bonusCounts: {}, combinedCounts: base.counts };
-  }
-
-  const bonusCounts = getBonusWeekClasses(mi);
-  const combinedCounts = { ...base.counts };
-  Object.entries(bonusCounts).forEach(([abbr, count]) => {
-    combinedCounts[abbr] = (combinedCounts[abbr] || 0) + count;
-  });
-
-  const compensationAnalysis = buildQualificationAnalysis(combinedCounts, base.requirements);
-  return {
-    canCompensate: !!compensationAnalysis.completed,
-    bonusCounts,
-    combinedCounts,
-    compensationAnalysis,
-  };
-}
-
-function getBonusStatsHTML(mi) {
-  const bonusCounts = getBonusWeekClasses(mi);
-  const totalBonus = getTotalBonusClasses(mi);
-  const compensatedWeeks = [];
-  for (let week = 1; week <= 4; week++) {
-    const base = getWeekScore(mi, week);
-    if (!base.completed) {
-      const check = computeBonusCompensationWeek(mi, week);
-      if (check.canCompensate) compensatedWeeks.push(week);
-    }
-  }
-
-  if (!totalBonus) {
-    return '<div style="font-size: 11px; color: var(--ink-muted); text-align: center; padding: 8px 4px;">—</div>';
-  }
-
-  const cardioBonus = Object.entries(bonusCounts).reduce((sum, [abbr, count]) => {
-    return sum + (getActualQualifiedDisplayKey(abbr) === 'CARDIO' ? count : 0);
-  }, 0);
-  const strengthBonus = Object.entries(bonusCounts).reduce((sum, [abbr, count]) => {
-    return sum + (getActualQualifiedDisplayKey(abbr) === 'STRENGTH' ? count : 0);
-  }, 0);
-
-  let html = '<div style="font-size: 10px; text-align: center; padding: 6px 4px; line-height: 1.35;">';
-  html += `<div style="font-weight: 800; margin-bottom: 3px;">${totalBonus} bonus</div>`;
-  if (cardioBonus > 0) html += `<div style="color: #e63946;">🫀 ${cardioBonus}</div>`;
-  if (strengthBonus > 0) html += `<div style="color: #6d6875;">🏋️ ${strengthBonus}</div>`;
-  if (compensatedWeeks.length) {
-    html += `<div style="margin-top: 4px; padding-top: 4px; border-top: 1px solid var(--ink-light); color: #16a34a; font-size: 9px; font-weight: 700;">✓ W${compensatedWeeks.join(', W')}</div>`;
-  }
-  html += '</div>';
-  return html;
-}
-
 function buildRequirementSlots(requirements) {
   const slots = [];
   Object.entries(requirements).forEach(([reqAbbr, required]) => {
     for (let i = 0; i < required; i++) {
       slots.push({
         reqAbbr,
-        displayKey: getQualifiedDisplayKey(reqAbbr),
         eligibleActuals: getRequirementEligibleActualAbbrs(reqAbbr),
       });
     }
@@ -2186,67 +2212,57 @@ function buildRequirementSlots(requirements) {
 }
 
 function buildQualificationAnalysis(counts, requirements) {
-  const requiredByDisplay = {};
-  Object.entries(requirements).forEach(([reqAbbr, required]) => {
-    const displayKey = getQualifiedDisplayKey(reqAbbr);
-    if (displayKey) {
-      requiredByDisplay[displayKey] = (requiredByDisplay[displayKey] || 0) + required;
-    }
-  });
-
-  const rawQualifiedDoneByDisplay = {};
+  const units = [];
   Object.entries(counts).forEach(([abbr, count]) => {
-    const displayKey = getActualQualifiedDisplayKey(abbr);
-    if (displayKey) {
-      rawQualifiedDoneByDisplay[displayKey] = (rawQualifiedDoneByDisplay[displayKey] || 0) + count;
-    }
+    for (let i = 0; i < count; i++) units.push({ abbr, source: 'week', unitId: `week:${abbr}:${i}` });
   });
-
   const slots = buildRequirementSlots(requirements);
-  const available = Object.fromEntries(
-    Object.entries(counts).filter(([, count]) => count > 0)
-  );
-
-  let bestMatched = -1;
-  let bestCompletedByDisplay = {};
-
-  function search(slotIndex, remaining, completedByDisplay, matched) {
-    if (matched + (slots.length - slotIndex) < bestMatched) return;
-
+  const used = new Set();
+  let best = { matched: -1, assignments: [] };
+  function search(slotIndex, assignments) {
+    if (assignments.length + (slots.length - slotIndex) < best.matched) return;
     if (slotIndex === slots.length) {
-      if (matched > bestMatched) {
-        bestMatched = matched;
-        bestCompletedByDisplay = { ...completedByDisplay };
+      if (assignments.length > best.matched) {
+        best = { matched: assignments.length, assignments: assignments.map(item => ({ ...item })) };
       }
       return;
     }
-
     const slot = slots[slotIndex];
-
-    slot.eligibleActuals.forEach(actualAbbr => {
-      if ((remaining[actualAbbr] || 0) <= 0) return;
-      remaining[actualAbbr]--;
-      if (slot.displayKey) {
-        completedByDisplay[slot.displayKey] = (completedByDisplay[slot.displayKey] || 0) + 1;
-      }
-      search(slotIndex + 1, remaining, completedByDisplay, matched + 1);
-      if (slot.displayKey) {
-        completedByDisplay[slot.displayKey]--;
-        if (!completedByDisplay[slot.displayKey]) delete completedByDisplay[slot.displayKey];
-      }
-      remaining[actualAbbr]++;
+    let matchedOne = false;
+    units.forEach(unit => {
+      if (used.has(unit.unitId)) return;
+      if (!slot.eligibleActuals.includes(unit.abbr)) return;
+      matchedOne = true;
+      used.add(unit.unitId);
+      assignments.push({ reqAbbr: slot.reqAbbr, actualAbbr: unit.abbr, source: unit.source });
+      search(slotIndex + 1, assignments);
+      assignments.pop();
+      used.delete(unit.unitId);
     });
-
-    search(slotIndex + 1, remaining, completedByDisplay, matched);
+    if (!matchedOne) search(slotIndex + 1, assignments);
   }
+  search(0, []);
 
-  search(0, { ...available }, {}, 0);
+  const assignedCountsByReq = {};
+  const assignedCountsByReqAndActual = {};
+  best.assignments.forEach(({ reqAbbr, actualAbbr }) => {
+    assignedCountsByReq[reqAbbr] = (assignedCountsByReq[reqAbbr] || 0) + 1;
+    if (!assignedCountsByReqAndActual[reqAbbr]) assignedCountsByReqAndActual[reqAbbr] = {};
+    assignedCountsByReqAndActual[reqAbbr][actualAbbr] = (assignedCountsByReqAndActual[reqAbbr][actualAbbr] || 0) + 1;
+  });
+
+  const missingByReq = {};
+  Object.entries(requirements).forEach(([reqAbbr, required]) => {
+    const done = assignedCountsByReq[reqAbbr] || 0;
+    if (done < required) missingByReq[reqAbbr] = required - done;
+  });
 
   return {
-    completed: bestMatched === slots.length,
-    completedByDisplay: bestCompletedByDisplay,
-    rawQualifiedDoneByDisplay,
-    requiredByDisplay,
+    completed: best.matched === slots.length,
+    assignments: best.assignments,
+    assignedCountsByReq,
+    assignedCountsByReqAndActual,
+    missingByReq,
   };
 }
 
@@ -2254,72 +2270,134 @@ function areWeeklyRequirementsMet(counts, requirements) {
   return buildQualificationAnalysis(counts, requirements).completed;
 }
 
-// ── BONUS WEEK COMPENSATION ──
-function getBonusWeekClasses(mi) {
-  // Bonus days are indices 28-32 (Mar 23-27)
-  const bonusDays = days.slice(28, 33);
-  const bonusCounts = {};
-  bonusDays.forEach(day => {
+function getNormalizedFormatAbbr(abbr) {
+  if (!qualificationSettings.normalizeFormats) return abbr;
+  const cardioFormats = new Set(['CB', 'CBP', 'HIIT', 'AMP']);
+  const strengthFormats = new Set(['LAB', 'FIT', 'BBB', 'SL']);
+  if (qualificationSettings.matCountsAsCardio || userFormatRules.Mat_interchangeable) cardioFormats.add('Mat');
+  if (userFormatRules.PC_interchangeable) cardioFormats.add('PC');
+  if (cardioFormats.has(abbr)) return 'CB';
+  if (strengthFormats.has(abbr)) return 'SL';
+  return abbr;
+}
+
+function formatCountsList(counts) {
+  const rolled = {};
+  Object.entries(counts || {}).forEach(([abbr, count]) => {
+    if (!count) return;
+    const key = getNormalizedFormatAbbr(abbr);
+    rolled[key] = (rolled[key] || 0) + count;
+  });
+  const order = ['B57', 'CB', 'SL', 'FIT', 'LAB', 'BBB', 'PC', 'Mat', 'HIIT', 'AMP', 'REC', 'TC'];
+  return Object.entries(rolled)
+    .sort((a, b) => {
+      const ai = order.indexOf(a[0]);
+      const bi = order.indexOf(b[0]);
+      return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+    })
+    .map(([abbr, count]) => `${count}${abbr}`);
+}
+
+function getWeekCounts(mi, weekNum) {
+  const counts = {};
+  (weekChunks[weekNum - 1] || []).forEach(day => {
     const emoji = state[mi][day.key];
-    if (emoji) {
-      const abbr = getStickerAbbr(emoji);
-      if (abbr) {
-        bonusCounts[abbr] = (bonusCounts[abbr] || 0) + 1;
+    if (!emoji) return;
+    const abbr = getStickerAbbr(emoji);
+    if (!abbr) return;
+    counts[abbr] = (counts[abbr] || 0) + 1;
+  });
+  return counts;
+}
+
+function getLocationRequirements(loc, weekNum) {
+  const reqs = loc === 'Bandra' ? WEEKLY_REQUIREMENTS_BANDRA : WEEKLY_REQUIREMENTS_KC;
+  return reqs[weekNum];
+}
+
+function getMemberWeekPlan(mi) {
+  const member = MEMBERS[mi];
+  const loc = member ? member.loc : 'KC';
+  const bonusPool = {};
+  const bonusDayKeysByAbbr = {};
+  days.slice(28, 33).forEach(day => {
+    const emoji = state[mi][day.key];
+    if (!emoji) return;
+    const abbr = getStickerAbbr(emoji);
+    if (!abbr) return;
+    bonusPool[abbr] = (bonusPool[abbr] || 0) + 1;
+    if (!bonusDayKeysByAbbr[abbr]) bonusDayKeysByAbbr[abbr] = [];
+    bonusDayKeysByAbbr[abbr].push(day.key);
+  });
+
+  const consumedBonusDayKeys = {};
+  const weeks = {};
+
+  for (let weekNum = 1; weekNum <= 4; weekNum++) {
+    const requirements = getLocationRequirements(loc, weekNum);
+    const counts = getWeekCounts(mi, weekNum);
+    const baseAnalysis = buildQualificationAnalysis(counts, requirements);
+    const week = {
+      requirements,
+      counts,
+      analysis: baseAnalysis,
+      completed: baseAnalysis.completed,
+      compensated: false,
+      finalQualified: baseAnalysis.completed,
+      bonusUsedCounts: {},
+      placedBonusClasses: [],
+    };
+
+    if (!baseAnalysis.completed && qualificationSettings.useBonusWeekCompensation) {
+      const combinedCounts = { ...counts };
+      Object.entries(bonusPool).forEach(([abbr, count]) => {
+        combinedCounts[abbr] = (combinedCounts[abbr] || 0) + count;
+      });
+      const combinedAnalysis = buildQualificationAnalysis(combinedCounts, requirements);
+      if (combinedAnalysis.completed) {
+        const weekUsage = {};
+        Object.entries(combinedAnalysis.assignedCountsByReqAndActual).forEach(([, actuals]) => {
+          Object.entries(actuals).forEach(([abbr, count]) => {
+            const weekCount = counts[abbr] || 0;
+            const alreadyUsed = weekUsage[abbr] || 0;
+            const bonusNeeded = Math.max(count - Math.max(weekCount - alreadyUsed, 0), 0);
+            if (bonusNeeded > 0) weekUsage[abbr] = alreadyUsed + bonusNeeded;
+          });
+        });
+        if (Object.keys(weekUsage).length) {
+          week.compensated = true;
+          week.finalQualified = true;
+          week.analysis = combinedAnalysis;
+          week.bonusUsedCounts = weekUsage;
+          const emptyDays = (weekChunks[weekNum - 1] || []).filter(day => !state[mi][day.key]);
+          Object.entries(weekUsage).forEach(([abbr, count]) => {
+            for (let i = 0; i < count; i++) {
+              bonusPool[abbr]--;
+              const sourceBonusDayKey = (bonusDayKeysByAbbr[abbr] || []).shift();
+              if (sourceBonusDayKey) consumedBonusDayKeys[sourceBonusDayKey] = weekNum;
+              const target = emptyDays.shift();
+              if (target) {
+                week.placedBonusClasses.push({
+                  actualAbbr: abbr,
+                  sourceBonusDayKey,
+                  targetDayKey: target.key,
+                  emoji: STICKER_LABEL[abbr]?.emoji || '',
+                });
+              }
+            }
+          });
+        }
       }
     }
-  });
-  return bonusCounts;
-}
-
-function getTotalBonusClasses(mi) {
-  const bonusCounts = getBonusWeekClasses(mi);
-  return Object.values(bonusCounts).reduce((sum, count) => sum + count, 0);
-}
-
-// Check if bonus classes can compensate for week shortfalls
-function checkBonusCompensation(mi, weekNum) {
-  if (!qualificationSettings.useBonusCompensation) {
-    return { canCompensate: false, compensationAnalysis: null };
+    weeks[weekNum] = week;
   }
-
-  const weekScore = getWeekScore(mi, weekNum);
-  if (weekScore.completed) {
-    return { canCompensate: false, compensationAnalysis: null }; // Already qualified
-  }
-
-  const requirements = weekScore.requirements;
-  const weekCounts = weekScore.counts;
-  
-  // Find what's missing
-  const slots = buildRequirementSlots(requirements);
-  const available = Object.fromEntries(
-    Object.entries(weekCounts).filter(([, count]) => count > 0)
-  );
-
-  // Get bonus classes
-  const bonusCounts = getBonusWeekClasses(mi);
-  
-  // Try to fill gaps with bonus classes
-  const combined = { ...available };
-  Object.entries(bonusCounts).forEach(([abbr, count]) => {
-    combined[abbr] = (combined[abbr] || 0) + count;
-  });
-
-  const compensationAnalysis = buildQualificationAnalysis(combined, requirements);
-  
-  return {
-    canCompensate: compensationAnalysis.completed && !weekScore.completed,
-    compensationAnalysis,
-    usedBonusClasses: bonusCounts,
-    missingInWeek: weekScore.qualificationAnalysis
-  };
+  return { weeks, consumedBonusDayKeys, remainingBonus: bonusPool };
 }
 
 
 // Returns true if the given sticker abbr counts toward any requirement in weekNum for a given location
 function isStickerQualifying(abbr, weekNum, loc) {
-  const reqs = (loc === 'Bandra') ? WEEKLY_REQUIREMENTS_BANDRA : WEEKLY_REQUIREMENTS_KC;
-  const requirements = reqs[weekNum];
+  const requirements = getLocationRequirements(loc, weekNum);
   if (!requirements || !abbr) return false;
   // TC means any class qualifies
   if ('TC' in requirements) return true;
@@ -2330,30 +2408,17 @@ function isStickerQualifying(abbr, weekNum, loc) {
 }
 
 function getWeekScore(mi, weekNum) {
-  const weekIdx = weekNum - 1;
-  const weekDays = weekChunks[weekIdx];
-  if (!weekDays) return { completed: false, counts: {} };
-
-  const loc = MEMBERS[mi] ? MEMBERS[mi].loc : 'KC';
-  const reqs = (loc === 'Bandra') ? WEEKLY_REQUIREMENTS_BANDRA : WEEKLY_REQUIREMENTS_KC;
-  const requirements = reqs[weekNum];
-  if (!requirements) return { completed: false, counts: {} };
-
-  // Count stickers for this week
-  const counts = {};
-  weekDays.forEach(day => {
-    const emoji = state[mi][day.key];
-    if (emoji) {
-      const abbr = getStickerAbbr(emoji);
-      if (abbr) {
-        counts[abbr] = (counts[abbr] || 0) + 1;
-      }
-    }
-  });
-
-  const qualificationAnalysis = buildQualificationAnalysis(counts, requirements);
-
-  return { completed: qualificationAnalysis.completed, counts, requirements, qualificationAnalysis };
+  const week = getMemberWeekPlan(mi).weeks[weekNum];
+  if (!week) return { completed: false, counts: {} };
+  return {
+    completed: week.finalQualified,
+    baseCompleted: week.completed,
+    compensated: week.compensated,
+    counts: week.counts,
+    requirements: week.requirements,
+    qualificationAnalysis: week.analysis,
+    bonusUsedCounts: week.bonusUsedCounts,
+  };
 }
 
 function getScore(mi) {
@@ -2369,15 +2434,9 @@ function getScore(mi) {
   
   // Original logic: count qualified weeks (with bonus compensation)
   let score = 0;
+  const plan = getMemberWeekPlan(mi);
   for (let week = 1; week <= 4; week++) {
-    const { completed } = getWeekScore(mi, week);
-    if (completed) {
-      score++;
-    } else if (qualificationSettings.useBonusCompensation) {
-      // Check if bonus classes can compensate
-      const { canCompensate } = checkBonusCompensation(mi, week);
-      if (canCompensate) score++;
-    }
+    if (plan.weeks[week] && plan.weeks[week].finalQualified) score++;
   }
   return score;
 }
@@ -2447,50 +2506,17 @@ function buildWeeklyRequirementBreakdown(requirements) {
   return ['Format Requirements:', ...lines];
 }
 
-function buildQualifiedFormatBreakdown(qualificationAnalysis) {
-  const lines = [];
-  ['CARDIO', 'STRENGTH'].forEach(displayKey => {
-    const done = qualificationAnalysis.rawQualifiedDoneByDisplay[displayKey] || 0;
-    const required = qualificationAnalysis.requiredByDisplay[displayKey] || 0;
-    const emoji = getQualifiedDisplayEmoji(displayKey);
-    const label = getQualifiedDisplayLabel(displayKey);
-    const status = done >= required ? '✓ DONE' : `✗ ${required - done} short`;
-    lines.push(`${emoji} ${label}:`);
-    lines.push(`    Completed: ${done} / Required: ${required} ${status}`);
-  });
-  return ['Formats Breakdown:', ...lines];
-}
-
 function buildWeekQualificationTooltip(mi, weekNum) {
   if (weekNum < 1 || weekNum > 4) return '';
-  const { completed, counts, requirements, qualificationAnalysis } = getWeekScore(mi, weekNum);
+  const { completed, counts, requirements } = getWeekScore(mi, weekNum);
   if (!requirements) return '';
 
-  // Format requirements as "1B57, 2CB, 1FIT, 2PC"
-  const requiredList = [];
-  Object.entries(requirements)
-    .sort((a, b) => {
-      const order = [...STICKERS.map(s => s.abbr), 'CBP', 'TC'];
-      return order.indexOf(a[0]) - order.indexOf(b[0]);
-    })
-    .forEach(([abbr, count]) => {
-      requiredList.push(`${count}${abbr}`);
-    });
+  // Build table for formats done vs required
+  let html = '<div class="tooltip-table-wrapper">';
+  html += '<div class="tooltip-header">FORMATS COMPARISON</div>';
+  html += '<table class="tooltip-table">';
+  html += '<thead><tr><th>Format</th><th>Required</th><th>Done</th><th>Status</th></tr></thead><tbody>';
   
-  // Format completed as "2CB, 1FIT, 1AU, 1HIIT"
-  const completedList = [];
-  STICKERS.forEach(({ abbr }) => {
-    const count = counts[abbr] || 0;
-    if (count > 0) {
-      completedList.push(`${count}${abbr}`);
-    }
-  });
-  
-  // Format qualified - showing what matched requirements with alternates in parentheses
-  const qualifiedList = [];
-  const matched = {};
-  
-  // For each requirement, find what format satisfied it
   Object.entries(requirements)
     .sort((a, b) => {
       const order = [...STICKERS.map(s => s.abbr), 'CBP', 'TC'];
@@ -2498,64 +2524,33 @@ function buildWeekQualificationTooltip(mi, weekNum) {
     })
     .forEach(([reqAbbr, required]) => {
       const group = getEquivGroup(reqAbbr);
-      if (!group) {
-        // No equivalency group, check if exact match exists in counts
-        if ((counts[reqAbbr] || 0) > 0) {
-          qualifiedList.push(`${required}${reqAbbr}`);
-          matched[reqAbbr] = required;
-        } else {
-          qualifiedList.push(`MISSING: ${required}${reqAbbr}`);
-        }
-        return;
-      }
-      
-      // Count how many from this group we have
-      let groupCount = 0;
-      const usedFromGroup = [];
-      group.forEach(fmt => {
-        const avail = counts[fmt] || 0;
-        if (avail > 0) {
-          usedFromGroup.push(`${avail}${fmt}`);
-          groupCount += avail;
-        }
-      });
-      
-      if (groupCount >= required) {
-        if (usedFromGroup.length === 1 && usedFromGroup[0].endsWith(reqAbbr)) {
-          // Exact match only
-          qualifiedList.push(`${required}${reqAbbr}`);
-        } else if (usedFromGroup.length === 1) {
-          // Different format in group
-          qualifiedList.push(`${required}${reqAbbr}(${usedFromGroup[0]})`);
-        } else {
-          // Multiple formats used
-          qualifiedList.push(`${required}${reqAbbr}(${usedFromGroup.join(', ')})`);
-        }
+      let available = 0;
+
+      if (group) {
+        group.forEach(fmt => {
+          available += counts[fmt] || 0;
+        });
       } else {
-        // Not enough in group, show shortfall
-        const shortfall = required - groupCount;
-        if (usedFromGroup.length > 0) {
-          qualifiedList.push(`${required}${reqAbbr}(${usedFromGroup.join(', ')})-${shortfall}short`);
-        } else {
-          qualifiedList.push(`MISSING: ${required}${reqAbbr}`);
-        }
+        available = counts[reqAbbr] || 0;
       }
+
+      const isMatched = available >= required;
+      const statusColor = isMatched ? '#22c55e' : '#ef4444';
+      const statusSymbol = isMatched ? '✓' : '✗';
+      
+      html += `<tr>`;
+      html += `<td class="format-name">${reqAbbr}</td>`;
+      html += `<td class="format-required">${required}</td>`;
+      html += `<td class="format-done" style="color: ${isMatched ? '#22c55e' : '#ef4444'}; font-weight: 600;">${available}</td>`;
+      html += `<td class="format-status" style="color: ${statusColor}; font-weight: 700; font-size: 11px;">${statusSymbol}</td>`;
+      html += `</tr>`;
     });
   
-  const compensation = completed ? null : computeBonusCompensationWeek(mi, weekNum);
-  const bonusNote = !completed && compensation && compensation.canCompensate 
-    ? ' (Bonus available)' 
-    : '';
-  
-  const lines = [
-    `FORMATS REQUIRED - ${requiredList.join(', ')}`,
-    `FORMATS COMPLETED - ${completedList.length > 0 ? completedList.join(', ') : 'None'}`,
-    `FORMATS QUALIFIED - ${qualifiedList.join(', ')}${bonusNote}`,
-    '',
-    `Qualification: ${completed ? '✓ QUALIFIED' : '✗ NOT QUALIFIED'}`
-  ];
+  html += '</tbody></table>';
+  html += `<div class="tooltip-footer">${completed ? '<span style="color: #22c55e; font-weight: 700;">✓ QUALIFIED</span>' : '<span style="color: #ef4444; font-weight: 700;">✗ NOT QUALIFIED</span>'}</div>`;
+  html += '</div>';
 
-  return lines.join('\n');
+  return html;
 }
 
 function buildSlotTooltip(abbr, label, mi, weekNum, loc) {
@@ -2637,6 +2632,8 @@ function restoreQualificationSettings() {
     qualificationSettings.matCountsAsCardio = !!parsed.matCountsAsCardio;
     qualificationSettings.useClassDifferenceQualification = !!parsed.useClassDifferenceQualification;
     qualificationSettings.classToleranceValue = parsed.classToleranceValue || 3;
+    if (typeof parsed.useBonusWeekCompensation === 'boolean') qualificationSettings.useBonusWeekCompensation = parsed.useBonusWeekCompensation;
+    qualificationSettings.normalizeFormats = !!parsed.normalizeFormats;
   } catch (e) {
     console.warn('Failed to restore qualification settings:', e);
   }
@@ -2648,6 +2645,9 @@ function syncQualificationToggle() {
   }
   if (classQualificationToggleEl) {
     classQualificationToggleEl.checked = qualificationSettings.useClassDifferenceQualification;
+  }
+  if (normalizeFormatsToggleEl) {
+    normalizeFormatsToggleEl.checked = qualificationSettings.normalizeFormats;
   }
   const toleranceInput = document.getElementById('class-tolerance-input');
   const toleranceControl = document.querySelector('.tolerance-control');
@@ -2698,6 +2698,7 @@ function getLocationStats(locationAbbr) {
 }
 
 function getBonusStatsHTML(mi) {
+  const plan = getMemberWeekPlan(mi);
   const bonusCounts = getBonusWeekClasses(mi);
   const totalBonus = getTotalBonusClasses(mi);
   
@@ -2705,35 +2706,11 @@ function getBonusStatsHTML(mi) {
     return '<div style="font-size: 11px; color: var(--ink-muted); text-align: center; padding: 8px 4px;">—</div>';
   }
   
-  // Categorize bonus classes
-  let cardioBonus = 0, strengthBonus = 0;
-  Object.entries(bonusCounts).forEach(([abbr, count]) => {
-    if (CARDIO_QUALIFICATION_FORMATS.includes(abbr)) cardioBonus += count;
-    else if (STRENGTH_QUALIFICATION_FORMATS.includes(abbr)) strengthBonus += count;
-  });
-  
   let html = '<div style="font-size: 10px; text-align: center; padding: 6px 4px;">';
   html += `<div style="font-weight: bold; margin-bottom: 3px;">${totalBonus} bonus</div>`;
-  if (cardioBonus > 0) html += `<div style="color: #e63946;">🫀 ${cardioBonus}</div>`;
-  if (strengthBonus > 0) html += `<div style="color: #6d6875;">🏋️ ${strengthBonus}</div>`;
-  
-  // Show if bonus can compensate any week
-  let compensating = false;
-  let compWeeks = [];
-  for (let week = 1; week <= 4; week++) {
-    const { completed } = getWeekScore(mi, week);
-    if (!completed) {
-      const { canCompensate } = checkBonusCompensation(mi, week);
-      if (canCompensate) {
-        compensating = true;
-        compWeeks.push(week);
-      }
-    }
-  }
-  
-  if (compensating && qualificationSettings.useBonusCompensation) {
-    html += `<div style="margin-top: 3px; padding-top: 3px; border-top: 1px solid var(--ink-light); color: #6eff95; font-size: 9px; font-weight: 600;">✓ Comp W${compWeeks.join(',')}</div>`;
-  }
+  html += `<div style="color: #475569;">${formatCountsList(bonusCounts).join(', ')}</div>`;
+  const compensatedWeeks = Object.entries(plan.weeks).filter(([, week]) => week.compensated).map(([weekNum]) => weekNum);
+  if (compensatedWeeks.length) html += `<div style="margin-top: 3px; padding-top: 3px; border-top: 1px solid var(--ink-light); color: #16a34a; font-size: 9px; font-weight: 700;">✓ W${compensatedWeeks.join(', W')}</div>`;
   
   html += '</div>';
   return html;
@@ -2843,6 +2820,7 @@ function refreshBoard() {
 
   const weekScoreTh = document.createElement('th');
   weekScoreTh.className = 'score-h';
+  weekScoreTh.appendChild(document.createTextNode('Score'));
   weekRow.appendChild(weekScoreTh);
 
   thead.appendChild(weekRow);
@@ -2956,6 +2934,7 @@ function refreshBoard() {
     tbody.appendChild(sepRow);
 
     groupList.forEach((m, rank) => {
+      const memberPlan = getMemberWeekPlan(m.mi);
       const animDelay = rank * 0.04;
       const row = document.createElement('tr');
       row.className = 'data-row';
@@ -2989,7 +2968,10 @@ function refreshBoard() {
 
         // Determine which week this day belongs to (1-4)
         const weekNum = Math.floor(di / 7) + 1;
-        const isCompletedWeek = weekNum <= 4 && getWeekScore(m.mi, weekNum).completed;
+        const weekPlan = weekNum <= 4 ? memberPlan.weeks[weekNum] : null;
+        const compensatedPlacement = weekPlan ? weekPlan.placedBonusClasses.find(item => item.targetDayKey === d.key) : null;
+        const isCompletedWeek = !!(weekPlan && weekPlan.finalQualified);
+        const isCompensatedWeek = !!(weekPlan && weekPlan.compensated);
         const weekTooltipText = weekNum <= 4 ? buildWeekQualificationTooltip(m.mi, weekNum) : '';
         // Week is "ended" if its last day is on or before today (midnight)
         const today = new Date(); today.setHours(0,0,0,0);
@@ -2997,7 +2979,11 @@ function refreshBoard() {
         const isWeekEnded = weekLastDay ? (weekLastDay <= today) : false;
         const isNotQualifiedEnded = isWeekEnded && !isCompletedWeek && weekNum <= 4;
 
-        td.className = 'day-td' + (d.isWeekend ? ' weekend' : '') + (isCompletedWeek ? ' week-completed' : '') + (isNotQualifiedEnded ? ' week-not-qualified' : '');
+        td.className = 'day-td'
+          + (d.isWeekend ? ' weekend' : '')
+          + (isCompletedWeek ? ' week-completed' : '')
+          + (isCompensatedWeek ? ' week-qualified-compensated bonus-week-compensated' : '')
+          + (isNotQualifiedEnded ? ' week-not-qualified' : '');
 
         // Inject badge on 4th day (center) of each completed or ended-but-not-qualified week
         if (di % 7 === 3 && weekNum <= 4) {
@@ -3005,7 +2991,7 @@ function refreshBoard() {
           if (isCompletedWeek) {
             const badge = document.createElement('div');
             badge.className = 'week-qualified-badge';
-            badge.textContent = '✓ Qualified';
+            badge.textContent = isCompensatedWeek ? '✓ Qualified + Bonus' : '✓ Qualified';
             td.appendChild(badge);
           } else if (isNotQualifiedEnded) {
             const badge = document.createElement('div');
@@ -3025,11 +3011,13 @@ function refreshBoard() {
           td.style.borderLeft = '2px solid var(--border-strong)';
         }
 
-        const stickerVal  = state[m.mi][d.key];
+        const stickerVal  = compensatedPlacement ? compensatedPlacement.emoji : state[m.mi][d.key];
         const stickerAbbr  = stickerVal ? getStickerAbbr(stickerVal) : null;
         const stickerLabel = stickerVal ? (STICKERS.find(s => s.emoji === stickerVal)?.label || '') : '';
         const slot = document.createElement('div');
         slot.className = 'sticker-slot' + (stickerVal ? ' has-sticker' : '');
+        if (compensatedPlacement) slot.classList.add('bonus-compensated');
+        if (memberPlan.consumedBonusDayKeys[d.key]) slot.classList.add('bonus-consumed');
         slot.textContent = stickerVal || '';
         slot.dataset.mi = m.mi;
         slot.dataset.dk = d.key;
@@ -3038,6 +3026,8 @@ function refreshBoard() {
         slot.addEventListener('mouseenter', () => {
           if (stickerAbbr && weekNum <= 4) {
             showCellTooltip(buildSlotTooltip(stickerAbbr, stickerLabel, m.mi, weekNum, m.loc), slot);
+          } else if (memberPlan.consumedBonusDayKeys[d.key] && stickerLabel) {
+            showCellTooltip(`${stickerLabel}\nUsed to qualify Week ${memberPlan.consumedBonusDayKeys[d.key]}`, slot);
           } else if (stickerLabel) {
             showCellTooltip(stickerLabel, slot);
           }
@@ -3288,11 +3278,14 @@ function getParticipantStats() {
       name: `${m.first} ${m.last}`,
       email: m.email,
       location: m.loc,
+      level: 'Advanced',
       classesCompleted: total,
       classesRequired: required,
       weeksQualified: score,
       fullyQualified: isFullyQualified,
       status: isFullyQualified ? 'QUALIFIED' : 'NOT QUALIFIED',
+      qualificationMethod: qualificationSettings.useClassDifferenceQualification ? 'Within 3 Classes' : 'Week-Based',
+      classTypeCounters,
       weekDetails
     });
   });
@@ -3308,7 +3301,7 @@ function exportToCSV() {
   
   // Data rows
   stats.forEach(participant => {
-    const weekStatuses = participant.weekDetails.map(w => w.qualified ? 'QUALIFIED' : 'NOT QUALIFIED').join(',');
+    const weekStatuses = participant.weekDetails.map(w => w.qualified ? '✓' : '✗').join('');
     rows.push([
       participant.name,
       participant.email,
@@ -3317,7 +3310,7 @@ function exportToCSV() {
       participant.classesRequired,
       participant.weeksQualified,
       participant.status,
-      ...participant.weekDetails.map(w => w.qualified ? '✓' : '✗')
+      ...weekStatuses
     ]);
   });
   
@@ -3374,17 +3367,17 @@ function exportToPDF() {
         .meta { text-align: center; color: #7f8c8d; margin-bottom: 15px; font-size: 10px; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th { background-color: #34495e; color: white; padding: 8px; text-align: left; font-weight: 600; font-size: 10px; border: 1px solid #bdc3c7; }
-        td { padding: 8px; border: 1px solid #ecf0f1; font-size: 10px; }
+        td { padding: 8px; border: 1px solid #ddd;font-size: 12px; }
         tr:nth-child(even) { background-color: #f8f9fa; }
         .status-qualified::before { content: '✓ '; color: #27ae60; font-weight: bold; }
         .status-not-qualified::before { content: '✗ '; color: #e74c3c; font-weight: bold; }
-        .summary { margin-top: 20px; padding: 12px; background-color: #ecf0f1; border-left: 3px solid #34495e; }
-        h2 { margin: 0 0 8px 0; color: #2c3e50; font-size: 12px; }
-        .summary-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
-        .summary-item { }
-        .summary-label { font-size: 9px; color: #7f8c8d; font-weight: 500; }
-        .summary-value { font-size: 14px; font-weight: 600; color: #b91c1c; margin-top: 5px;
-        }
+        .center{text-align:center};
+        .summary{background:#fff;padding:20px;margin-top:30px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1)};
+        .summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-top:15px};
+        .summary-card{padding:15px;background:#f9f9f9;border-radius:5px;border-left:4px solid #b91c1c};
+        .summary-label{font-size:12px;color:#666;font-weight:bold};
+        .summary-value{font-size:24px;font-weight:bold;color:#b91c1c;margin-top:5px};
+        .meta{text-align:center;color:#999;font-size:11px;margin:15px 0};
       </style>
     </head>
     <body>
@@ -3783,7 +3776,11 @@ bindSettingsModalEvents();
 if (qualificationToggleEl) {
   qualificationToggleEl.addEventListener('change', () => {
     qualificationSettings.matCountsAsCardio = qualificationToggleEl.checked;
+    userFormatRules.Mat_interchangeable = qualificationToggleEl.checked;
+    updateEquivGroupsFromRules();
+    saveFormatRules();
     saveQualificationSettings();
+    syncSettingsModal();
     refreshBoard();
   });
 }
@@ -3791,6 +3788,13 @@ if (classQualificationToggleEl) {
   classQualificationToggleEl.addEventListener('change', () => {
     qualificationSettings.useClassDifferenceQualification = classQualificationToggleEl.checked;
     document.querySelector('.tolerance-control').style.display = classQualificationToggleEl.checked ? 'block' : 'none';
+    saveQualificationSettings();
+    refreshBoard();
+  });
+}
+if (normalizeFormatsToggleEl) {
+  normalizeFormatsToggleEl.addEventListener('change', () => {
+    qualificationSettings.normalizeFormats = normalizeFormatsToggleEl.checked;
     saveQualificationSettings();
     refreshBoard();
   });

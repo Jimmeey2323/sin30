@@ -13,7 +13,18 @@ const EQUIV_GROUPS = {
   'REC_interchangeable': ['Recovery', 'Strength']
 };
 
+// Add normalization toggle
+let normalizationEnabled = true; // Default to enabled
+
+function setNormalizationEnabled(enabled) {
+  normalizationEnabled = enabled;
+}
+
 function normalizeClass(cleanedClass) {
+  if (!normalizationEnabled) {
+    return cleanedClass; // Return as is if normalization is disabled
+  }
+
   for (const group of Object.values(EQUIV_GROUPS)) {
     if (group.includes(cleanedClass)) {
       return group[0]; // Normalize to the first class in the group
@@ -22,4 +33,4 @@ function normalizeClass(cleanedClass) {
   return cleanedClass; // Return as is if no match found
 }
 
-module.exports = normalizeClass;
+module.exports = { normalizeClass, setNormalizationEnabled };

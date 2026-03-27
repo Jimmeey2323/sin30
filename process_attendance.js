@@ -39,6 +39,53 @@ data.forEach(row => {
   }
 });
 
+// Update weekData to dynamically apply bonus classes
+function applyBonusClasses(weekData, bonusClasses) {
+  Object.keys(weekData).forEach(week => {
+    const weekStats = weekData[week];
+    const missingFormats = calculateMissingFormats(weekStats);
+
+    missingFormats.forEach(format => {
+      const bonusIndex = bonusClasses.findIndex(bonus => bonus.format === format && !bonus.used);
+      if (bonusIndex !== -1) {
+        const bonus = bonusClasses[bonusIndex];
+        weekStats.bonusUsed += 1;
+        weekStats.qualified += 1;
+        bonus.used = true;
+      }
+    });
+  });
+}
+
+function calculateMissingFormats(weekStats) {
+  const requiredFormats = ['Cardio', 'Strength', 'Flexibility']; // Example formats
+  const completedFormats = weekStats.completedFormats || [];
+
+  return requiredFormats.filter(format => !completedFormats.includes(format));
+}
+
+// Export updated CSV
+function exportCSV(weekData) {
+  const headers = ['Week', 'Total Classes', 'Qualified', 'Bonus Classes Used', 'Qualified After Bonus'];
+  const rows = [headers];
+
+  Object.keys(weekData).forEach(week => {
+    const { total, qualified, bonusUsed } = weekData[week];
+    rows.push([week, total, qualified, bonusUsed, qualified]);
+  });
+
+  const csvContent = rows.map(row => row.join(',')).join('\n');
+  fs.writeFileSync('Updated_Report.csv', csvContent);
+}
+
+// Example usage
+const bonusClasses = [
+  { format: 'Strength', used: false },
+  { format: 'Cardio', used: false }
+];
+applyBonusClasses(weekData, bonusClasses);
+exportCSV(weekData);
+
 // Generate summary
 console.log('Week,Total Classes,Qualified Classes,Bonus Used');
 Object.entries(weekData).forEach(([week, stats]) => {

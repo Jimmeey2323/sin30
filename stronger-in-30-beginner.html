@@ -856,8 +856,10 @@ td.day-td.week-not-qualified .sticker-slot:hover {
 }
 
 .day-td.bonus-week-compensated {
-  background: linear-gradient(135deg, rgba(254, 243, 199, 0.4), rgba(253, 230, 138, 0.4)) !important;
-  outline: 2px solid #f59e0b;
+  /* Removed: Only individual slots should be highlighted, not the full week */
+  /* Original styling applied to entire week - removed to prevent over-highlighting */
+  background: transparent !important;
+  outline: none;
 }
 
 /* Qualifying sticker highlight */
@@ -868,20 +870,171 @@ td.day-td.week-not-qualified .sticker-slot:hover {
   display: none;
   position: fixed;
   z-index: 9999;
-  background: var(--ink);
+  background: linear-gradient(to bottom, rgba(20, 20, 22, 0.98), rgba(30, 30, 35, 0.98));
   color: #fff;
-  font-family: 'Syne', sans-serif;
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
   white-space: pre-line;
-  line-height: 1.45;
-  max-width: 260px;
-  padding: 7px 9px;
-  border-radius: 6px;
+  line-height: 1.6;
+  max-width: 420px;
+  padding: 12px 14px;
+  border-radius: 8px;
   pointer-events: none;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.22);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4), 0 0 1px rgba(255,255,255,0.1) inset;
   transform: translateX(-50%);
+  border: 1px solid rgba(100, 200, 255, 0.2);
+}
+
+#cell-tooltip .tooltip-section {
+  margin-bottom: 8px;
+}
+
+#cell-tooltip .tooltip-label {
+  font-weight: 700;
+  color: #ffd700;
+  margin-bottom: 3px;
+  font-size: 9px;
+  opacity: 0.9;
+  letter-spacing: 0.08em;
+}
+
+#cell-tooltip .tooltip-item {
+  margin: 2px 0;
+  padding-left: 8px;
+}
+
+.tooltip-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tooltip-head {
+  font-weight: 800;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #64b5ff;
+  padding-bottom: 6px;
+  border-bottom: 2px solid #64b5ff;
+  text-align: center;
+}
+
+.tooltip-section-label {
+  font-weight: 700;
+  font-size: 10px;
+  color: #a3e635;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+  margin-top: 4px;
+  padding-left: 2px;
+  border-left: 2px solid #a3e635;
+}
+
+.format-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 4px;
+  border-left: 3px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 3px;
+}
+
+.format-row.matched {
+  border-left-color: #22c55e;
+  background: rgba(34, 197, 94, 0.08);
+}
+
+.format-row.missing {
+  border-left-color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.format-name {
+  font-weight: 700;
+  min-width: 45px;
+  color: #f0f9ff;
+  font-size: 10px;
+}
+
+.format-progress {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 100px;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.progress-fill {
+  height: 100%;
+  background: #64b5ff;
+  border-radius: 2px;
+  transition: width 0.2s;
+}
+
+.progress-fill.matched {
+  background: #22c55e;
+}
+
+.progress-fill.missing {
+  background: #ef4444;
+}
+
+.format-count {
+  font-weight: 600;
+  font-size: 10px;
+  min-width: 40px;
+  text-align: right;
+  color: #e5e7eb;
+}
+
+.format-status {
+  font-weight: 700;
+  font-size: 12px;
+  min-width: 16px;
+  text-align: center;
+}
+
+.status-matched {
+  color: #22c55e;
+}
+
+.status-missing {
+  color: #ef4444;
+}
+
+.tooltip-footer {
+  padding-top: 8px;
+  padding-bottom: 2px;
+  border-top: 2px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+  font-weight: 800;
+  font-size: 11px;
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.qualified-status {
+  color: #22c55e;
+}
+
+.not-qualified-status {
+  color: #ef4444;
 }
 
 
@@ -1258,7 +1411,7 @@ tr.data-row.hidden { display: none; }
 .settings-modal {
   position: fixed;
   inset: 0;
-  z-index: 260;
+  z-index: 5000;
   display: none;
   align-items: center;
   justify-content: center;
@@ -1573,6 +1726,11 @@ tr.data-row.hidden { display: none; }
         <span class="toggle-slider"></span>
         <span class="toggle-text">Within Classes</span>
       </label>
+      <label class="toggle-pill" for="normalize-formats-toggle">
+        <input type="checkbox" id="normalize-formats-toggle">
+        <span class="toggle-slider"></span>
+        <span class="toggle-text">Normalize Formats</span>
+      </label>
       <div class="tolerance-control" style="display: none;">
         <input type="number" id="class-tolerance-input" min="0" max="20" value="3" style="width: 50px; padding: 6px 8px; border: 1px solid var(--border-strong); border-radius: 6px; font-size: 12px;">
       </div>
@@ -1843,7 +2001,12 @@ const state = MEMBERS.map(() => ({}));
 const cellTooltip = document.getElementById('cell-tooltip');
 function showCellTooltip(text, anchorEl) {
   if (!text) return;
-  cellTooltip.textContent = text;
+  // Check if text is HTML (contains table elements)
+  if (text.includes('<table') || text.includes('tooltip-')) {
+    cellTooltip.innerHTML = text;
+  } else {
+    cellTooltip.textContent = text;
+  }
   cellTooltip.style.display = 'block';
   const r = anchorEl.getBoundingClientRect();
   const tooltipHeight = cellTooltip.offsetHeight;
@@ -2167,6 +2330,10 @@ function computeBonusCompensationWeek(mi, weekNum) {
   });
 
   const compensationAnalysis = buildQualificationAnalysis(combinedCounts, base.requirements);
+  if (compensationAnalysis.completed) {
+    markWeekAsQualified(mi, weekNum, combinedCounts);
+  }
+
   return {
     canCompensate: !!compensationAnalysis.completed,
     bonusCounts,
@@ -2487,99 +2654,75 @@ function buildQualifiedFormatBreakdown(qualificationAnalysis) {
 
 function buildWeekQualificationTooltip(mi, weekNum) {
   if (weekNum < 1 || weekNum > 4) return '';
-  const { completed, counts, requirements, qualificationAnalysis } = getWeekScore(mi, weekNum);
+  const { completed, counts, requirements } = getWeekScore(mi, weekNum);
   if (!requirements) return '';
 
-  // Format requirements as "1B57, 2CB, 1FIT, 2PC"
-  const requiredList = [];
-  Object.entries(requirements)
-    .sort((a, b) => {
-      const order = [...STICKERS.map(s => s.abbr), 'CBP', 'TC'];
-      return order.indexOf(a[0]) - order.indexOf(b[0]);
-    })
-    .forEach(([abbr, count]) => {
-      requiredList.push(`${count}${abbr}`);
-    });
+  let html = '<div class="tooltip-wrapper">';
+  html += `<div class="tooltip-head">📋 Week ${weekNum} Qualification</div>`;
+  html += '<div class="tooltip-section-label">Format Breakdown</div>';
   
-  // Format completed as "2CB, 1FIT, 1AU, 1HIIT"
-  const completedList = [];
-  STICKERS.forEach(({ abbr }) => {
-    const count = counts[abbr] || 0;
-    if (count > 0) {
-      completedList.push(`${count}${abbr}`);
-    }
-  });
+  let totalRequired = 0;
+  let totalDone = 0;
+  const rows = [];
   
-  // Format qualified - showing what matched requirements with alternates in parentheses
-  const qualifiedList = [];
-  const matched = {};
-  
-  // For each requirement, find what format satisfied it
   Object.entries(requirements)
     .sort((a, b) => {
       const order = [...STICKERS.map(s => s.abbr), 'CBP', 'TC'];
       return order.indexOf(a[0]) - order.indexOf(b[0]);
     })
     .forEach(([reqAbbr, required]) => {
+      totalRequired += required;
       const group = getEquivGroup(reqAbbr);
-      if (!group) {
-        // No equivalency group, check if exact match exists in counts
-        if ((counts[reqAbbr] || 0) > 0) {
-          qualifiedList.push(`${required}${reqAbbr}`);
-          matched[reqAbbr] = required;
-        } else {
-          qualifiedList.push(`MISSING: ${required}${reqAbbr}`);
-        }
-        return;
-      }
-      
-      // Count how many from this group we have
-      let groupCount = 0;
-      const usedFromGroup = [];
-      group.forEach(fmt => {
-        const avail = counts[fmt] || 0;
-        if (avail > 0) {
-          usedFromGroup.push(`${avail}${fmt}`);
-          groupCount += avail;
-        }
-      });
-      
-      if (groupCount >= required) {
-        if (usedFromGroup.length === 1 && usedFromGroup[0].endsWith(reqAbbr)) {
-          // Exact match only
-          qualifiedList.push(`${required}${reqAbbr}`);
-        } else if (usedFromGroup.length === 1) {
-          // Different format in group
-          qualifiedList.push(`${required}${reqAbbr}(${usedFromGroup[0]})`);
-        } else {
-          // Multiple formats used
-          qualifiedList.push(`${required}${reqAbbr}(${usedFromGroup.join(', ')})`);
-        }
+      let available = 0;
+
+      if (group) {
+        group.forEach(fmt => {
+          available += counts[fmt] || 0;
+        });
       } else {
-        // Not enough in group, show shortfall
-        const shortfall = required - groupCount;
-        if (usedFromGroup.length > 0) {
-          qualifiedList.push(`${required}${reqAbbr}(${usedFromGroup.join(', ')})-${shortfall}short`);
-        } else {
-          qualifiedList.push(`MISSING: ${required}${reqAbbr}`);
-        }
+        available = counts[reqAbbr] || 0;
       }
+      totalDone += Math.min(available, required);
+
+      const isMatched = available >= required;
+      const fillPercent = Math.min(100, (available / required) * 100);
+      const rowClass = isMatched ? 'matched' : 'missing';
+      const statusIcon = isMatched ? '✓' : '✗';
+      const statusClass = isMatched ? 'status-matched' : 'status-missing';
+      const fillClass = isMatched ? 'matched' : 'missing';
+      
+      rows.push({
+        html: `<div class="format-row ${rowClass}">
+          <div class="format-name">${reqAbbr}</div>
+          <div class="format-progress">
+            <div class="progress-bar">
+              <div class="progress-fill ${fillClass}" style="width: ${fillPercent}%"></div>
+            </div>
+          </div>
+          <div class="format-count">${available}/${required}</div>
+          <div class="format-status ${statusClass}">${statusIcon}</div>
+        </div>`,
+        isMatched
+      });
     });
   
-  const compensation = completed ? null : computeBonusCompensationWeek(mi, weekNum);
-  const bonusNote = !completed && compensation && compensation.canCompensate 
-    ? ' (Bonus available)' 
-    : '';
+  rows.forEach(row => html += row.html);
   
-  const lines = [
-    `FORMATS REQUIRED - ${requiredList.join(', ')}`,
-    `FORMATS COMPLETED - ${completedList.length > 0 ? completedList.join(', ') : 'None'}`,
-    `FORMATS QUALIFIED - ${qualifiedList.join(', ')}${bonusNote}`,
-    '',
-    `Qualification: ${completed ? '✓ QUALIFIED' : '✗ NOT QUALIFIED'}`
-  ];
+  html += '<div class="tooltip-section-label">Overall Progress</div>';
+  const overallPercent = Math.min(100, (totalDone / totalRequired) * 100);
+  html += `<div style="padding: 6px; background: rgba(255,255,255,0.03); border-radius: 4px; border-left: 3px solid #64b5ff;">`;
+  html += `<div style="font-size: 9px; color: #b0b4b8; margin-bottom: 4px;">Total Classes Attended</div>`;
+  html += `<div style="display: flex; align-items: center; gap: 6px;">`;
+  html += `<div class="progress-bar" style="flex: 1;"><div class="progress-fill" style="width: ${overallPercent}%; background: #64b5ff;"></div></div>`;
+  html += `<div style="font-weight: 700; color: #64b5ff; min-width: 50px; text-align: right;">${totalDone}/${totalRequired}</div>`;
+  html += `</div></div>`;
+  
+  html += `<div class="tooltip-footer ${completed ? 'qualified-status' : 'not-qualified-status'}">`;
+  html += completed ? '✓ QUALIFIED' : '✗ NOT QUALIFIED';
+  html += '</div>';
+  html += '</div>';
 
-  return lines.join('\n');
+  return html;
 }
 
 function buildSlotTooltip(abbr, label, mi, weekNum, loc) {
@@ -2667,6 +2810,33 @@ function syncQualificationToggle() {
   if (toleranceControl) {
     toleranceControl.style.display = qualificationSettings.useClassDifferenceQualification ? 'block' : 'none';
   }
+}
+
+// Define markWeekAsQualified at the top to ensure global accessibility
+function markWeekAsQualified(mi, weekNum, combinedCounts) {
+  // Validate state and weeks array
+  if (!state[mi] || !Array.isArray(state[mi].weeks)) {
+    console.error(`Invalid state or weeks array for member index: ${mi}`);
+    return;
+  }
+
+  const weekIndex = weekNum - 1;
+  if (weekIndex < 0 || weekIndex >= state[mi].weeks.length) {
+    console.error(`Invalid week number: ${weekNum} for member index: ${mi}`);
+    return;
+  }
+
+  const weekData = state[mi].weeks[weekIndex];
+  if (!weekData) {
+    console.error(`Week data is undefined for week number: ${weekNum} and member index: ${mi}`);
+    return;
+  }
+
+  // Mark the week as qualified
+  weekData.qualified = true;
+  weekData.counts = combinedCounts;
+  saveState();
+  refreshBoard();
 }
 
 // ── COLLAPSE/EXPAND HELPERS ──
@@ -2867,14 +3037,45 @@ function refreshBoard() {
         const td = document.createElement('td');
         const weekNum = Math.floor(di / 7) + 1;
         const isCompletedWeek = weekNum <= 4 && getWeekScore(m.mi, weekNum).completed;
+        const isCompensatedWeek = weekNum <= 4 && computeBonusCompensationWeek(m.mi, weekNum).canCompensate && !isCompletedWeek;
         const weekTooltipText = weekNum <= 4 ? buildWeekQualificationTooltip(m.mi, weekNum) : '';
+        
+        // Week is "ended" if its last day is on or before today (midnight)
+        const today = new Date(); today.setHours(0,0,0,0);
+        const weekLastDay = weekNum <= 4 ? weekChunks[weekNum - 1][weekChunks[weekNum - 1].length - 1].fullDate : null;
+        const isWeekEnded = weekLastDay ? (weekLastDay <= today) : false;
+        const isNotQualifiedEnded = isWeekEnded && !isCompletedWeek && weekNum <= 4;
 
-        // Check for bonus compensation
-        if (weekNum <= 4) {
-          const bonusCompensation = computeBonusCompensationWeek(m.mi, weekNum);
-          if (bonusCompensation.canCompensate) {
-            td.classList.add('bonus-week-compensated');
+        td.className = 'day-td'
+          + (d.isWeekend ? ' weekend' : '')
+          + (isCompletedWeek ? ' week-completed' : '')
+          + (isCompensatedWeek ? ' week-qualified-compensated bonus-week-compensated' : '')
+          + (isNotQualifiedEnded ? ' week-not-qualified' : '');
+
+        // Inject badge on 4th day (center) of each completed or ended-but-not-qualified week
+        if (di % 7 === 3 && weekNum <= 4) {
+          td.style.zIndex = '10'; // elevate above later siblings so badge renders on top
+          if (isCompletedWeek) {
+            const badge = document.createElement('div');
+            badge.className = 'week-qualified-badge';
+            badge.textContent = isCompensatedWeek ? '✓ Qualified + Bonus' : '✓ Qualified';
+            td.appendChild(badge);
+          } else if (isNotQualifiedEnded) {
+            const badge = document.createElement('div');
+            badge.className = 'week-not-qualified-badge';
+            badge.textContent = '✗ Not Qualified';
+            td.appendChild(badge);
           }
+        }
+
+        if (weekTooltipText) {
+          td.addEventListener('mouseenter', () => showCellTooltip(weekTooltipText, td));
+          td.addEventListener('mouseleave', hideCellTooltip);
+        }
+
+        // Add week separator border
+        if (di > 0 && di % 7 === 0) {
+          td.style.borderLeft = '2px solid var(--border-strong)';
         }
 
         const stickerVal = state[m.mi][d.key];
@@ -2883,7 +3084,7 @@ function refreshBoard() {
         slot.className = 'sticker-slot' + (stickerVal ? ' has-sticker' : '');
         slot.textContent = stickerVal || '';
 
-        // Highlight consumed bonus classes
+        // Highlight consumed bonus classes - only individual slots, not full week
         if (stickerAbbr && di >= 28) {
           const bonusCompensation = computeBonusCompensationWeek(m.mi, weekNum);
           if (bonusCompensation.bonusCounts[stickerAbbr]) {
@@ -3122,6 +3323,29 @@ function positionScorePillTooltips() {
 // ── INIT ──
 restoreQualificationSettings();
 initializeFormatRules();
+
+// ── NORMALIZATION TOGGLE ──
+let normalizationEnabled = false;
+
+function setNormalizationEnabled(enabled) {
+  normalizationEnabled = enabled;
+  localStorage.setItem('normalizationEnabled', enabled ? '1' : '0');
+}
+
+function getNormalizationEnabled() {
+  return localStorage.getItem('normalizationEnabled') === '1';
+}
+
+// Initialize from localStorage
+normalizationEnabled = getNormalizationEnabled();
+const normalizeToggle = document.getElementById('normalize-formats-toggle');
+if (normalizeToggle) {
+  normalizeToggle.checked = normalizationEnabled;
+  normalizeToggle.addEventListener('change', (e) => {
+    setNormalizationEnabled(e.target.checked);
+    refreshBoard();
+  });
+}
 syncQualificationToggle();
 if (classQualificationToggleEl) {
   classQualificationToggleEl.addEventListener('change', () => {

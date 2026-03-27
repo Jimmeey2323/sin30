@@ -847,6 +847,13 @@ td.day-td.week-not-qualified .sticker-slot:hover {
   background: rgba(254, 243, 199, 0.6);
   border: 1px solid #f59e0b;
 }
+.sticker-slot.bonus-consumed {
+  text-decoration: line-through;
+  opacity: 0.35;
+  filter: grayscale(1);
+  background: rgba(148, 163, 184, 0.18);
+  border: 1px solid rgba(100, 116, 139, 0.45);
+}
 
 .sticker-slot.bonus-compensated {
   background: linear-gradient(135deg, #fef3c7, #fde68a) !important;
@@ -2313,6 +2320,87 @@ function getTotalBonusClasses(mi) {
   return Object.values(getBonusWeekClasses(mi)).reduce((sum, count) => sum + count, 0);
 }
 
+function getMemberWeekPlan(mi) {
+  const member = MEMBERS[mi];
+  const loc = member ? member.loc : 'KC';
+  const bonusPool = {};
+  const bonusDayKeysByAbbr = {};
+  days.slice(28, 33).forEach(day => {
+    const emoji = state[mi][day.key];
+    if (!emoji) return;
+    const abbr = getStickerAbbr(emoji);
+    if (!abbr) return;
+    bonusPool[abbr] = (bonusPool[abbr] || 0) + 1;
+    if (!bonusDayKeysByAbbr[abbr]) bonusDayKeysByAbbr[abbr] = [];
+    bonusDayKeysByAbbr[abbr].push(day.key);
+  });
+
+  const consumedBonusDayKeys = {};
+  const weeks = {};
+
+  for (let weekNum = 1; weekNum <= 4; weekNum++) {
+    const reqs = (loc === 'Bandra') ? WEEKLY_REQUIREMENTS_BANDRA : (loc === 'KH') ? WEEKLY_REQUIREMENTS_KH : (loc === 'CNC') ? WEEKLY_REQUIREMENTS_CNC : WEEKLY_REQUIREMENTS_KC;
+    const requirements = reqs[weekNum];
+    if (!requirements) continue;
+    
+    const counts = getWeekCounts(mi, weekNum);
+    const baseAnalysis = buildQualificationAnalysis(counts, requirements);
+    const week = {
+      requirements,
+      counts,
+      analysis: baseAnalysis,
+      completed: baseAnalysis.completed,
+      compensated: false,
+      finalQualified: baseAnalysis.completed,
+    };
+
+    if (!baseAnalysis.completed && qualificationSettings.useBonusWeekCompensation) {
+      const combinedCounts = { ...counts };
+      Object.entries(bonusPool).forEach(([abbr, count]) => {
+        if (count > 0) combinedCounts[abbr] = (combinedCounts[abbr] || 0) + count;
+      });
+      const combinedAnalysis = buildQualificationAnalysis(combinedCounts, requirements);
+      if (combinedAnalysis.completed) {
+        week.compensated = true;
+        week.finalQualified = true;
+        
+        // Simple heuristic: mark bonus days as consumed if their format could help
+        Object.keys(bonusPool).forEach(abbr => {
+          if (bonusPool[abbr] > 0) {
+            const bonusDays = bonusDayKeysByAbbr[abbr] || [];
+            for (let i = 0; i < Math.min(bonusPool[abbr], 1); i++) {
+              if (bonusDays[i]) {
+                consumedBonusDayKeys[bonusDays[i]] = weekNum;
+              }
+            }
+            bonusPool[abbr] = 0;
+          }
+        });
+      }
+    }
+    weeks[weekNum] = week;
+  }
+  return { weeks, consumedBonusDayKeys, remainingBonus: bonusPool };
+}
+
+function getWeekCounts(mi, weekNum) {
+  const weekIdx = weekNum - 1;
+  const weekDays = weekChunks[weekIdx];
+  const counts = {};
+  if (weekDays) {
+    weekDays.forEach(day => {
+      const emoji = state[mi][day.key];
+      if (emoji) {
+        const abbr = getStickerAbbr(emoji);
+        if (abbr) {
+          counts[abbr] = (counts[abbr] || 0) + 1;
+        }
+      }
+    });
+  }
+  return counts;
+}
+
 function computeBonusCompensationWeek(mi, weekNum) {
   if (!qualificationSettings.useBonusWeekCompensation || weekNum < 1 || weekNum > 4) {
     return { canCompensate: false, bonusCounts: {}, combinedCounts: {} };
@@ -2554,16 +2642,11 @@ function getScore(mi) {
     return 0; // Not qualified
   }
   
-  // Original logic: count qualified weeks
+  // Original logic: count qualified weeks using getMemberWeekPlan
   let score = 0;
+  const plan = getMemberWeekPlan(mi);
   for (let week = 1; week <= 4; week++) {
-    const base = getWeekScore(mi, week);
-    if (base.completed) {
-      score++;
-    } else if (qualificationSettings.useBonusWeekCompensation) {
-      const compensation = computeBonusCompensationWeek(mi, week);
-      if (compensation.canCompensate) score++;
-    }
+    if (plan.weeks[week] && plan.weeks[week].finalQualified) score++;
   }
   return score;
 }
@@ -3085,12 +3168,8 @@ function refreshBoard() {
         slot.textContent = stickerVal || '';
 
         // Highlight consumed bonus classes - only individual slots, not full week
-        if (stickerAbbr && di >= 28) {
-          const bonusCompensation = computeBonusCompensationWeek(m.mi, weekNum);
-          if (bonusCompensation.bonusCounts[stickerAbbr]) {
-            slot.classList.add('bonus-used');
-          }
-        }
+        const memberPlan = getMemberWeekPlan(m.mi);
+        if (memberPlan.consumedBonusDayKeys[d.key]) slot.classList.add('bonus-consumed');
 
         slot.dataset.mi = m.mi;
         slot.dataset.dk = d.key;

@@ -184,7 +184,7 @@
       <div class="dashboard-title">Stronger in 30</div>
       <div class="dashboard-subtitle">Select a difficulty level to view the challenge board</div>
       <div style="position: absolute; right: 24px; top: 50%; transform: translateY(-50%);">
-        <button onclick="aggregateAndExportAllLevels()" style="font-size: 11px; font-weight: 600; letter-spacing: 0.06em; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; border: none; border-radius: 6px; padding: 8px 14px; cursor: pointer; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; transition: background 0.15s; box-shadow: 0 2px 6px rgba(139, 92, 246, 0.3);">📊 Export All Levels</button>
+        <button onclick="openExportModal()" style="font-size: 11px; font-weight: 600; letter-spacing: 0.06em; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; border: none; border-radius: 6px; padding: 8px 14px; cursor: pointer; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; transition: background 0.15s; box-shadow: 0 2px 6px rgba(139, 92, 246, 0.3);">📊 Export Levels</button>
       </div>
     </div>
 
@@ -204,6 +204,48 @@
 
     <div class="tab-content" id="advanced">
       <iframe class="tab-iframe" src="./stronger-in-30-advanced.html" loading="eager"></iframe>
+    </div>
+  </div>
+
+  <!-- Export Modal -->
+  <div id="export-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
+    <div style="background: white; border-radius: 12px; padding: 32px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <h2 style="font-size: 20px; font-weight: 600; color: #1a1a1a;">Export Options</h2>
+        <button onclick="closeExportModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #888;">✕</button>
+      </div>
+      
+      <div style="margin-bottom: 24px;">
+        <h3 style="font-size: 14px; font-weight: 600; color: #333; margin-bottom: 12px;">Select Locations</h3>
+        <div id="location-checkboxes" style="display: grid; gap: 8px;">
+          <!-- Location checkboxes will be populated dynamically -->
+        </div>
+        <div style="margin-top: 10px;">
+          <button onclick="selectAllLocations()" style="background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 4px; padding: 4px 8px; font-size: 12px; cursor: pointer; margin-right: 8px;">Select All</button>
+          <button onclick="deselectAllLocations()" style="background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 4px; padding: 4px 8px; font-size: 12px; cursor: pointer;">Deselect All</button>
+        </div>
+      </div>
+      
+      <div style="margin-bottom: 24px;">
+        <h3 style="font-size: 14px; font-weight: 600; color: #333; margin-bottom: 12px;">Filter Options</h3>
+        <label style="display: flex; align-items: center; margin-bottom: 8px; cursor: pointer;">
+          <input type="radio" name="filter-type" value="all" checked style="margin-right: 8px; cursor: pointer;">
+          <span>All Members</span>
+        </label>
+        <label style="display: flex; align-items: center; margin-bottom: 8px; cursor: pointer;">
+          <input type="radio" name="filter-type" value="qualified" style="margin-right: 8px; cursor: pointer;">
+          <span>Qualified Members Only</span>
+        </label>
+        <label style="display: flex; align-items: center; cursor: pointer;">
+          <input type="radio" name="filter-type" value="not-qualified" style="margin-right: 8px; cursor: pointer;">
+          <span>Not Qualified Members Only</span>
+        </label>
+      </div>
+      
+      <div style="display: flex; justify-content: space-between; gap: 12px;">
+        <button onclick="exportSelectedData('csv')" style="flex: 1; background: #22c55e; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: 600;">Export CSV</button>
+        <button onclick="exportSelectedData('pdf')" style="flex: 1; background: #ef4444; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: 600;">Export PDF</button>
+      </div>
     </div>
   </div>
 
@@ -235,6 +277,122 @@
     });
 
     // ── UNIFIED EXPORT FUNCTIONALITY ──
+    let cachedStats = [];
+
+    function openExportModal() {
+      // Collect and cache stats first
+      cachedStats = collectAllStats();
+      
+      if (cachedStats.length === 0) {
+        alert('No data available. Please ensure all levels have loaded.');
+        return;
+      }
+
+      // Get unique locations
+      const locations = [...new Set(cachedStats.map(s => s.location))].sort();
+      
+      // Populate location checkboxes
+      const container = document.getElementById('location-checkboxes');
+      container.innerHTML = locations.map(location => 
+        `<label style="display: flex; align-items: center; cursor: pointer;">
+          <input type="checkbox" value="${location}" checked style="margin-right: 8px; cursor: pointer;">
+          <span>${location}</span>
+        </label>`
+      ).join('');
+      
+      // Show modal
+      document.getElementById('export-modal').style.display = 'flex';
+    }
+
+    function closeExportModal() {
+      document.getElementById('export-modal').style.display = 'none';
+    }
+
+    function selectAllLocations() {
+      const checkboxes = document.querySelectorAll('#location-checkboxes input[type="checkbox"]');
+      checkboxes.forEach(cb => cb.checked = true);
+    }
+
+    function deselectAllLocations() {
+      const checkboxes = document.querySelectorAll('#location-checkboxes input[type="checkbox"]');
+      checkboxes.forEach(cb => cb.checked = false);
+    }
+
+    function collectAllStats() {
+      const allStats = [];
+      
+      try {
+        // Get iframes
+        const iframes = document.querySelectorAll('.tab-iframe');
+        if (iframes.length < 3) return [];
+
+        // Get Beginner stats
+        if (iframes[0].contentWindow && iframes[0].contentWindow.getBeginnerStats) {
+          const beginnerStats = iframes[0].contentWindow.getBeginnerStats();
+          allStats.push(...beginnerStats);
+        }
+
+        // Get Intermediate stats
+        if (iframes[1].contentWindow && iframes[1].contentWindow.getIntermediateStats) {
+          const intermediateStats = iframes[1].contentWindow.getIntermediateStats();
+          allStats.push(...intermediateStats);
+        }
+
+        // Get Advanced stats
+        if (iframes[2].contentWindow && iframes[2].contentWindow.getAdvancedStats) {
+          const advancedStats = iframes[2].contentWindow.getAdvancedStats();
+          allStats.push(...advancedStats);
+        }
+      } catch (error) {
+        console.warn('Error collecting stats:', error);
+      }
+
+      return allStats;
+    }
+
+    function exportSelectedData(format) {
+      // Get selected locations
+      const locationCheckboxes = document.querySelectorAll('#location-checkboxes input[type="checkbox"]:checked');
+      const selectedLocations = Array.from(locationCheckboxes).map(cb => cb.value);
+      
+      if (selectedLocations.length === 0) {
+        alert('Please select at least one location to export.');
+        return;
+      }
+
+      // Get filter type
+      const filterType = document.querySelector('input[name="filter-type"]:checked').value;
+      
+      // Filter stats based on selections
+      let filteredStats = cachedStats.filter(s => selectedLocations.includes(s.location));
+      
+      if (filterType === 'qualified') {
+        filteredStats = filteredStats.filter(s => s.fullyQualified);
+      } else if (filterType === 'not-qualified') {
+        filteredStats = filteredStats.filter(s => !s.fullyQualified);
+      }
+      
+      if (filteredStats.length === 0) {
+        alert('No data matches your selected criteria.');
+        return;
+      }
+
+      // Close modal
+      closeExportModal();
+      
+      // Export based on format
+      try {
+        if (format === 'csv') {
+          downloadUnifiedCSV(filteredStats);
+        } else {
+          generateUnifiedPDF(filteredStats);
+        }
+      } catch (error) {
+        console.error('Export failed:', error);
+        alert('Export failed: ' + error.message);
+      }
+    }
+
     function aggregateAndExportAllLevels() {
       try {
         // Get iframes
@@ -298,8 +456,20 @@
       }
     }
 
-    // Make function globally available
+    // Make functions globally available
     window.aggregateAndExportAllLevels = aggregateAndExportAllLevels;
+    window.openExportModal = openExportModal;
+    window.closeExportModal = closeExportModal;
+    window.selectAllLocations = selectAllLocations;
+    window.deselectAllLocations = deselectAllLocations;
+    window.exportSelectedData = exportSelectedData;
+
+    // Close modal when clicking outside
+    document.getElementById('export-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'export-modal') {
+        closeExportModal();
+      }
+    });
   </script>
 </body>
 </html>

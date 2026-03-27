@@ -14,6 +14,7 @@
   --ink-muted: #8a8a8a;
   --ink-light: #c8c8c8;
   --accent: #7c3aed;
+  --accent-rgb: 124, 58, 237;
   --accent-light: #f5f3ff;
   --accent-mid: #9333ea;
   --border: #e8e6e0;
@@ -1111,19 +1112,47 @@ tbody tr.data-row {
 }
 
 /* ── LOCATION GROUP SEPARATOR ── */
-tr.location-group-header { animation: none; }
+tr.location-group-header { 
+  animation: none;
+  position: relative;
+}
+tr.location-group-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, var(--accent), transparent);
+  opacity: 0.4;
+}
 td.location-header-cell {
-  padding: 10px 18px 12px;
-  background: var(--accent-light);
+  padding: 12px 18px 14px;
+  background: linear-gradient(135deg, var(--accent-light) 0%, rgba(var(--accent-rgb), 0.08) 100%);
   border-top: 2px solid var(--border-strong);
   border-bottom: 1px solid var(--border-strong);
+  position: relative;
+  overflow: hidden;
+}
+td.location-header-cell::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  transition: left 0.5s ease;
+}
+td.location-header-cell:hover::after {
+  left: 100%;
 }
 tr.location-group-header:first-child td.location-header-cell { border-top: none; }
 
 .location-toggle-btn {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   background: none;
   border: none;
   cursor: pointer;
@@ -1134,24 +1163,53 @@ tr.location-group-header:first-child td.location-header-cell { border-top: none;
   font-family: inherit;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  transition: opacity 0.2s ease;
+  transition: all 0.2s ease;
+  position: relative;
 }
 
-.location-toggle-btn:hover { opacity: 0.7; }
+.location-toggle-btn:hover {
+  opacity: 0.8;
+  transform: translateX(2px);
+}
+
+.location-toggle-btn:active {
+  transform: translateX(1px) scale(0.98);
+}
 
 .location-toggle-icon {
   display: inline-block;
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
-  transition: transform 0.2s ease;
-  font-size: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 14px;
   font-style: normal;
+  color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .location-toggle-btn.collapsed .location-toggle-icon {
   transform: rotate(-90deg);
+  background: rgba(var(--accent-rgb), 0.2);
 }
 
-tr.data-row.hidden { display: none; }
+tr.data-row.hidden {
+  opacity: 0;
+  transform: translateY(-10px);
+  max-height: 0;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+tr.data-row {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 1;
+  transform: translateY(0);
+}
 .data-status {
   font-size: 9px;
   font-weight: 500;
@@ -1176,6 +1234,33 @@ tr.data-row.hidden { display: none; }
 }
 .refresh-btn:hover { background: var(--border); }
 .refresh-btn:disabled { opacity: 0.45; cursor: default; }
+
+/* ── GROUP CONTROL BUTTONS ── */
+.group-control-btn {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  background: var(--off);
+  border: 1px solid var(--border-strong);
+  border-radius: 5px;
+  padding: 4px 10px;
+  cursor: pointer;
+  color: var(--ink);
+  transition: all 0.15s;
+  font-family: 'Syne', sans-serif;
+}
+.group-control-btn:hover { 
+  background: var(--border);
+  transform: translateY(-1px);
+}
+.group-control-btn:active {
+  transform: translateY(0);
+}
+.group-control-btn:disabled { 
+  opacity: 0.45; 
+  cursor: default;
+  transform: none;
+}
 .qualification-toggle {
   margin-top: 10px;
   display: flex;
@@ -1310,13 +1395,12 @@ tr.data-row.hidden { display: none; }
     <div id="data-status" class="data-status"></div>
     <button onclick="fetchAndSeedCheckins()" id="refresh-btn" class="refresh-btn">↻ Refresh</button>
     <button onclick="openFormatSettingsModal()" id="settings-btn" class="refresh-btn" style="margin-left: 8px;">⚙ Format Rules</button>
+    <div class="group-controls" style="margin-left: 12px; display: inline-flex; gap: 6px; align-items: center;">
+      <button onclick="collapseAllGroups()" id="collapse-all-btn" class="group-control-btn" title="Collapse All Groups">▲ Collapse All</button>
+      <button onclick="expandAllGroups()" id="expand-all-btn" class="group-control-btn" title="Expand All Groups">▼ Expand All</button>
+    </div>
     <div class="qualification-toggle">
-      <label class="toggle-pill" for="mat-as-cardio-toggle">
-        <input type="checkbox" id="mat-as-cardio-toggle">
-        <span class="toggle-slider"></span>
-        <span class="toggle-text">Count Mat 57 as Cardio</span>
-      </label>
-      <label class="toggle-pill" for="class-diff-qualification-toggle" style="margin-left: 12px;">
+      <label class="toggle-pill" for="class-diff-qualification-toggle">
         <input type="checkbox" id="class-diff-qualification-toggle">
         <span class="toggle-slider"></span>
         <span class="toggle-text">Qualify within Classes: </span>
@@ -1542,11 +1626,9 @@ function getStickerAbbr(emoji) {
 
 const BOARD_SETTINGS_KEY = 'sin30_beginner_settings';
 const qualificationSettings = {
-  matCountsAsCardio: false,
   useClassDifferenceQualification: false,
   classToleranceValue: 3,
 };
-const qualificationToggleEl = document.getElementById('mat-as-cardio-toggle');
 const classQualificationToggleEl = document.getElementById('class-diff-qualification-toggle');
 // ── INTERCHANGEABLE FORMATS ──
 // CARDIO: Cardio Barre, HIIT, Amped Up, Cardio Barre Plus, Trainer's Choice
@@ -1751,21 +1833,121 @@ function getWeekScore(mi, weekNum) {
   const requirements = reqs[weekNum];
   if (!requirements) return { completed: false, counts: {} };
 
-  // Count stickers for this week
-  const counts = {};
+  // Count stickers for this week ONLY
+  const weekCounts = {};
   weekDays.forEach(day => {
     const emoji = state[mi][day.key];
     if (emoji) {
       const abbr = getStickerAbbr(emoji);
       if (abbr) {
-        counts[abbr] = (counts[abbr] || 0) + 1;
+        weekCounts[abbr] = (weekCounts[abbr] || 0) + 1;
       }
     }
   });
 
-  const qualificationAnalysis = buildQualificationAnalysis(counts, requirements);
+  // First check if week qualifies with its own classes
+  const initialAnalysis = buildQualificationAnalysis(weekCounts, requirements);
+  
+  if (initialAnalysis.completed) {
+    // Week already qualifies without compensation
+    return { 
+      completed: true, 
+      counts: weekCounts, 
+      requirements, 
+      qualificationAnalysis: initialAnalysis,
+      compensationUsed: false
+    };
+  }
 
-  return { completed: qualificationAnalysis.completed, counts, requirements, qualificationAnalysis };
+  // Week doesn't qualify - try bonus day compensation
+  const compensatedAnalysis = applyBonusDayCompensation(mi, weekCounts, requirements);
+  
+  return { 
+    completed: compensatedAnalysis.completed, 
+    counts: compensatedAnalysis.finalCounts, 
+    requirements, 
+    qualificationAnalysis: compensatedAnalysis,
+    compensationUsed: compensatedAnalysis.compensationUsed || false,
+    bonusClassesUsed: compensatedAnalysis.bonusClassesUsed || {}
+  };
+}
+
+// ── BONUS DAY COMPENSATION SYSTEM ──
+function applyBonusDayCompensation(mi, weekCounts, requirements) {
+  // Get bonus day classes (Mar 23-27, days 28-32 in the days array)
+  const bonusCounts = {};
+  if (days.length > 28) {
+    const bonusDays = days.slice(28, 33); // Mar 23-27 (5 days)
+    bonusDays.forEach(day => {
+      const emoji = state[mi][day.key];
+      if (emoji) {
+        const abbr = getStickerAbbr(emoji);
+        if (abbr) {
+          bonusCounts[abbr] = (bonusCounts[abbr] || 0) + 1;
+        }
+      }
+    });
+  }
+
+  // If no bonus classes, return original analysis
+  if (Object.keys(bonusCounts).length === 0) {
+    const analysis = buildQualificationAnalysis(weekCounts, requirements);
+    return { ...analysis, compensationUsed: false };
+  }
+
+  // Try to compensate missing requirements with bonus classes
+  const originalAnalysis = buildQualificationAnalysis(weekCounts, requirements);
+  
+  // Find what requirements are still needed
+  const neededByFormat = {};
+  Object.entries(requirements).forEach(([reqAbbr, required]) => {
+    const matched = originalAnalysis.matchedFormats[reqAbbr] || 0;
+    const stillNeeded = Math.max(0, required - matched);
+    if (stillNeeded > 0) {
+      neededByFormat[reqAbbr] = stillNeeded;
+    }
+  });
+
+  // Try to satisfy missing requirements with bonus classes
+  const compensatedCounts = { ...weekCounts };
+  const bonusClassesUsed = {};
+  const availableBonus = { ...bonusCounts };
+  
+  // For each missing requirement, try to find a bonus class that can satisfy it
+  Object.entries(neededByFormat).forEach(([reqAbbr, needed]) => {
+    const eligibleActuals = getRequirementEligibleActualAbbrs(reqAbbr);
+    
+    // Try to use bonus classes that match this requirement
+    for (const actualAbbr of eligibleActuals) {
+      const availableBonusCount = availableBonus[actualAbbr] || 0;
+      if (availableBonusCount > 0 && needed > 0) {
+        const useCount = Math.min(availableBonusCount, needed);
+        
+        // Add bonus classes to compensated counts
+        compensatedCounts[actualAbbr] = (compensatedCounts[actualAbbr] || 0) + useCount;
+        
+        // Track bonus classes used
+        bonusClassesUsed[actualAbbr] = (bonusClassesUsed[actualAbbr] || 0) + useCount;
+        
+        // Reduce available bonus and needed counts
+        availableBonus[actualAbbr] -= useCount;
+        neededByFormat[reqAbbr] -= useCount;
+        needed -= useCount;
+        
+        if (needed <= 0) break;
+      }
+    }
+  });
+
+  // Re-analyze with compensated counts
+  const finalAnalysis = buildQualificationAnalysis(compensatedCounts, requirements);
+  
+  return {
+    ...finalAnalysis,
+    finalCounts: compensatedCounts,
+    compensationUsed: Object.keys(bonusClassesUsed).length > 0,
+    bonusClassesUsed: bonusClassesUsed
+  };
 }
 
 function getScore(mi) {
@@ -1874,23 +2056,35 @@ function buildQualifiedFormatBreakdown(qualificationAnalysis) {
 
 function buildWeekQualificationTooltip(mi, weekNum) {
   if (weekNum < 1 || weekNum > 4) return '';
-  const { completed, counts, requirements, qualificationAnalysis } = getWeekScore(mi, weekNum);
+  const weekScore = getWeekScore(mi, weekNum);
+  const { completed, counts, requirements, qualificationAnalysis, compensationUsed, bonusClassesUsed } = weekScore;
   if (!requirements) return '';
 
   const result = completed ? '✓ QUALIFIED' : '✗ NOT QUALIFIED';
+  const compensationNote = compensationUsed ? ' (with Bonus Day compensation)' : '';
   
   const lines = [
-    `WEEK ${weekNum}: ${result}`,
+    `WEEK ${weekNum}: ${result}${compensationNote}`,
     '',
     ...buildWeeklyClassBreakdown(counts),
     '',
     ...buildWeeklyRequirementBreakdown(requirements),
     '',
-    ...buildQualifiedFormatBreakdown(qualificationAnalysis),
-    '',
-    `Setting: Mat counts as Cardio is ${qualificationSettings.matCountsAsCardio ? 'ON' : 'OFF'}`
+    ...buildQualifiedFormatBreakdown(qualificationAnalysis)
   ];
 
+  // Add bonus compensation details if used
+  if (compensationUsed && bonusClassesUsed && Object.keys(bonusClassesUsed).length > 0) {
+    lines.push('');
+    lines.push('BONUS DAY COMPENSATION:');
+    Object.entries(bonusClassesUsed).forEach(([format, count]) => {
+      const formatLabel = STICKER_LABEL[format] ? STICKER_LABEL[format].label : format;
+      lines.push(`• ${count}x ${formatLabel} (${format}) from bonus days`);
+    });
+  }
+
+  lines.push('');
+  lines.push(`Setting: Mat counts as Cardio is ${qualificationSettings.matCountsAsCardio ? 'ON' : 'OFF'}`);
   return lines.join('\n');
 }
 
@@ -2002,6 +2196,64 @@ function toggleLocationGroup(btn) {
       row.classList.toggle('hidden');
     }
   }
+}
+
+function collapseAllGroups() {
+  const tbody = document.getElementById('tbody');
+  if (!tbody) return;
+  
+  // Find all location toggle buttons and collapse them
+  const toggleBtns = tbody.querySelectorAll('.location-toggle-btn');
+  toggleBtns.forEach(btn => {
+    if (!btn.classList.contains('collapsed')) {
+      btn.classList.add('collapsed');
+      
+      // Hide all data rows for this group
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+      const header = btn.closest('tr.location-group-header');
+      if (!header) return;
+      
+      let headerIndex = rows.indexOf(header);
+      if (headerIndex === -1) return;
+      
+      for (let i = headerIndex + 1; i < rows.length; i++) {
+        const row = rows[i];
+        if (row.classList.contains('location-group-header')) break;
+        if (row.classList.contains('data-row')) {
+          row.classList.add('hidden');
+        }
+      }
+    }
+  });
+}
+
+function expandAllGroups() {
+  const tbody = document.getElementById('tbody');
+  if (!tbody) return;
+  
+  // Find all location toggle buttons and expand them
+  const toggleBtns = tbody.querySelectorAll('.location-toggle-btn');
+  toggleBtns.forEach(btn => {
+    if (btn.classList.contains('collapsed')) {
+      btn.classList.remove('collapsed');
+      
+      // Show all data rows for this group
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+      const header = btn.closest('tr.location-group-header');
+      if (!header) return;
+      
+      let headerIndex = rows.indexOf(header);
+      if (headerIndex === -1) return;
+      
+      for (let i = headerIndex + 1; i < rows.length; i++) {
+        const row = rows[i];
+        if (row.classList.contains('location-group-header')) break;
+        if (row.classList.contains('data-row')) {
+          row.classList.remove('hidden');
+        }
+      }
+    }
+  });
 }
 
 function getQualifiedMembersCount() {
@@ -2209,22 +2461,22 @@ function refreshBoard() {
       
       // Create stats display
       const statsHtml = `
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; padding: 2px; height: 100%;">
-          <div style="background: rgba(255,255,255,0.8); border-radius: 3px; padding: 2px; text-align: center; border: 1px solid rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: center; align-items: center;">
-            <div style="font-size: 9px; color: #1a1a1a; font-weight: 900;">👥</div>
-            <div style="font-size: 10px; font-weight: 800; color: #1a1a1a;">${totalMembers}</div>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 4px; height: 100%; align-items: center;">
+          <div style="text-align: center; display: flex; flex-direction: column; align-items: center; gap: 1px;">
+            <div style="font-size: 10px; color: #666;">👥</div>
+            <div style="font-size: 11px; font-weight: 700; color: #333;">${totalMembers}</div>
           </div>
-          <div style="background: rgba(76, 175, 80, 0.2); border-radius: 3px; padding: 2px; text-align: center; border: 1px solid rgba(46, 125, 50, 0.2); display: flex; flex-direction: column; justify-content: center; align-items: center;">
-            <div style="font-size: 9px; color: #1b5e20; font-weight: 900;">✓</div>
-            <div style="font-size: 10px; font-weight: 800; color: #1b5e20;">${qualifiedMembers}/${totalMembers}</div>
+          <div style="text-align: center; display: flex; flex-direction: column; align-items: center; gap: 1px;">
+            <div style="font-size: 10px; color: #22c55e;">✓</div>
+            <div style="font-size: 11px; font-weight: 700; color: #22c55e;">${qualifiedMembers}/${totalMembers}</div>
           </div>
-          <div style="background: rgba(33, 150, 243, 0.2); border-radius: 3px; padding: 2px; text-align: center; border: 1px solid rgba(21, 101, 192, 0.2); display: flex; flex-direction: column; justify-content: center; align-items: center;">
-            <div style="font-size: 9px; color: #0d47a1; font-weight: 900;">📊</div>
-            <div style="font-size: 10px; font-weight: 800; color: #0d47a1;">${avgClasses}</div>
+          <div style="text-align: center; display: flex; flex-direction: column; align-items: center; gap: 1px;">
+            <div style="font-size: 10px; color: #3b82f6;">📊</div>
+            <div style="font-size: 11px; font-weight: 700; color: #3b82f6;">${avgClasses}</div>
           </div>
-          <div style="background: rgba(233, 30, 99, 0.2); border-radius: 3px; padding: 2px; text-align: center; border: 1px solid rgba(136, 14, 79, 0.2); display: flex; flex-direction: column; justify-content: center; align-items: center;">
-            <div style="font-size: 9px; color: #c2185b; font-weight: 900;">📅</div>
-            <div style="font-size: 10px; font-weight: 800; color: #c2185b;">${avgWeeks}/4</div>
+          <div style="text-align: center; display: flex; flex-direction: column; align-items: center; gap: 1px;">
+            <div style="font-size: 10px; color: #e11d48;">📅</div>
+            <div style="font-size: 11px; font-weight: 700; color: #e11d48;">${avgWeeks}/4</div>
           </div>
         </div>
       `;
@@ -2286,9 +2538,15 @@ function refreshBoard() {
         if (di % 7 === 3 && weekNum <= 4) {
           td.style.zIndex = '10';
           if (isCompletedWeek) {
+            const weekScore = getWeekScore(m.mi, weekNum);
+            const compensationUsed = weekScore.compensationUsed;
             const badge = document.createElement('div');
             badge.className = 'week-qualified-badge';
-            badge.textContent = '✓ Qualified';
+            const compensationIcon = compensationUsed ? ' ✨' : '';
+            badge.textContent = `✓ Qualified${compensationIcon}`;
+            if (compensationUsed) {
+              badge.title = 'Qualified with Bonus Day compensation';
+            }
             td.appendChild(badge);
           } else if (isNotQualifiedEnded) {
             const badge = document.createElement('div');

@@ -906,11 +906,7 @@ td.score-td {
 
 .score-tooltip {
   display: none;
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  margin-bottom: 8px;
+  position: fixed;
   background: var(--ink);
   color: white;
   padding: 0;
@@ -919,14 +915,17 @@ td.score-td {
   font-weight: 500;
   white-space: pre-wrap;
   word-wrap: break-word;
-  z-index: 1000;
+  z-index: 10000;
   box-shadow: 0 8px 24px rgba(0,0,0,0.25);
-  max-width: 300px;
-  line-height: 1.5;
+  max-width: 400px;
+  min-width: 280px;
+  line-height: 1.6;
   overflow: visible;
-  max-height: 500px;
+  max-height: 600px;
   overflow-y: auto;
   pointer-events: auto;
+  margin: 0;
+  padding: 0;
 }
 
 .score-tooltip-content {
@@ -2939,6 +2938,49 @@ function showComprehensiveExportOptions() {
   }
 }
 
+function positionScorePillTooltips() {
+  document.querySelectorAll('.score-pill').forEach(pill => {
+    const tooltip = pill.querySelector('.score-tooltip');
+    if (!tooltip) return;
+    
+    pill.addEventListener('mouseenter', () => {
+      tooltip.style.display = 'block';
+      setTimeout(() => {
+        const pillRect = pill.getBoundingClientRect();
+        const tooltipRect = tooltip.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        const gap = 12;
+        
+        // Default position: above, centered
+        let top = pillRect.top - tooltipRect.height - gap;
+        let left = pillRect.left + (pillRect.width - tooltipRect.width) / 2;
+        
+        // Check if tooltip overflows right
+        if (left + tooltipRect.width + 10 > viewportWidth) {
+          left = viewportWidth - tooltipRect.width - 10;
+        }
+        
+        // Check if tooltip overflows left
+        if (left < 10) {
+          left = 10;
+        }
+        
+        // Check if tooltip overflows top
+        if (top < 10) {
+          top = pillRect.bottom + gap;
+        }
+        
+        tooltip.style.top = top + 'px';
+        tooltip.style.left = left + 'px';
+      }, 0);
+    });
+    
+    pill.addEventListener('mouseleave', () => {
+      tooltip.style.display = 'none';
+    });
+  });
+}
+
 // ── INIT ──
 restoreQualificationSettings();
 syncQualificationToggle();
@@ -2947,6 +2989,7 @@ if (qualificationToggleEl) {
     qualificationSettings.matCountsAsCardio = qualificationToggleEl.checked;
     saveQualificationSettings();
     refreshBoard();
+    positionScorePillTooltips();
   });
 }
 if (classQualificationToggleEl) {
@@ -2958,6 +3001,7 @@ if (classQualificationToggleEl) {
     }
     saveQualificationSettings();
     refreshBoard();
+    positionScorePillTooltips();
   });
 }
 const toleranceInput = document.getElementById('class-tolerance-input');
@@ -2966,16 +3010,19 @@ if (toleranceInput) {
     qualificationSettings.classToleranceValue = parseInt(toleranceInput.value) || 3;
     saveQualificationSettings();
     refreshBoard();
+    positionScorePillTooltips();
   });
 }
 if (restoreStateFromLocalStorage()) {
   renderLegend();
   refreshBoard();
+  positionScorePillTooltips();
 }
 const loader = document.getElementById('board-loader');
 if (loader) loader.classList.add('hidden');
 renderLegend();
 refreshBoard();
+positionScorePillTooltips();
 fetchAndSeedCheckins();
 </script>
 </body>

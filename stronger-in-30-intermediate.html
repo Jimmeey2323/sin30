@@ -921,10 +921,14 @@ td.score-td {
   font-weight: 500;
   white-space: pre-wrap;
   word-wrap: break-word;
-  z-index: 100;
+  z-index: 1000;
   box-shadow: 0 8px 24px rgba(0,0,0,0.25);
-  max-width: 280px;
+  max-width: 300px;
   line-height: 1.5;
+  overflow: visible;
+  max-height: 500px;
+  overflow-y: auto;
+  pointer-events: auto;
 }
 
 .score-tooltip-content {
@@ -984,6 +988,11 @@ td.score-td {
 
 .score-pill:hover .score-tooltip {
   display: block;
+  /* Smart positioning: check if tooltip would overflow right */
+}
+
+.score-pill {
+  position: relative;
 }
 
 .score-tooltip::after {
@@ -1826,7 +1835,7 @@ function buildWeeklyRequirementBreakdown(requirements) {
 }
 
 function buildQualifiedFormatBreakdown(qualificationAnalysis) {
-  const lines = ['Formats Completed:'];
+  const lines = ['Formats Breakdown:'];
   ['CARDIO', 'STRENGTH'].forEach(displayKey => {
     const done = qualificationAnalysis.rawQualifiedDoneByDisplay[displayKey] || 0;
     const required = qualificationAnalysis.requiredByDisplay[displayKey] || 0;
@@ -1834,9 +1843,9 @@ function buildQualifiedFormatBreakdown(qualificationAnalysis) {
     const label = getQualifiedDisplayLabel(displayKey);
     const shortfall = required - done;
     if (done >= required) {
-      lines.push(`${emoji} ${label}: ✓ DONE`);
+      lines.push(`${emoji} ${label}: ${done}/${required} ✓ DONE`);
     } else {
-      lines.push(`${emoji} ${label}: ✗ ${shortfall} short`);
+      lines.push(`${emoji} ${label}: ${done}/${required} ✗ ${shortfall} short`);
     }
   });
   return lines;
@@ -2851,7 +2860,10 @@ if (qualificationToggleEl) {
 if (classQualificationToggleEl) {
   classQualificationToggleEl.addEventListener('change', () => {
     qualificationSettings.useClassDifferenceQualification = classQualificationToggleEl.checked;
-    document.querySelector('.tolerance-control').style.display = classQualificationToggleEl.checked ? 'block' : 'none';
+    const toleranceCtrl = document.querySelector('.tolerance-control');
+    if (toleranceCtrl) {
+      toleranceCtrl.style.display = classQualificationToggleEl.checked ? 'block' : 'none';
+    }
     saveQualificationSettings();
     refreshBoard();
   });

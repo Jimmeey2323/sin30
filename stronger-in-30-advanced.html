@@ -924,10 +924,14 @@ td.score-td {
   font-weight: 500;
   white-space: pre-wrap;
   word-wrap: break-word;
-  z-index: 100;
+  z-index: 1000;
   box-shadow: 0 8px 24px rgba(0,0,0,0.25);
-  max-width: 280px;
+  max-width: 300px;
   line-height: 1.5;
+  overflow: visible;
+  max-height: 500px;
+  overflow-y: auto;
+  pointer-events: auto;
 }
 
 .score-tooltip-content {
@@ -987,6 +991,11 @@ td.score-td {
 
 .score-pill:hover .score-tooltip {
   display: block;
+  /* Smart positioning: check if tooltip would overflow right */
+}
+
+.score-pill {
+  position: relative;
 }
 
 .score-tooltip::after {
@@ -1803,9 +1812,10 @@ function buildQualifiedFormatBreakdown(qualificationAnalysis) {
     const emoji = getQualifiedDisplayEmoji(displayKey);
     const label = getQualifiedDisplayLabel(displayKey);
     const status = done >= required ? '✓ DONE' : `✗ ${required - done} short`;
-    lines.push(`${emoji} ${label}: ${done}/${required} ${status}`);
+    lines.push(`${emoji} ${label}:`);
+    lines.push(`    Completed: ${done} / Required: ${required} ${status}`);
   });
-  return ['Formats Completed:', ...lines];
+  return ['Formats Breakdown:', ...lines];
 }
 
 function buildWeekQualificationTooltip(mi, weekNum) {

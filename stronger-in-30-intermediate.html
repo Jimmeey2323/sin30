@@ -2046,17 +2046,55 @@ const WEEK_COLORS = ['#1d4ed8','#1d4ed8','#1d4ed8','#1d4ed8','#1d4ed8'];
 
 // ── STATE ──
 // state[memberIdx][dayKey] = stickerEmoji or null
-let state = MEMBERS.map(() => ({ weeks: [] }));
+function createEmptyWeeks() {
+  return [
+    { qualified: false, counts: {} },
+    { qualified: false, counts: {} },
+    { qualified: false, counts: {} },
+    { qualified: false, counts: {} }
+  ];
+}
+
+function createEmptyMemberState() {
+  return { weeks: createEmptyWeeks() };
+}
+
+function normalizeMemberState(rawState) {
+  const normalized = createEmptyMemberState();
+  if (!rawState || typeof rawState !== 'object') return normalized;
+
+  Object.entries(rawState).forEach(([key, value]) => {
+    if (key === 'weeks') return;
+    normalized[key] = value;
+  });
+
+  if (Array.isArray(rawState.weeks)) {
+    rawState.weeks.slice(0, 4).forEach((week, index) => {
+      normalized.weeks[index] = {
+        qualified: !!week?.qualified,
+        counts: week && typeof week.counts === 'object' && week.counts ? { ...week.counts } : {}
+      };
+    });
+  }
+
+  return normalized;
+}
+
+let state = MEMBERS.map(() => createEmptyMemberState());
 
 // Function to ensure state array is properly sized to match MEMBERS
 function ensureStateSize() {
   // Resize state array to match MEMBERS if needed
   while (state.length < MEMBERS.length) {
-    state.push({ weeks: [] });
+    state.push(createEmptyMemberState());
   }
   // Remove excess state entries if MEMBERS shrank
   if (state.length > MEMBERS.length) {
     state = state.slice(0, MEMBERS.length);
+  }
+
+  for (let mi = 0; mi < state.length; mi++) {
+    state[mi] = normalizeMemberState(state[mi]);
   }
 }
 
@@ -2530,9 +2568,6 @@ function computeBonusCompensationWeek(mi, weekNum) {
   });
 
   const compensationAnalysis = buildQualificationAnalysis(combinedCounts, base.requirements);
-  if (compensationAnalysis.completed) {
-    markWeekAsQualified(mi, weekNum, combinedCounts);
-  }
 
   return {
     canCompensate: !!compensationAnalysis.completed,
@@ -2964,15 +2999,9 @@ function restoreStateFromLocalStorage() {
     const saved = localStorage.getItem('sin30_intermediate_state');
     if (saved) {
       const savedState = JSON.parse(saved);
+      ensureStateSize();
       MEMBERS.forEach((m, mi) => {
-        if (savedState[mi]) {
-          Object.assign(state[mi], savedState[mi]);
-          // Ensure weeks array is valid after restoration
-          if (!Array.isArray(state[mi].weeks)) {
-            console.warn(`Weeks array is invalid for member ${mi}, reinitializing...`);
-            state[mi].weeks = [];
-          }
-        }
+        state[mi] = normalizeMemberState(savedState[mi]);
       });
       return true;
     }
@@ -4058,6 +4087,8 @@ function positionScorePillTooltips() {
 
 // Define markWeekAsQualified at the top to ensure global accessibility
 function markWeekAsQualified(mi, weekNum, combinedCounts) {
+  ensureStateSize();
+
   // Validate member index
   if (mi < 0 || mi >= MEMBERS.length) {
     console.warn(`Member index ${mi} is out of bounds for MEMBERS array (length: ${MEMBERS.length})`);
@@ -4102,8 +4133,6 @@ function markWeekAsQualified(mi, weekNum, combinedCounts) {
   // Mark the week as qualified
   weekData.qualified = true;
   weekData.counts = combinedCounts;
-  saveStateToLocalStorage();
-  refreshBoard();
 }
 
 // ── INIT ──
@@ -4257,7 +4286,7 @@ function getDisqualificationReason(mi) {
 // Enhanced: Get all member data with detailed breakdown
 function getDetailedMemberExportData() {
   const allData = [];
-  
+
   MEMBERS.forEach((m, mi) => {
     const score = getScore(mi);
     const plan = getMemberWeekPlan(mi);
@@ -4265,8 +4294,7 @@ function getDetailedMemberExportData() {
     const dayByDay = getDayByDayBreakdown(mi);
     const status = score >= 4 ? 'QUALIFIED' : 'DISQUALIFIED';
     const disqualReason = score < 4 ? getDisqualificationReason(mi) : '';
-    
-    // Summarize bonus usage
+
     let bonusUsedSummary = '';
     const usedFormats = [];
     Object.entries(bonusClasses).forEach(([fmt, total]) => {
@@ -4277,14 +4305,13 @@ function getDetailedMemberExportData() {
       }
     });
     bonusUsedSummary = usedFormats.length > 0 ? usedFormats.join(', ') : 'None';
-    
+
     const totalClasses = getTotalClasses(mi);
     const required = getTotalClassesRequired(mi);
-    
-    // Build week-by-week qualification criteria
+
     const loc = MEMBERS[mi] ? MEMBERS[mi].loc : 'KC';
     const reqs = (loc === 'Bandra') ? WEEKLY_REQUIREMENTS_BANDRA : (loc === 'KH') ? WEEKLY_REQUIREMENTS_KH : (loc === 'CNC') ? WEEKLY_REQUIREMENTS_CNC : WEEKLY_REQUIREMENTS_KC;
-    
+
     let qualifCriteria = '';
     for (let week = 1; week <= 4; week++) {
       if (reqs[week]) {
@@ -4293,15 +4320,13 @@ function getDetailedMemberExportData() {
       }
     }
     qualifCriteria = qualifCriteria.slice(0, -1);
-    
-    // Build day-by-day columns object
+
     const dayColumns = {};
     dayByDay.forEach(d => {
       const dayKey = `Day${d.dayNum}`;
       if (d.class !== '-') {
-        // Format: "FIT" or "FIT*" for bonus
         if (d.isBonus && d.bonusUsedForWeek !== '-') {
-          dayColumns[dayKey] = `${d.class}*Week${d.bonusUsedForWeek.substring(5)}`; // Extract week number
+          dayColumns[dayKey] = `${d.class}*Week${d.bonusUsedForWeek.substring(5)}`;
         } else {
           dayColumns[dayKey] = d.class;
         }
@@ -4309,7 +4334,7 @@ function getDetailedMemberExportData() {
         dayColumns[dayKey] = '-';
       }
     });
-    
+
     allData.push({
       name: `${m.first} ${m.last}`,
       location: m.loc,

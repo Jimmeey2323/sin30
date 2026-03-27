@@ -1274,6 +1274,7 @@ tr.data-row.hidden { display: none; }
     configScript.onerror = function() {
       const loader = document.getElementById('board-loader');
       if (loader) loader.classList.add('hidden');
+      if (typeof fetchAndSeedCheckins === 'function') fetchAndSeedCheckins();
     };
     configScript.onload = function() {
       console.log('✅ Loaded custom configuration');
@@ -3043,7 +3044,6 @@ if (loader) loader.classList.add('hidden');
 renderLegend();
 refreshBoard();
 positionScorePillTooltips();
-fetchAndSeedCheckins();
 </script>
 </body>
 </html>

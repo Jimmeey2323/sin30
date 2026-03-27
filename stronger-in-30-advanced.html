@@ -1304,6 +1304,7 @@ tr.data-row.hidden {
     configScript.onerror = function() {
       const loader = document.getElementById('board-loader');
       if (loader) loader.classList.add('hidden');
+      if (typeof fetchAndSeedCheckins === 'function') fetchAndSeedCheckins();
     };
     configScript.onload = function() {
       console.log('✅ Loaded custom configuration');
@@ -2532,7 +2533,7 @@ async function fetchSheetRows(accessToken) {
 }
 
 async function fetchFallbackData() {
-  const fallbackPath = '/Users/jimmeeygondaa/sin30/Day End Report - Part 4 - Checkins (5).csv';
+  const fallbackPath = 'Day%20End%20Report%20-%20Part%204%20-%20Checkins%20(5).csv';
   const response = await fetch(fallbackPath);
   if (!response.ok) {
     throw new Error('Failed to load fallback data');
@@ -3168,7 +3169,6 @@ if (loader) loader.classList.add('hidden');
 renderLegend();
 refreshBoard();
 positionScorePillTooltips();
-fetchAndSeedCheckins();
 </script>
 </body>
 </html>

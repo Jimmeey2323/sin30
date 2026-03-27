@@ -3870,7 +3870,7 @@ function markWeekAsQualified(mi, weekNum, combinedCounts) {
   // Mark the week as qualified
   weekData.qualified = true;
   weekData.counts = combinedCounts;
-  saveState();
+  saveStateToLocalStorage();
   refreshBoard();
 }
 

@@ -3713,16 +3713,18 @@ function buildQualificationAnalysis(counts, requirements) {
     Object.entries(counts).filter(([, count]) => count > 0)
   );
 
-  let bestMatched = -1;
-  let bestCompletedByDisplay = {};
+  let best = { matched: -1, assignments: [], completedByDisplay: {} };
 
-  function search(slotIndex, remaining, completedByDisplay, matched) {
-    if (matched + (slots.length - slotIndex) < bestMatched) return;
+  function search(slotIndex, remaining, completedByDisplay, matched, assignments) {
+    if (matched + (slots.length - slotIndex) < best.matched) return;
 
     if (slotIndex === slots.length) {
-      if (matched > bestMatched) {
-        bestMatched = matched;
-        bestCompletedByDisplay = { ...completedByDisplay };
+      if (matched > best.matched) {
+        best = {
+          matched,
+          assignments: assignments.map(item => ({ ...item })),
+          completedByDisplay: { ...completedByDisplay },
+        };
       }
       return;
     }
@@ -3735,7 +3737,9 @@ function buildQualificationAnalysis(counts, requirements) {
       if (slot.displayKey) {
         completedByDisplay[slot.displayKey] = (completedByDisplay[slot.displayKey] || 0) + 1;
       }
-      search(slotIndex + 1, remaining, completedByDisplay, matched + 1);
+      assignments.push({ reqAbbr: slot.reqAbbr, actualAbbr, displayKey: slot.displayKey });
+      search(slotIndex + 1, remaining, completedByDisplay, matched + 1, assignments);
+      assignments.pop();
       if (slot.displayKey) {
         completedByDisplay[slot.displayKey]--;
         if (!completedByDisplay[slot.displayKey]) delete completedByDisplay[slot.displayKey];
@@ -3743,15 +3747,33 @@ function buildQualificationAnalysis(counts, requirements) {
       remaining[actualAbbr]++;
     });
 
-    search(slotIndex + 1, remaining, completedByDisplay, matched);
+    search(slotIndex + 1, remaining, completedByDisplay, matched, assignments);
   }
 
-  search(0, { ...available }, {}, 0);
+  search(0, { ...available }, {}, 0, []);
+
+  const assignedCountsByReq = {};
+  const assignedCountsByReqAndActual = {};
+  best.assignments.forEach(({ reqAbbr, actualAbbr }) => {
+    assignedCountsByReq[reqAbbr] = (assignedCountsByReq[reqAbbr] || 0) + 1;
+    if (!assignedCountsByReqAndActual[reqAbbr]) assignedCountsByReqAndActual[reqAbbr] = {};
+    assignedCountsByReqAndActual[reqAbbr][actualAbbr] = (assignedCountsByReqAndActual[reqAbbr][actualAbbr] || 0) + 1;
+  });
+
+  const missingByReq = {};
+  Object.entries(requirements).forEach(([reqAbbr, required]) => {
+    const done = assignedCountsByReq[reqAbbr] || 0;
+    if (done < required) missingByReq[reqAbbr] = required - done;
+  });
 
   return {
-    completed: bestMatched === slots.length,
-    completedByDisplay: bestCompletedByDisplay,
+    completed: best.matched === slots.length,
+    completedByDisplay: best.completedByDisplay,
     rawQualifiedDoneByDisplay,
+    assignments: best.assignments,
+    assignedCountsByReq,
+    assignedCountsByReqAndActual,
+    missingByReq,
     requiredByDisplay,
   };
 }
@@ -3948,6 +3970,67 @@ function buildBonusUsageDetails(bonusUsage = {}) {
     });
 }
 
+function escapeTooltipHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function getTooltipSortIndex(abbr) {
+  const order = [...STICKERS.map(s => s.abbr), 'CBP', 'TC'];
+  const idx = order.indexOf(abbr);
+  return idx === -1 ? order.length : idx;
+}
+
+function buildTooltipCountListHtml(counts, emptyLabel = 'None') {
+  const items = Object.entries(counts || {})
+    .filter(([, count]) => count > 0)
+    .sort(([a], [b]) => getTooltipSortIndex(a) - getTooltipSortIndex(b))
+    .map(([abbr, count]) => {
+      const info = STICKER_LABEL[abbr] || { emoji: '•', label: abbr };
+      const label = `${info.emoji ? `${info.emoji} ` : ''}${info.label || abbr}`;
+      return `<li><strong>${count}</strong> × ${escapeTooltipHtml(label)}</li>`;
+    });
+
+  return items.length
+    ? `<ul style="margin:6px 0 0 18px; padding:0; display:grid; gap:4px;">${items.join('')}</ul>`
+    : `<div style="margin-top:6px; font-size:11px; opacity:0.78;">${escapeTooltipHtml(emptyLabel)}</div>`;
+}
+
+function buildTooltipRequirementTableRows(requirements, counts, qualificationAnalysis) {
+  return Object.entries(requirements)
+    .sort(([a], [b]) => getTooltipSortIndex(a) - getTooltipSortIndex(b))
+    .map(([reqAbbr, required]) => {
+      const label = getRequirementLabel(reqAbbr);
+      const eligible = getRequirementEligibleActualAbbrs(reqAbbr);
+      const available = eligible.reduce((sum, actualAbbr) => sum + (counts[actualAbbr] || 0), 0);
+      const qualified = qualificationAnalysis.assignedCountsByReq?.[reqAbbr] || 0;
+      const actualCounts = qualificationAnalysis.assignedCountsByReqAndActual?.[reqAbbr] || {};
+      const usingText = Object.entries(actualCounts)
+        .filter(([, count]) => count > 0)
+        .sort(([a], [b]) => getTooltipSortIndex(a) - getTooltipSortIndex(b))
+        .map(([abbr, count]) => {
+          const info = STICKER_LABEL[abbr] || { label: abbr };
+          return `${count}× ${info.label || abbr}`;
+        })
+        .join(', ');
+      const qualifiedColor = qualified >= required ? '#22c55e' : '#ef4444';
+
+      return `
+        <tr>
+          <td style="padding:6px 8px; border-bottom:1px solid rgba(255,255,255,0.08); vertical-align:top;"><strong>${escapeTooltipHtml(label)}</strong></td>
+          <td style="padding:6px 8px; border-bottom:1px solid rgba(255,255,255,0.08); text-align:center;">${available}</td>
+          <td style="padding:6px 8px; border-bottom:1px solid rgba(255,255,255,0.08); text-align:center;">${required}</td>
+          <td style="padding:6px 8px; border-bottom:1px solid rgba(255,255,255,0.08); text-align:center; color:${qualifiedColor}; font-weight:700;">${qualified}</td>
+          <td style="padding:6px 8px; border-bottom:1px solid rgba(255,255,255,0.08); vertical-align:top;">${escapeTooltipHtml(usingText || '—')}</td>
+        </tr>`;
+    })
+    .join('');
+}
+
 function buildWeekQualificationTooltip(mi, weekNum) {
   if (weekNum < 1 || weekNum > 4) return '';
   const plan = getMemberWeekPlan(mi);
@@ -3959,100 +4042,81 @@ function buildWeekQualificationTooltip(mi, weekNum) {
   const effectiveCounts = weekPlan.combinedCounts || baseCounts;
   const completed = !!weekPlan.finalQualified;
   const isCompensated = !!weekPlan.compensated;
-  const bonusDetails = buildBonusUsageDetails(weekPlan.bonusUsage || {});
-  const disqualReasons = completed ? [] : buildWeekDisqualificationReasons(requirements, effectiveCounts);
+  const bonusUsage = weekPlan.bonusUsage || {};
+  const bonusDetails = buildBonusUsageDetails(bonusUsage);
+  const finalAnalysis = buildQualificationAnalysis(effectiveCounts, requirements);
+  const totalDone = Object.values(baseCounts).reduce((sum, count) => sum + count, 0);
+  const totalRequired = Object.values(requirements).reduce((sum, count) => sum + count, 0);
+  const totalQualified = Object.values(finalAnalysis.assignedCountsByReq || {}).reduce((sum, count) => sum + count, 0);
+  const baseReasons = buildWeekDisqualificationReasons(requirements, baseCounts);
+  const finalReasons = buildWeekDisqualificationReasons(requirements, effectiveCounts);
+  const statusText = completed ? (isCompensated ? 'QUALIFIED WITH BONUS' : 'QUALIFIED') : 'NOT QUALIFIED';
+  const statusColor = completed ? '#22c55e' : '#ef4444';
 
-  let html = '<div class="tooltip-wrapper">';
-  html += `<div class="tooltip-head">📋 Week ${weekNum} Qualification</div>`;
-  
-  // Format breakdown section
+  let reasonHtml = '';
+  if (completed && isCompensated) {
+    reasonHtml += '<div style="font-size:11px;">This week qualified after bonus classes were applied.</div>';
+    if (baseReasons.length) {
+      reasonHtml += `<ul style="margin:6px 0 0 18px; padding:0; display:grid; gap:4px;">${baseReasons.map(reason => `<li>${escapeTooltipHtml(reason.text)}</li>`).join('')}</ul>`;
+    }
+  } else if (completed) {
+    reasonHtml = '<div style="font-size:11px;">All required classes were satisfied using logged weekly classes.</div>';
+  } else if (finalReasons.length) {
+    reasonHtml = `<ul style="margin:0 0 0 18px; padding:0; display:grid; gap:4px;">${finalReasons.map(reason => `<li>${escapeTooltipHtml(reason.text)}</li>`).join('')}</ul>`;
+  } else {
+    reasonHtml = '<div style="font-size:11px;">The week does not meet the required class mix yet.</div>';
+  }
+
+  let html = '<div style="min-width:340px; max-width:520px; display:grid; gap:10px;">';
+  html += `<div style="font-weight:800; font-size:12px; letter-spacing:0.08em; text-transform:uppercase; color:#f8fafc;">Week ${weekNum} Qualification Report</div>`;
+
   html += '<div class="tooltip-section">';
-  html += '<div class="tooltip-section-header" style="border-left-color: #64b5ff; color: #64b5ff;">📊 Format Requirements</div>';
-  html += '<div class="tooltip-format-list">';
-  
-  let totalRequired = 0;
-  let totalDone = 0;
-  
-  Object.entries(requirements)
-    .sort((a, b) => {
-      const order = [...STICKERS.map(s => s.abbr), 'CBP', 'TC'];
-      return order.indexOf(a[0]) - order.indexOf(b[0]);
-    })
-    .forEach(([reqAbbr, required]) => {
-      totalRequired += required;
-      const eligible = getRequirementEligibleActualAbbrs(reqAbbr);
-      const available = eligible.reduce((sum, actualAbbr) => sum + (effectiveCounts[actualAbbr] || 0), 0);
-      
-      const done = Math.min(available, required);
-      totalDone += done;
-      const isMatched = available >= required;
-      const fillPercent = Math.min(100, (available / required) * 100);
-      
-      html += `<div class="tooltip-format-item ${isMatched ? 'matched' : 'missing'}">`;
-      html += `<div class="tooltip-format-label">${reqAbbr}</div>`;
-      html += `<div class="tooltip-format-bar"><div class="tooltip-format-bar-fill ${isMatched ? 'matched' : 'missing'}" style="width: ${fillPercent}%"></div></div>`;
-      html += `<div class="tooltip-format-count">${available}/${required}</div>`;
-      html += `<div class="tooltip-format-icon ${isMatched ? 'matched' : 'missing'}">${isMatched ? '✓' : '✗'}</div>`;
-      html += '</div>';
-    });
-  
-  html += '</div></div>';
-
-  if (!completed) {
-    html += '<div class="tooltip-section">';
-    html += '<div class="tooltip-section-header" style="border-left-color: #f87171; color: #ef4444;">⚠ Why this week is not qualified</div>';
-    if (disqualReasons.length) {
-      html += '<div style="display:grid; gap:6px; font-size:11px; color:#7f1d1d;">';
-      disqualReasons.forEach(reason => {
-        html += `<div>• ${reason.text}</div>`;
-      });
-      html += '</div>';
-    } else {
-      html += '<div style="font-size: 10px; color: #7f1d1d; opacity: 0.7;">Requirements were not fully met.</div>';
-    }
-    html += '</div>';
-  }
-  
-  // Bonus compensation section
-  if (isCompensated) {
-    html += '<div class="tooltip-bonus-section">';
-    html += '<div class="tooltip-bonus-header">🎁 Bonus Compensation Used</div>';
-    html += '<div class="tooltip-bonus-items">';
-
-    if (bonusDetails.length) {
-      bonusDetails.forEach(({ abbr, count, emoji, label }) => {
-        html += `<div class="tooltip-bonus-item">`;
-        html += `<span style="font-weight: 700;">${emoji} ${label}</span>`;
-        html += `<span style="opacity: 0.8;">→ added from bonus as ${count} ${abbr} class${count !== 1 ? 'es' : ''}</span>`;
-        html += `</div>`;
-      });
-    } else {
-      html += `<div style="font-size: 10px; color: #92400e; opacity: 0.6;">No bonus classes needed for this week</div>`;
-    }
-    
-    html += '</div></div>';
-  }
-  
-  // Overall progress section
-  html += '<div class="tooltip-progress-section">';
-  html += '<div class="tooltip-progress-header">📈 Week Overall Progress</div>';
-  const overallPercent = Math.min(100, (totalDone / totalRequired) * 100);
-  html += '<div class="tooltip-progress-container">';
-  html += `<div class="tooltip-progress-bar-main"><div class="tooltip-progress-bar-main-fill" style="width: ${overallPercent}%"></div></div>`;
-  html += `<div class="tooltip-progress-text">${totalDone}/${totalRequired}</div>`;
-  html += '</div></div>';
-  
-  // Status footer
-  const statusClass = completed ? 'qualified' : 'not-qualified';
-  const statusIcon = completed ? '✓' : '✗';
-  let statusText = completed ? 'QUALIFIED' : 'NOT QUALIFIED';
-  if (isCompensated) statusText += ' (with Bonus)';
-  
-  html += `<div class="tooltip-footer-status ${statusClass}">`;
-  html += `<span style="font-size: 14px;">${statusIcon}</span>`;
-  html += `<span>${statusText}</span>`;
+  html += '<div class="tooltip-section-header">Classes Done</div>';
+  html += `<div style="font-size:10px; opacity:0.8;">Total logged in week: ${totalDone}</div>`;
+  html += buildTooltipCountListHtml(baseCounts, 'No classes logged in this week.');
   html += '</div>';
-  
+
+  html += '<div class="tooltip-section">';
+  html += '<div class="tooltip-section-header">Classes Required</div>';
+  html += `<div style="font-size:10px; opacity:0.8;">Total required: ${totalRequired}</div>`;
+  html += buildTooltipCountListHtml(requirements, 'No class requirements configured.');
+  html += '</div>';
+
+  html += '<div class="tooltip-section">';
+  html += '<div class="tooltip-section-header">Classes Qualified</div>';
+  html += `<div style="font-size:10px; opacity:0.8;">Qualified toward requirements: ${totalQualified}/${totalRequired}</div>`;
+  html += '<div style="overflow-x:auto; margin-top:6px;">';
+  html += '<table style="width:100%; border-collapse:collapse; font-size:10px;">';
+  html += '<thead><tr>';
+  html += '<th style="text-align:left; padding:6px 8px; border-bottom:1px solid rgba(255,255,255,0.14);">Requirement</th>';
+  html += '<th style="text-align:center; padding:6px 8px; border-bottom:1px solid rgba(255,255,255,0.14);">Available</th>';
+  html += '<th style="text-align:center; padding:6px 8px; border-bottom:1px solid rgba(255,255,255,0.14);">Required</th>';
+  html += '<th style="text-align:center; padding:6px 8px; border-bottom:1px solid rgba(255,255,255,0.14);">Qualified</th>';
+  html += '<th style="text-align:left; padding:6px 8px; border-bottom:1px solid rgba(255,255,255,0.14);">Counted As</th>';
+  html += '</tr></thead>';
+  html += `<tbody>${buildTooltipRequirementTableRows(requirements, effectiveCounts, finalAnalysis)}</tbody>`;
+  html += '</table></div></div>';
+
+  html += '<div class="tooltip-section">';
+  html += '<div class="tooltip-section-header">Bonus Classes Used</div>';
+  html += `<div style="font-size:10px; opacity:0.8;">Total bonus classes used: ${Object.values(bonusUsage).reduce((sum, count) => sum + count, 0)}</div>`;
+  if (bonusDetails.length) {
+    html += `<ul style="margin:6px 0 0 18px; padding:0; display:grid; gap:4px;">${bonusDetails.map(({ count, emoji, label }) => `<li><strong>${count}</strong> × ${escapeTooltipHtml(`${emoji ? `${emoji} ` : ''}${label}`)}</li>`).join('')}</ul>`;
+  } else {
+    html += '<div style="margin-top:6px; font-size:11px; opacity:0.78;">No bonus classes were used.</div>';
+  }
+  html += '</div>';
+
+  html += '<div class="tooltip-section">';
+  html += '<div class="tooltip-section-header">Qualification Status</div>';
+  html += `<div style="margin-top:6px; padding:8px 10px; border-radius:8px; background:rgba(255,255,255,0.05); border-left:3px solid ${statusColor}; color:${statusColor}; font-size:11px; font-weight:800; letter-spacing:0.06em; text-transform:uppercase;">${escapeTooltipHtml(statusText)}</div>`;
+  html += '</div>';
+
+  html += '<div class="tooltip-section">';
+  html += '<div class="tooltip-section-header">Reason</div>';
+  html += reasonHtml;
+  html += '</div>';
+
   html += '</div>';
   return html;
 }

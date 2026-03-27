@@ -1548,20 +1548,21 @@ const qualificationSettings = {
 const qualificationToggleEl = document.getElementById('mat-as-cardio-toggle');
 const classQualificationToggleEl = document.getElementById('class-diff-qualification-toggle');
 // ── INTERCHANGEABLE FORMATS ──
-// CARDIO: Cardio Barre, PowerCycle, HIIT, Cardio Barre Plus, Amped Up, Back Body Blaze, Trainer's Choice
-const CARDIO_QUALIFICATION_FORMATS = ['CB', 'CBP', 'HIIT', 'PC', 'BBB', 'AMP', 'TC'];
-// STRENGTH: FIT, Strength Lab
-const STRENGTH_QUALIFICATION_FORMATS = ['LAB', 'FIT'];
+// CARDIO: Cardio Barre, HIIT, Amped Up, Cardio Barre Plus, Trainer's Choice
+// (NOTE: PowerCycle is NOT interchangeable - must be matched exactly)
+const CARDIO_QUALIFICATION_FORMATS = ['CB', 'HIIT', 'AMP', 'CBP', 'TC'];
+// STRENGTH: FIT, Strength Lab, Back Body Blaze
+const STRENGTH_QUALIFICATION_FORMATS = ['LAB', 'FIT', 'BBB'];
 const QUALIFIED_DISPLAY_ORDER = ['CARDIO', 'STRENGTH'];
 
 // ── CLASS EQUIVALENCY GROUPS ──
 // Classes within a group are interchangeable when checking weekly requirements.
-// Group A: Strength-type  (FIT ↔ LAB)
-// Group B: Cardio-type    (CB ↔ BBB ↔ HIIT ↔ AMP ↔ CBP ↔ PC ↔ TC)
+// Group A: Strength-type  (FIT ↔ LAB ↔ BBB)
+// Group B: Cardio-type    (CB ↔ HIIT ↔ AMP ↔ CBP ↔ TC)
+// NOTE: PC (PowerCycle) and specific formats (B57, Mat, REC) are NOT interchangeable
 const EQUIV_GROUPS = [
-  new Set(['FIT', 'LAB']),
-  new Set(['CB', 'BBB', 'HIIT', 'AMP', 'CBP', 'PC', 'TC']),
-];
+  new Set(['FIT', 'LAB', 'BBB']),
+  new Set(['CB', 'HIIT', 'AMP', 'CBP', 'TC']),
 
 function getEquivGroup(abbr) {
   return EQUIV_GROUPS.find(g => g.has(abbr)) || null;
@@ -1628,67 +1629,98 @@ function buildRequirementSlots(requirements) {
 }
 
 function buildQualificationAnalysis(counts, requirements) {
-  const requiredByDisplay = {};
+  // Keep track of both specific format requirements and their display grouping
+  const requiredByFormat = {};
   Object.entries(requirements).forEach(([reqAbbr, required]) => {
-    const displayKey = getQualifiedDisplayKey(reqAbbr);
-    if (displayKey) {
-      requiredByDisplay[displayKey] = (requiredByDisplay[displayKey] || 0) + required;
+    requiredByFormat[reqAbbr] = (requiredByFormat[reqAbbr] || 0) + required;
+  });
+
+  // Build requirement slots - ONE SLOT PER SPECIFIC FORMAT REQUIRED
+  const slots = [];
+  Object.entries(requiredByFormat).forEach(([reqAbbr, required]) => {
+    for (let i = 0; i < required; i++) {
+      slots.push({
+        reqAbbr,
+        eligibleActuals: getRequirementEligibleActualAbbrs(reqAbbr),
+      });
     }
   });
 
-  const rawQualifiedDoneByDisplay = {};
-  Object.entries(counts).forEach(([abbr, count]) => {
-    const displayKey = getActualQualifiedDisplayKey(abbr);
-    if (displayKey) {
-      rawQualifiedDoneByDisplay[displayKey] = (rawQualifiedDoneByDisplay[displayKey] || 0) + count;
-    }
+  // Sort slots: more restrictive (fewer alternatives) first for efficient matching
+  slots.sort((a, b) => {
+    if (a.eligibleActuals.length === 1 && b.eligibleActuals.length > 1) return -1;
+    if (b.eligibleActuals.length === 1 && a.eligibleActuals.length > 1) return 1;
+    return a.eligibleActuals.length - b.eligibleActuals.length;
   });
 
-  const slots = buildRequirementSlots(requirements);
+  // Available classes from member
   const available = Object.fromEntries(
     Object.entries(counts).filter(([, count]) => count > 0)
   );
 
   let bestMatched = -1;
-  let bestCompletedByDisplay = {};
+  let bestMatchedFormats = {};
 
-  function search(slotIndex, remaining, completedByDisplay, matched) {
+  function search(slotIndex, remaining, matchedFormats, matched) {
+    // Pruning: if best possible score is worse than current best, stop
     if (matched + (slots.length - slotIndex) < bestMatched) return;
 
+    // Base case: all slots checked
     if (slotIndex === slots.length) {
       if (matched > bestMatched) {
         bestMatched = matched;
-        bestCompletedByDisplay = { ...completedByDisplay };
+        bestMatchedFormats = { ...matchedFormats };
       }
       return;
     }
 
     const slot = slots[slotIndex];
 
+    // Try each eligible actual format
     slot.eligibleActuals.forEach(actualAbbr => {
       if ((remaining[actualAbbr] || 0) <= 0) return;
+      
+      // Use this actual to satisfy the requirement
       remaining[actualAbbr]--;
-      if (slot.displayKey) {
-        completedByDisplay[slot.displayKey] = (completedByDisplay[slot.displayKey] || 0) + 1;
-      }
-      search(slotIndex + 1, remaining, completedByDisplay, matched + 1);
-      if (slot.displayKey) {
-        completedByDisplay[slot.displayKey]--;
-        if (!completedByDisplay[slot.displayKey]) delete completedByDisplay[slot.displayKey];
-      }
+      matchedFormats[actualAbbr] = (matchedFormats[actualAbbr] || 0) + 1;
+      
+      search(slotIndex + 1, remaining, matchedFormats, matched + 1);
+      
+      // Backtrack
+      matchedFormats[actualAbbr]--;
+      if (!matchedFormats[actualAbbr]) delete matchedFormats[actualAbbr];
       remaining[actualAbbr]++;
     });
 
-    search(slotIndex + 1, remaining, completedByDisplay, matched);
+    // Try not matching this slot (for permutations)
+    search(slotIndex + 1, remaining, matchedFormats, matched);
   }
 
   search(0, { ...available }, {}, 0);
 
+  // Build display summary (for tooltip)
+  const completedByDisplay = {};
+  Object.entries(bestMatchedFormats).forEach(([fmt, count]) => {
+    const displayKey = getActualQualifiedDisplayKey(fmt);
+    if (displayKey) {
+      completedByDisplay[displayKey] = (completedByDisplay[displayKey] || 0) + count;
+    }
+  });
+
+  const requiredByDisplay = {};
+  Object.entries(requiredByFormat).forEach(([fmt, count]) => {
+    const displayKey = getQualifiedDisplayKey(fmt);
+    if (displayKey) {
+      requiredByDisplay[displayKey] = (requiredByDisplay[displayKey] || 0) + count;
+    }
+  });
+
   return {
     completed: bestMatched === slots.length,
-    completedByDisplay: bestCompletedByDisplay,
-    rawQualifiedDoneByDisplay,
+    completedByDisplay,
     requiredByDisplay,
+    requiredByFormat,
+    matchedFormats: bestMatchedFormats,
   };
 }
 

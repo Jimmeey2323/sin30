@@ -1971,6 +1971,14 @@ function getQualifiedMembersCount() {
   return MEMBERS.filter(m => getScore(MEMBERS.indexOf(m)) >= 4).length;
 }
 
+function getLocationStats(locationAbbr) {
+  // Get members for this location
+  const membersAtLoc = MEMBERS.map((m, idx) => ({ m, idx })).filter(({ m }) => m.loc === locationAbbr);
+  const totalCount = membersAtLoc.length;
+  const qualifiedCount = membersAtLoc.filter(({ idx }) => getScore(idx) >= 4).length;
+  return { total: totalCount, qualified: qualifiedCount };
+}
+
 // ── BUILD / REFRESH TABLE ──
 function refreshBoard() {
   // Update member count dynamically
@@ -2119,7 +2127,9 @@ function refreshBoard() {
     const btn = document.createElement('button');
     btn.className = 'location-toggle-btn';
     btn.type = 'button';
-    btn.innerHTML = `<span class="location-toggle-icon">▼</span><span>${groupLabel}</span>`;
+    const stats = getLocationStats(loc);
+    const countBadge = ` <span style="font-size: 9px; opacity: 0.9; margin-left: 8px;">(${stats.qualified}/${stats.total} qualified)</span>`;
+    btn.innerHTML = `<span class="location-toggle-icon">▼</span><span>${groupLabel}${countBadge}</span>`;
     btn.addEventListener('click', function(e) {
       e.preventDefault();
       e.stopPropagation();
@@ -2557,9 +2567,24 @@ function getParticipantStats() {
 function exportToCSV() {
   const stats = getParticipantStats();
   
+  // Calculate location summaries
+  const locationSummaries = [];
+  const byLoc = {};
+  
+  MEMBERS.forEach((m, idx) => {
+    if (!byLoc[m.loc]) byLoc[m.loc] = [];
+    byLoc[m.loc].push({ name: m.first + ' ' + m.last, idx });
+  });
+  
+  Object.entries(byLoc).forEach(([locCode, members]) => {
+    const qualified = members.filter(m => getScore(m.idx) >= 4).length;
+    const locName = locCode === 'KC' ? 'Kemps Corner' : 'Bandra';
+    locationSummaries.push([`${locName} Summary`, `${qualified}/${members.length}`, 'qualified']);
+  });
+  
   // Header row
   const headers = ['Name', 'Email', 'Location', 'Classes Completed', 'Classes Required', 'Weeks Qualified', 'Total Status', 'Week 1', 'Week 2', 'Week 3', 'Week 4'];
-  const rows = [headers];
+  const rows = [...locationSummaries.map(s => s), [''], headers];
   
   // Data rows
   stats.forEach(participant => {
@@ -2603,6 +2628,21 @@ function exportToCSV() {
 function exportToPDF() {
   const stats = getParticipantStats();
   
+  // Calculate location summaries
+  const byLoc = {};
+  MEMBERS.forEach((m, idx) => {
+    if (!byLoc[m.loc]) byLoc[m.loc] = [];
+    byLoc[m.loc].push({ name: m.first + ' ' + m.last, idx });
+  });
+  
+  let locSummaryHTML = '<div class="summary"><h2>Qualification by Location</h2><div class="summary-row" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">';
+  Object.entries(byLoc).forEach(([locCode, members]) => {
+    const qualified = members.filter(m => getScore(m.idx) >= 4).length;
+    const locName = locCode === 'KC' ? 'Kemps Corner' : 'Bandra';
+    locSummaryHTML += `<div class="summary-item"><div class="summary-label">${locName}</div><div class="summary-value">${qualified}/${members.length}</div></div>`;
+  });
+  locSummaryHTML += '</div></div>';
+  
   // Create a simple HTML table for printing
   let html = `
     <html>
@@ -2629,6 +2669,8 @@ function exportToPDF() {
     <body>
       <h1>Stronger in 30 — Participant Qualification Stats</h1>
       <div class="meta">Beginner Board | Generated ${new Date().toLocaleDateString()}</div>
+      
+      ${locSummaryHTML}
       
       <table>
         <thead>
@@ -2675,7 +2717,7 @@ function exportToPDF() {
       </table>
       
       <div class="summary">
-        <h2>Summary</h2>
+        <h2>Overall Summary</h2>
         <div class="summary-row">
           <div class="summary-item">
             <div class="summary-label">Total Participants</div>
@@ -2708,12 +2750,77 @@ function exportToPDF() {
 }
 
 function showExportOptions() {
-  const choice = confirm('Select export format:\nOK = CSV | Cancel = PDF');
-  if (choice) {
-    exportToCSV();
-  } else {
+  const menu = `
+    <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 10px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); padding: 20px; z-index: 2000; min-width: 280px; font-family: 'Syne', sans-serif;">
+      <div style="margin-bottom: 20px; font-size: 14px; font-weight: 600; color: #2c3e50;">Export Format</div>
+      <button onclick="exportToCSV(); closeExportMenu();" style="width: 100%; padding: 10px; margin-bottom: 8px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 12px;">📄 CSV</button>
+      <button onclick="exportToPDF(); closeExportMenu();" style="width: 100%; padding: 10px; margin-bottom: 8px; background: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 12px;">📋 PDF</button>
+      <button onclick="exportToPNG(); closeExportMenu();" style="width: 100%; padding: 10px; margin-bottom: 8px; background: #9b59b6; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 12px;">🖼️ PNG</button>
+      <button onclick="copyTableToClipboard(); closeExportMenu();" style="width: 100%; padding: 10px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 12px;">📋 Copy to Clipboard</button>
+      <button onclick="closeExportMenu();" style="width: 100%; padding: 10px; margin-top: 12px; background: #95a5a6; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 12px;">Cancel</button>
+    </div>
+    <div id="export-menu-backdrop" onclick="closeExportMenu();" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); z-index: 1999;"></div>
+  `;
+  document.body.insertAdjacentHTML('beforeend', menu);
+}
+
+function closeExportMenu() {
+  const menu = document.querySelector('[style*="position: fixed"][style*="transform: translate"]');
+  const backdrop = document.getElementById('export-menu-backdrop');
+  if (menu) menu.remove();
+  if (backdrop) backdrop.remove();
+}
+
+function exportToPNG() {
+  const table = document.getElementById('main-table');
+  if (!table) return;
+  
+  html2canvas(table, { 
+    scale: 2, 
+    useCORS: true,
+    logging: false,
+    backgroundColor: '#ffffff'
+  }).then(canvas => {
+    const link = document.createElement('a');
+    link.href = canvas.toDataURL('image/png');
+    link.download = `stronger-in-30-board-${new Date().toISOString().split('T')[0]}.png`;
+    link.click();
+  }).catch(err => {
+    alert('PNG export requires html2canvas library. Using PDF instead.');
     exportToPDF();
-  }
+  });
+}
+
+function copyTableToClipboard() {
+  const stats = getParticipantStats();
+  let text = 'STRONGER IN 30 — PARTICIPANT STATS\n';
+  text += `Generated: ${new Date().toLocaleDateString()}\n\n`;
+  
+  // Add stats by location
+  const byLoc = {};
+  MEMBERS.forEach((m, idx) => {
+    if (!byLoc[m.loc]) byLoc[m.loc] = [];
+    byLoc[m.loc].push(idx);
+  });
+  
+  Object.entries(byLoc).forEach(([locCode, indices]) => {
+    const locName = locCode === 'KC' ? 'Kemps Corner' : 'Bandra';
+    const qualified = indices.filter(idx => getScore(idx) >= 4).length;
+    text += `${locName}: ${qualified}/${indices.length} qualified\n`;
+  });
+  
+  text += '\n';
+  text += ['Name', 'Email', 'Location', 'Classes', 'Weeks Qualified', 'Status'].join('\t') + '\n';
+  
+  stats.forEach(s => {
+    text += [s.name, s.email, s.location, `${s.classesCompleted}/${s.classesRequired}`, `${s.weeksQualified}/4`, s.status].join('\t') + '\n';
+  });
+  
+  navigator.clipboard.writeText(text).then(() => {
+    alert('Stats copied to clipboard!');
+  }).catch(() => {
+    alert('Failed to copy. Please try again.');
+  });
 }
 
 function exportToComprehensiveCSV() {

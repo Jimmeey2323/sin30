@@ -915,8 +915,8 @@ td.score-td {
   font-weight: 500;
   white-space: pre-wrap;
   word-wrap: break-word;
-  z-index: 10000;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  z-index: 999999;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.35);
   max-width: 400px;
   min-width: 280px;
   line-height: 1.6;
@@ -926,6 +926,8 @@ td.score-td {
   pointer-events: auto;
   margin: 0;
   padding: 0;
+  top: 0 !important;
+  left: 0 !important;
 }
 
 .score-tooltip-content {
@@ -984,8 +986,8 @@ td.score-td {
 }
 
 .score-pill:hover .score-tooltip {
-  display: block;
-  /* Smart positioning: check if tooltip would overflow right */
+  display: block !important;
+  /* Smart positioning handled by JavaScript */
 }
 
 .score-pill {
@@ -2948,38 +2950,51 @@ function positionScorePillTooltips() {
     
     pill.addEventListener('mouseenter', () => {
       tooltip.style.display = 'block';
+      tooltip.style.visibility = 'visible';
       setTimeout(() => {
         const pillRect = pill.getBoundingClientRect();
-        const tooltipRect = tooltip.getBoundingClientRect();
         const viewportWidth = window.innerWidth;
-        const gap = 12;
+        const viewportHeight = window.innerHeight;
+        const gap = 16;
+        const padding = 10;
         
-        // Default position: above, centered
-        let top = pillRect.top - tooltipRect.height - gap;
-        let left = pillRect.left + (pillRect.width - tooltipRect.width) / 2;
+        // Force display to calculate dimensions
+        tooltip.style.display = 'block';
+        const tooltipHeight = tooltip.offsetHeight;
+        const tooltipWidth = tooltip.offsetWidth;
         
-        // Check if tooltip overflows right
-        if (left + tooltipRect.width + 10 > viewportWidth) {
-          left = viewportWidth - tooltipRect.width - 10;
-        }
+        // Always position ABOVE the pill with priority
+        let top = pillRect.top - tooltipHeight - gap;
+        let left = pillRect.left + (pillRect.width - tooltipWidth) / 2;
         
-        // Check if tooltip overflows left
-        if (left < 10) {
-          left = 10;
-        }
-        
-        // Check if tooltip overflows top
-        if (top < 10) {
+        // If tooltip would go above viewport, move it below instead
+        if (top < padding) {
           top = pillRect.bottom + gap;
         }
         
-        tooltip.style.top = top + 'px';
-        tooltip.style.left = left + 'px';
+        // Ensure tooltip doesn't overflow left edge
+        if (left < padding) {
+          left = padding;
+        }
+        
+        // Ensure tooltip doesn't overflow right edge
+        if (left + tooltipWidth + padding > viewportWidth) {
+          left = viewportWidth - tooltipWidth - padding;
+        }
+        
+        // Ensure tooltip doesn't overflow bottom (constrain height with scroll if needed)
+        if (top + tooltipHeight + padding > viewportHeight) {
+          top = viewportHeight - tooltipHeight - padding;
+        }
+        
+        tooltip.style.top = Math.max(padding, top) + 'px';
+        tooltip.style.left = Math.max(padding, left) + 'px';
       }, 0);
     });
     
     pill.addEventListener('mouseleave', () => {
       tooltip.style.display = 'none';
+      tooltip.style.visibility = 'hidden';
     });
   });
 }

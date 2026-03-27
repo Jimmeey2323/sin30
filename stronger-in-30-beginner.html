@@ -1697,15 +1697,49 @@ td.day-td.week-not-qualified .sticker-slot:hover {
   font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.01em;
-  white-space: pre-line;
+  white-space: normal;
   line-height: 1.6;
-  max-width: 420px;
+  width: min(560px, calc(100vw - 24px));
+  max-width: min(560px, calc(100vw - 24px));
+  max-height: min(78vh, 720px);
   padding: 12px 14px;
-  border-radius: 8px;
+  border-radius: 12px;
   pointer-events: none;
   box-shadow: 0 4px 20px rgba(0,0,0,0.4), 0 0 1px rgba(255,255,255,0.1) inset;
-  transform: translateX(-50%);
   border: 1px solid rgba(100, 200, 255, 0.2);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+#cell-tooltip > div,
+#cell-tooltip table,
+#cell-tooltip th,
+#cell-tooltip td,
+#cell-tooltip li,
+#cell-tooltip div {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+#cell-tooltip table {
+  table-layout: fixed;
+}
+
+#cell-tooltip thead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+#cell-tooltip thead th {
+  background: rgba(15, 23, 42, 0.96) !important;
+  color: #f8fafc !important;
+  box-shadow: inset 0 -1px 0 rgba(255,255,255,0.08);
+}
+
+#cell-tooltip tbody td {
+  background: transparent;
 }
 
 .tooltip-section {
@@ -3019,11 +3053,26 @@ function showCellTooltip(text, anchorEl) {
   }
   cellTooltip.style.display = 'block';
   const r = anchorEl.getBoundingClientRect();
-  const tooltipHeight = cellTooltip.offsetHeight;
-  cellTooltip.style.left = (r.left + r.width / 2) + 'px';
-  let top = r.top - tooltipHeight - 8;
-  if (top < 8) top = r.bottom + 8;
-  cellTooltip.style.top = top + 'px';
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  const gap = 10;
+  const margin = 12;
+
+  cellTooltip.style.left = '0px';
+  cellTooltip.style.top = '0px';
+
+  const tooltipRect = cellTooltip.getBoundingClientRect();
+  let left = r.left + (r.width - tooltipRect.width) / 2;
+  left = Math.max(margin, Math.min(left, viewportWidth - tooltipRect.width - margin));
+
+  let top = r.top - tooltipRect.height - gap;
+  if (top < margin) top = r.bottom + gap;
+  if (top + tooltipRect.height > viewportHeight - margin) {
+    top = Math.max(margin, viewportHeight - tooltipRect.height - margin);
+  }
+
+  cellTooltip.style.left = `${left}px`;
+  cellTooltip.style.top = `${top}px`;
 }
 function hideCellTooltip() {
   cellTooltip.style.display = 'none';

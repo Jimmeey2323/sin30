@@ -78,13 +78,17 @@ function generateParticipantStatsForLevel(
  * @returns {string} CSV content
  */
 function generateUnifiedCSV(allStats) {
-  // Group by location and level
+  // Group by location, level, and qualification status
   const byLocationLevel = {};
   allStats.forEach(s => {
     const key = `${s.location}`;
     if (!byLocationLevel[key]) byLocationLevel[key] = {};
-    if (!byLocationLevel[key][s.level]) byLocationLevel[key][s.level] = [];
-    byLocationLevel[key][s.level].push(s);
+    if (!byLocationLevel[key][s.level]) byLocationLevel[key][s.level] = { qualified: [], notQualified: [] };
+    if (s.fullyQualified) {
+      byLocationLevel[key][s.level].qualified.push(s);
+    } else {
+      byLocationLevel[key][s.level].notQualified.push(s);
+    }
   });
 
   const allClassTypes = Array.from(new Set(allStats.flatMap(s => Object.keys(s.classTypeCounters))));
@@ -113,24 +117,50 @@ function generateUnifiedCSV(allStats) {
     rows.push([`--- ${location} ---`]);
     ['Beginner', 'Intermediate', 'Advanced'].forEach(level => {
       if (levels[level]) {
-        if (level !== 'Beginner') rows.push(['  ' + level]);
-        else rows.push([level]);
+        const levelLabel = level === 'Beginner' ? level : `  ${level}`;
+        rows.push([levelLabel]);
         
-        levels[level].forEach(participant => {
-          const classTypeCells = orderedClassTypes.map(ct => participant.classTypeCounters[ct] || 0);
-          rows.push([
-            participant.name,
-            participant.email,
-            '',
-            '',
-            `${participant.classesCompleted}/${participant.classesRequired}`,
-            participant.weeksQualified,
-            participant.status,
-            participant.qualificationMethod,
-            ...participant.weekDetails.map(w => w.qualified ? '✓' : '✗'),
-            ...classTypeCells
-          ]);
-        });
+        // QUALIFIED SECTION
+        if (levels[level].qualified.length > 0) {
+          rows.push(['  ✓ QUALIFIED', `(${levels[level].qualified.length})`]);
+          levels[level].qualified.forEach(participant => {
+            const classTypeCells = orderedClassTypes.map(ct => participant.classTypeCounters[ct] || 0);
+            rows.push([
+              participant.name,
+              participant.email,
+              '',
+              '',
+              `${participant.classesCompleted}/${participant.classesRequired}`,
+              participant.weeksQualified,
+              participant.status,
+              participant.qualificationMethod,
+              ...participant.weekDetails.map(w => w.qualified ? '✓' : '✗'),
+              ...classTypeCells
+            ]);
+          });
+          rows.push([]);
+        }
+        
+        // NOT QUALIFIED SECTION
+        if (levels[level].notQualified.length > 0) {
+          rows.push(['  ✗ NOT QUALIFIED', `(${levels[level].notQualified.length})`]);
+          levels[level].notQualified.forEach(participant => {
+            const classTypeCells = orderedClassTypes.map(ct => participant.classTypeCounters[ct] || 0);
+            rows.push([
+              participant.name,
+              participant.email,
+              '',
+              '',
+              `${participant.classesCompleted}/${participant.classesRequired}`,
+              participant.weeksQualified,
+              participant.status,
+              participant.qualificationMethod,
+              ...participant.weekDetails.map(w => w.qualified ? '✓' : '✗'),
+              ...classTypeCells
+            ]);
+          });
+          rows.push([]);
+        }
       }
     });
   });
@@ -200,6 +230,9 @@ function generateUnifiedPDF(allStats) {
       if (!levels[level] || levels[level].length === 0) return;
       
       const members = levels[level];
+      const qualified = members.filter(p => p.fullyQualified);
+      const notQualified = members.filter(p => !p.fullyQualified);
+      
       html += '<h3 style="margin-left:0">' + level + ' Level (' + members.length + ' participants)</h3>';
       html += '<table><thead><tr><th>Name</th><th class="center">Done</th><th class="center">Req.</th><th class="center">Weeks</th><th class="center">Method</th>';
       
@@ -209,20 +242,41 @@ function generateUnifiedPDF(allStats) {
       
       html += '<th class="center">Status</th></tr></thead><tbody>';
       
-      members.forEach(p => {
-        html += '<tr><td><strong>' + p.name + '</strong></td>';
-        html += '<td class="center">' + p.classesCompleted + '</td>';
-        html += '<td class="center">' + p.classesRequired + '</td>';
-        html += '<td class="center">' + p.weeksQualified + '/4</td>';
-        html += '<td class="center" style="font-size:10px;">' + p.qualificationMethod + '</td>';
-        
-        allClassTypes.forEach(ct => {
-          html += '<td class="center">' + (p.classTypeCounters[ct] || 0) + '</td>';
+      // Qualified section
+      if (qualified.length > 0) {
+        html += '<tr style="background:rgba(212,237,218,0.6);"><td colspan="100%" style="font-weight:bold;color:#155724;padding:12px;border:2px solid #28a745;">✓ QUALIFIED (' + qualified.length + ')</td></tr>';
+        qualified.forEach(p => {
+          html += '<tr><td><strong>' + p.name + '</strong></td>';
+          html += '<td class="center">' + p.classesCompleted + '</td>';
+          html += '<td class="center">' + p.classesRequired + '</td>';
+          html += '<td class="center">' + p.weeksQualified + '/4</td>';
+          html += '<td class="center" style="font-size:10px;">' + p.qualificationMethod + '</td>';
+          
+          allClassTypes.forEach(ct => {
+            html += '<td class="center">' + (p.classTypeCounters[ct] || 0) + '</td>';
+          });
+          
+          html += '<td class="center qualified">' + p.status + '</td></tr>';
         });
-        
-        const statusClass = p.fullyQualified ? 'qualified' : 'not-qualified';
-        html += '<td class="center ' + statusClass + '">' + p.status + '</td></tr>';
-      });
+      }
+      
+      // Not qualified section
+      if (notQualified.length > 0) {
+        html += '<tr style="background:rgba(248,215,218,0.6);"><td colspan="100%" style="font-weight:bold;color:#721c24;padding:12px;border:2px solid #dc3545;">✗ NOT QUALIFIED (' + notQualified.length + ')</td></tr>';
+        notQualified.forEach(p => {
+          html += '<tr><td><strong>' + p.name + '</strong></td>';
+          html += '<td class="center">' + p.classesCompleted + '</td>';
+          html += '<td class="center">' + p.classesRequired + '</td>';
+          html += '<td class="center">' + p.weeksQualified + '/4</td>';
+          html += '<td class="center" style="font-size:10px;">' + p.qualificationMethod + '</td>';
+          
+          allClassTypes.forEach(ct => {
+            html += '<td class="center">' + (p.classTypeCounters[ct] || 0) + '</td>';
+          });
+          
+          html += '<td class="center not-qualified">' + p.status + '</td></tr>';
+        });
+      }
       
       html += '</tbody></table>';
     });

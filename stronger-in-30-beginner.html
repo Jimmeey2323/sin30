@@ -2208,22 +2208,22 @@ function refreshBoard() {
       
       // Create stats display
       const statsHtml = `
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 8px; height: 100%;">
-          <div style="background: rgba(255,255,255,0.7); border-radius: 6px; padding: 8px; text-align: center;">
-            <div style="font-size: 10px; color: #666; font-weight: 600;">Members</div>
-            <div style="font-size: 16px; font-weight: 800; color: #1a1a1a;">${totalMembers}</div>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 4px; height: 100%;">
+          <div style="background: rgba(255,255,255,0.8); border-radius: 4px; padding: 4px; text-align: center; border: 1px solid rgba(0,0,0,0.05);">
+            <div style="font-size: 7px; color: #888; font-weight: 700; letter-spacing: 0.3px;">MEMBERS</div>
+            <div style="font-size: 12px; font-weight: 900; color: #1a1a1a; line-height: 1.2;">${totalMembers}</div>
           </div>
-          <div style="background: rgba(76, 175, 80, 0.15); border-radius: 6px; padding: 8px; text-align: center;">
-            <div style="font-size: 10px; color: #2e7d32; font-weight: 600;">Qualified</div>
-            <div style="font-size: 16px; font-weight: 800; color: #1b5e20;">${qualifiedMembers}/${totalMembers}</div>
+          <div style="background: rgba(76, 175, 80, 0.2); border-radius: 4px; padding: 4px; text-align: center; border: 1px solid rgba(46, 125, 50, 0.2);">
+            <div style="font-size: 7px; color: #2e7d32; font-weight: 700; letter-spacing: 0.3px;">QUALIFIED</div>
+            <div style="font-size: 12px; font-weight: 900; color: #1b5e20; line-height: 1.2;">${qualifiedMembers}/${totalMembers}</div>
           </div>
-          <div style="background: rgba(33, 150, 243, 0.15); border-radius: 6px; padding: 8px; text-align: center;">
-            <div style="font-size: 10px; color: #1565c0; font-weight: 600;">Avg Classes</div>
-            <div style="font-size: 16px; font-weight: 800; color: #0d47a1;">${avgClasses}</div>
+          <div style="background: rgba(33, 150, 243, 0.2); border-radius: 4px; padding: 4px; text-align: center; border: 1px solid rgba(21, 101, 192, 0.2);">
+            <div style="font-size: 7px; color: #1565c0; font-weight: 700; letter-spacing: 0.3px;">AVG CLASSES</div>
+            <div style="font-size: 12px; font-weight: 900; color: #0d47a1; line-height: 1.2;">${avgClasses}</div>
           </div>
-          <div style="background: rgba(233, 30, 99, 0.15); border-radius: 6px; padding: 8px; text-align: center;">
-            <div style="font-size: 10px; color: #880e4f; font-weight: 600;">Avg Weeks</div>
-            <div style="font-size: 16px; font-weight: 800; color: #c2185b;">${avgWeeks}/4</div>
+          <div style="background: rgba(233, 30, 99, 0.2); border-radius: 4px; padding: 4px; text-align: center; border: 1px solid rgba(136, 14, 79, 0.2);">
+            <div style="font-size: 7px; color: #880e4f; font-weight: 700; letter-spacing: 0.3px;">AVG WEEKS</div>
+            <div style="font-size: 12px; font-weight: 900; color: #c2185b; line-height: 1.2;">${avgWeeks}/4</div>
           </div>
         </div>
       `;

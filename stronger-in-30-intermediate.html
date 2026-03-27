@@ -52,8 +52,6 @@ body {
   gap: 24px;
 }
 
-.masthead-left {}
-
 .studio-tag {
   font-size: 10px;
   font-weight: 600;
@@ -1351,6 +1349,13 @@ tr.data-row.hidden { display: none; }
     <span class="footer-note">Stickers auto-populated from Google Sheets check-ins</span>
   </div>
   <div class="footer-logo">Physique 57</div>
+</div>
+
+<!-- TOOLBAR SECTION -->
+<div class="toolbar">
+  <button onclick="expandAll()" class="toolbar-btn">Expand All</button>
+  <button onclick="collapseAll()" class="toolbar-btn">Collapse All</button>
+  <button onclick="filterQualified()" class="toolbar-btn">Filter Qualified</button>
 </div>
 
 <script>

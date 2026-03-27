@@ -1384,6 +1384,13 @@ tr.data-row.hidden {
   <div class="footer-logo">Physique 57</div>
 </div>
 
+<!-- TOOLBAR SECTION -->
+<div class="toolbar">
+  <button onclick="expandAll()" class="toolbar-btn">Expand All</button>
+  <button onclick="collapseAll()" class="toolbar-btn">Collapse All</button>
+  <button onclick="filterQualified()" class="toolbar-btn">Filter Qualified</button>
+</div>
+
 <script>
 // ── DATA ──
 const MEMBERS = [
@@ -2039,6 +2046,14 @@ function getQualifiedMembersCount() {
   return MEMBERS.filter(m => getScore(MEMBERS.indexOf(m)) >= 4).length;
 }
 
+function getLocationStats(locationAbbr) {
+  // Get members for this location
+  const membersAtLoc = MEMBERS.map((m, idx) => ({ m, idx })).filter(({ m }) => m.loc === locationAbbr);
+  const totalCount = membersAtLoc.length;
+  const qualifiedCount = membersAtLoc.filter(({ idx }) => getScore(idx) >= 4).length;
+  return { total: totalCount, qualified: qualifiedCount };
+}
+
 function getBonusStatsHTML(mi) {
   const bonusCounts = getBonusWeekClasses(mi);
   const totalBonus = getTotalBonusClasses(mi);
@@ -2516,6 +2531,17 @@ async function fetchSheetRows(accessToken) {
   return data.values || [];
 }
 
+async function fetchFallbackData() {
+  const fallbackPath = '/Users/jimmeeygondaa/sin30/Day End Report - Part 4 - Checkins (5).csv';
+  const response = await fetch(fallbackPath);
+  if (!response.ok) {
+    throw new Error('Failed to load fallback data');
+  }
+  const text = await response.text();
+  const rows = text.split('\n').map(row => row.split(','));
+  return rows;
+}
+
 async function fetchAndSeedCheckins() {
   const statusEl = document.getElementById('data-status');
   const btn      = document.getElementById('refresh-btn');
@@ -2525,11 +2551,17 @@ async function fetchAndSeedCheckins() {
   if (loader) loader.classList.remove('hidden');
 
   try {
-    const accessToken = await getAccessToken();
-    const rows        = await fetchSheetRows(accessToken);
+    let rows;
+    try {
+      const accessToken = await getAccessToken();
+      rows = await fetchSheetRows(accessToken);
+    } catch (err) {
+      console.warn('Google Sheets fetch failed, falling back to local data:', err);
+      rows = await fetchFallbackData();
+    }
 
     if (rows.length < 2) {
-      if (statusEl) statusEl.textContent = 'No data found in sheet.';
+      if (statusEl) statusEl.textContent = 'No data found.';
       return;
     }
 
@@ -2582,11 +2614,7 @@ async function fetchAndSeedCheckins() {
   } catch (err) {
     console.error(err);
     if (statusEl) {
-      if (err.message.includes('not configured') || err.message.includes('not found')) {
-        statusEl.textContent = '⚠ Google Sheets not configured · Please set up credentials';
-      } else {
-        statusEl.textContent = '✗ ' + err.message;
-      }
+      statusEl.textContent = '✗ ' + err.message;
     }
   } finally {
     if (btn) btn.disabled = false;
@@ -2712,7 +2740,8 @@ function exportToPDF() {
         .summary-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
         .summary-item { }
         .summary-label { font-size: 9px; color: #7f8c8d; font-weight: 500; }
-        .summary-value { font-size: 14px; font-weight: 600; color: #2c3e50; }
+        .summary-value { font-size: 14px; font-weight: 600; color: #b91c1c; margin-top: 5px;
+        }
       </style>
     </head>
     <body>

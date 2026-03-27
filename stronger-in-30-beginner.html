@@ -51,8 +51,6 @@ body {
   gap: 24px;
 }
 
-.masthead-left {}
-
 .studio-tag {
   font-size: 10px;
   font-weight: 600;
@@ -1174,6 +1172,13 @@ tr.data-row.hidden { display: none; }
 }
 .refresh-btn:hover { background: var(--border); }
 .refresh-btn:disabled { opacity: 0.45; cursor: default; }
+.settings-btn {
+  margin-left: 8px;
+  background: #f5f3ff;
+  color: #5b21b6;
+  border-color: rgba(91,33,182,0.25);
+}
+.settings-btn:hover { background: #ede9fe; }
 .qualification-toggle {
   margin-top: 10px;
   display: flex;
@@ -1228,6 +1233,240 @@ tr.data-row.hidden { display: none; }
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.settings-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 260;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+.settings-modal.open { display: flex; }
+.settings-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+}
+.settings-panel {
+  position: relative;
+  width: min(980px, 100%);
+  max-height: min(88vh, 920px);
+  overflow: auto;
+  background: var(--paper);
+  border: 1px solid var(--border-strong);
+  border-radius: 18px;
+  box-shadow: 0 18px 55px rgba(0,0,0,0.22);
+  padding: 18px;
+}
+.settings-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+.settings-eyebrow {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+.settings-panel h2 {
+  margin: 4px 0 0;
+  font-size: 22px;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.settings-close-btn {
+  border: 1px solid var(--border-strong);
+  background: var(--off);
+  color: var(--ink-muted);
+  border-radius: 10px;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+}
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.settings-section {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  background: rgba(255,255,255,0.72);
+}
+.settings-section.wide { grid-column: 1 / -1; }
+.settings-section h3 {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.settings-rule-list {
+  display: grid;
+  gap: 10px;
+}
+.settings-rule-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--off);
+}
+.settings-rule-item .rule-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.settings-rule-item .rule-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.settings-rule-item .rule-desc {
+  font-size: 10px;
+  color: var(--ink-muted);
+}
+.settings-rule-item input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+.settings-inline-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--off);
+  margin-bottom: 10px;
+}
+.settings-inline-field .field-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.settings-inline-field .field-title {
+  font-size: 12px;
+  font-weight: 700;
+}
+.settings-inline-field .field-desc {
+  font-size: 10px;
+  color: var(--ink-muted);
+}
+.settings-inline-field input[type="number"] {
+  width: 70px;
+  padding: 6px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  font-size: 12px;
+}
+.settings-goal-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.settings-goal-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: var(--paper);
+}
+.settings-goal-card .goal-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin-bottom: 6px;
+}
+.settings-goal-card .goal-lines {
+  display: grid;
+  gap: 3px;
+  font-size: 11px;
+  color: var(--ink);
+}
+.settings-note {
+  margin-top: 10px;
+  font-size: 10px;
+  line-height: 1.45;
+  color: var(--ink-muted);
+}
+
+/* ── BOARD TOOLBAR ── */
+.board-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 48px;
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.toolbar-btn {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--off);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  padding: 5px 12px;
+  cursor: pointer;
+  color: var(--ink-muted);
+  font-family: 'Syne', sans-serif;
+  transition: all 0.15s;
+}
+.toolbar-btn:hover { background: var(--border); color: var(--ink); }
+.toolbar-filter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.filter-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+.filter-pill {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  background: var(--off);
+  border: 1px solid var(--border-strong);
+  border-radius: 100px;
+  padding: 4px 12px;
+  cursor: pointer;
+  color: var(--ink-muted);
+  font-family: 'Syne', sans-serif;
+  transition: all 0.15s;
+}
+.filter-pill:hover { border-color: var(--accent); color: var(--accent); }
+.filter-pill.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
 }
 
 /* ── BOARD LOADER ── */
@@ -1306,19 +1545,15 @@ tr.data-row.hidden { display: none; }
       <div class="total-classes-display" id="total-classes-display">0 <span>Total Classes</span></div>
     </div>
     <div id="data-status" class="data-status"></div>
-    <button onclick="fetchAndSeedCheckins()" id="refresh-btn" class="refresh-btn">↻ Refresh</button>
-    <div class="qualification-toggle">
-      <label class="toggle-pill" for="mat-as-cardio-toggle">
-        <input type="checkbox" id="mat-as-cardio-toggle">
-        <span class="toggle-slider"></span>
-        <span class="toggle-text">Count Mat 57 as Cardio</span>
-      </label>
-      <label class="toggle-pill" for="class-diff-qualification-toggle" style="margin-left: 12px;">
+    <div style="display:flex; align-items:center; gap:6px; margin-top:4px; flex-wrap:wrap;">
+      <button onclick="fetchAndSeedCheckins()" id="refresh-btn" class="refresh-btn">↻ Refresh</button>
+      <button onclick="openSettingsModal()" id="settings-btn" class="refresh-btn settings-btn">⚙ Settings</button>
+      <label class="toggle-pill" for="class-diff-qualification-toggle">
         <input type="checkbox" id="class-diff-qualification-toggle">
         <span class="toggle-slider"></span>
-        <span class="toggle-text">Qualify within Classes: </span>
+        <span class="toggle-text">Within Classes</span>
       </label>
-      <div class="tolerance-control" style="margin-left: 12px; display: none;">
+      <div class="tolerance-control" style="display: none;">
         <input type="number" id="class-tolerance-input" min="0" max="20" value="3" style="width: 50px; padding: 6px 8px; border: 1px solid var(--border-strong); border-radius: 6px; font-size: 12px;">
       </div>
     </div>
@@ -1329,6 +1564,20 @@ tr.data-row.hidden { display: none; }
 <div class="sticker-legend">
   <div class="legend-label">Class Format</div>
   <div class="legend-items" id="legend-items"></div>
+</div>
+
+<!-- BOARD TOOLBAR -->
+<div class="board-toolbar" id="board-toolbar">
+  <div class="toolbar-left">
+    <button class="toolbar-btn" onclick="collapseAllGroups()">⊟ Collapse All</button>
+    <button class="toolbar-btn" onclick="expandAllGroups()">⊞ Expand All</button>
+  </div>
+  <div class="toolbar-filter">
+    <span class="filter-label">Filter:</span>
+    <button class="filter-pill active" data-filter="all" onclick="setFilter('all', this)">All</button>
+    <button class="filter-pill" data-filter="qualified" onclick="setFilter('qualified', this)">✓ Qualified</button>
+    <button class="filter-pill" data-filter="not-qualified" onclick="setFilter('not-qualified', this)">✗ Not Qualified</button>
+  </div>
 </div>
 
 <!-- BOARD -->
@@ -1349,6 +1598,74 @@ tr.data-row.hidden { display: none; }
     <span class="footer-note">Stickers auto-populated from Google Sheets check-ins</span>
   </div>
   <div class="footer-logo">Physique 57</div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div id="settings-modal" class="settings-modal" aria-hidden="true">
+  <div class="settings-backdrop" onclick="closeSettingsModal()"></div>
+  <div class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+    <div class="settings-panel-header">
+      <div>
+        <div class="settings-eyebrow">Board settings</div>
+        <h2 id="settings-title">Qualification controls</h2>
+      </div>
+      <button class="settings-close-btn" type="button" onclick="closeSettingsModal()">✕</button>
+    </div>
+
+    <div class="settings-grid">
+      <section class="settings-section">
+        <h3>Format interchangeability</h3>
+        <div class="settings-rule-list" id="settings-format-rules"></div>
+      </section>
+
+      <section class="settings-section">
+        <h3>Qualification rules</h3>
+        <div class="settings-inline-field">
+          <div class="field-copy">
+            <div class="field-title">Count Mat 57 as Cardio</div>
+            <div class="field-desc">Lets Mat classes qualify within cardio-style weeks.</div>
+          </div>
+          <label class="toggle-pill" for="settings-mat-cardio">
+            <input type="checkbox" id="settings-mat-cardio">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="settings-inline-field">
+          <div class="field-copy">
+            <div class="field-title">Compensate with bonus days</div>
+            <div class="field-desc">Bonus-week classes can backfill short weeks.</div>
+          </div>
+          <label class="toggle-pill" for="settings-bonus-comp">
+            <input type="checkbox" id="settings-bonus-comp">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="settings-inline-field">
+          <div class="field-copy">
+            <div class="field-title">Qualify within classes</div>
+            <div class="field-desc">Use total classes instead of week-by-week qualification.</div>
+          </div>
+          <label class="toggle-pill" for="settings-class-diff">
+            <input type="checkbox" id="settings-class-diff">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="settings-inline-field" id="settings-class-tolerance-wrap">
+          <div class="field-copy">
+            <div class="field-title">Class tolerance</div>
+            <div class="field-desc">How many classes short still counts as qualified.</div>
+          </div>
+          <input type="number" id="settings-class-tolerance" min="0" max="20" value="3">
+        </div>
+        <div class="settings-note">Bonus compensation applies first to the week that is short, then uses the bonus area to fill the missing requirement.</div>
+      </section>
+
+      <section class="settings-section wide">
+        <h3>Current goals</h3>
+        <div class="settings-goal-summary" id="settings-goal-summary"></div>
+      </section>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -1538,25 +1855,339 @@ function getStickerAbbr(emoji) {
 }
 
 const BOARD_SETTINGS_KEY = 'sin30_beginner_settings';
+const FORMAT_RULES_KEY = 'sin30_format_rules_beginner';
+const DEFAULT_FORMAT_RULES = {
+  CB_HIIT: true,
+  CB_AMP: true,
+  CB_CBP: true,
+  CB_TC: true,
+  FIT_LAB: true,
+  FIT_BBB: true,
+  LAB_BBB: true,
+  PC_interchangeable: false,
+  B57_interchangeable: false,
+  Mat_interchangeable: false,
+  REC_interchangeable: false,
+};
 const qualificationSettings = {
   matCountsAsCardio: false,
   useClassDifferenceQualification: false,
   classToleranceValue: 3,
+  useBonusWeekCompensation: true,
 };
-const qualificationToggleEl = document.getElementById('mat-as-cardio-toggle');
+const qualificationToggleEl = null; // mat toggle removed from dashboard — managed via Settings modal
 const classQualificationToggleEl = document.getElementById('class-diff-qualification-toggle');
 const CARDIO_QUALIFICATION_FORMATS = ['CB', 'CBP', 'HIIT', 'PC', 'BBB', 'AMP'];
 const STRENGTH_QUALIFICATION_FORMATS = ['LAB', 'FIT'];
 const QUALIFIED_DISPLAY_ORDER = ['CARDIO', 'STRENGTH'];
+let userFormatRules = { ...DEFAULT_FORMAT_RULES };
 
 // ── CLASS EQUIVALENCY GROUPS ──
 // Classes within a group are interchangeable when checking weekly requirements.
 // Group A: Strength-type  (FIT ↔ LAB)
 // Group B: Cardio-type    (CB ↔ BBB ↔ HIIT ↔ AMP ↔ CBP ↔ PC)
-const EQUIV_GROUPS = [
-  new Set(['FIT', 'LAB']),
-  new Set(['CB', 'BBB', 'HIIT', 'AMP', 'CBP', 'PC']),
-];
+let EQUIV_GROUPS = [];
+
+function initializeFormatRules() {
+  try {
+    const saved = localStorage.getItem(FORMAT_RULES_KEY);
+    if (saved) {
+      userFormatRules = { ...DEFAULT_FORMAT_RULES, ...JSON.parse(saved) };
+    }
+  } catch (e) {
+    console.warn('Failed to restore format rules:', e);
+    userFormatRules = { ...DEFAULT_FORMAT_RULES };
+  }
+
+  if (typeof userFormatRules.Mat_interchangeable !== 'boolean') {
+    userFormatRules.Mat_interchangeable = !!qualificationSettings.matCountsAsCardio;
+  }
+
+  qualificationSettings.matCountsAsCardio = !!userFormatRules.Mat_interchangeable;
+  updateEquivGroupsFromRules();
+}
+
+function saveFormatRules() {
+  try {
+    localStorage.setItem(FORMAT_RULES_KEY, JSON.stringify(userFormatRules));
+  } catch (e) {
+    console.warn('Failed to save format rules:', e);
+  }
+}
+
+function updateEquivGroupsFromRules() {
+  const cardio = new Set(['CB']);
+  const strength = new Set(['FIT']);
+
+  if (userFormatRules.CB_HIIT) cardio.add('HIIT');
+  if (userFormatRules.CB_AMP) cardio.add('AMP');
+  if (userFormatRules.CB_CBP) cardio.add('CBP');
+  if (userFormatRules.CB_TC) cardio.add('TC');
+  if (userFormatRules.PC_interchangeable) cardio.add('PC');
+  if (userFormatRules.B57_interchangeable) cardio.add('B57');
+  if (userFormatRules.Mat_interchangeable || qualificationSettings.matCountsAsCardio) cardio.add('Mat');
+
+  if (userFormatRules.FIT_LAB) strength.add('LAB');
+  if (userFormatRules.FIT_BBB) strength.add('BBB');
+  if (userFormatRules.LAB_BBB) strength.add('BBB');
+  if (userFormatRules.REC_interchangeable) strength.add('REC');
+
+  EQUIV_GROUPS = [cardio, strength];
+}
+
+function isRuleEnabled(ruleKey) {
+  return !!userFormatRules[ruleKey];
+}
+
+function setFormatRule(ruleKey, value) {
+  userFormatRules[ruleKey] = !!value;
+  if (ruleKey === 'Mat_interchangeable') {
+    qualificationSettings.matCountsAsCardio = !!value;
+  }
+  updateEquivGroupsFromRules();
+  saveFormatRules();
+  saveQualificationSettings();
+  syncQualificationToggle();
+  syncSettingsModal();
+  refreshBoard();
+  positionScorePillTooltips();
+}
+
+function toggleFormatRule(ruleKey) {
+  setFormatRule(ruleKey, !isRuleEnabled(ruleKey));
+}
+
+function getFormatRuleLabel(ruleKey) {
+  const labels = {
+    CB_HIIT: 'Cardio Barre ↔ HIIT',
+    CB_AMP: 'Cardio Barre ↔ Amped Up',
+    CB_CBP: 'Cardio Barre ↔ Cardio Barre Plus',
+    CB_TC: "Cardio Barre ↔ Trainer's Choice",
+    FIT_LAB: 'FIT ↔ Strength Lab',
+    FIT_BBB: 'FIT ↔ Back Body Blaze',
+    LAB_BBB: 'Strength Lab ↔ Back Body Blaze',
+    PC_interchangeable: 'PowerCycle ↔ Cardio formats',
+    B57_interchangeable: 'Barre 57 ↔ Cardio formats',
+    Mat_interchangeable: 'Mat 57 ↔ Cardio formats',
+    REC_interchangeable: 'Recovery ↔ Strength formats',
+  };
+  return labels[ruleKey] || ruleKey;
+}
+
+function getFormatRuleDescription(ruleKey) {
+  const descriptions = {
+    CB_HIIT: 'Lets HIIT satisfy Cardio Barre requirements and vice-versa.',
+    CB_AMP: 'Lets Amped Up count for Cardio Barre slots.',
+    CB_CBP: 'Lets Cardio Barre Plus count for Cardio Barre slots.',
+    CB_TC: "Treats Trainer's Choice as part of the cardio exchange set.",
+    FIT_LAB: 'Keeps FIT and Strength Lab interchangeable.',
+    FIT_BBB: 'Allows Back Body Blaze to flow into the strength group.',
+    LAB_BBB: 'Makes Strength Lab and Back Body Blaze interchangeable directly.',
+    PC_interchangeable: 'Lets PowerCycle compensate cardio requirements.',
+    B57_interchangeable: 'Lets Barre 57 compensate cardio requirements.',
+    Mat_interchangeable: 'Lets Mat 57 compensate cardio requirements.',
+    REC_interchangeable: 'Lets Recovery compensate strength requirements.',
+  };
+  return descriptions[ruleKey] || '';
+}
+
+function getSettingsModal() {
+  return document.getElementById('settings-modal');
+}
+
+function openSettingsModal() {
+  syncSettingsModal();
+  const modal = getSettingsModal();
+  if (modal) modal.classList.add('open');
+}
+
+function closeSettingsModal() {
+  const modal = getSettingsModal();
+  if (modal) modal.classList.remove('open');
+}
+
+function renderFormatRulesSettings() {
+  const list = document.getElementById('settings-format-rules');
+  if (!list) return;
+  list.innerHTML = '';
+  Object.keys(DEFAULT_FORMAT_RULES).forEach(ruleKey => {
+    const item = document.createElement('label');
+    item.className = 'settings-rule-item';
+    item.innerHTML = `
+      <span class="rule-copy">
+        <span class="rule-title">${getFormatRuleLabel(ruleKey)}</span>
+        <span class="rule-desc">${getFormatRuleDescription(ruleKey)}</span>
+      </span>
+      <input type="checkbox" data-format-rule="${ruleKey}">
+    `;
+    const input = item.querySelector('input');
+    input.checked = isRuleEnabled(ruleKey);
+    input.addEventListener('change', () => setFormatRule(ruleKey, input.checked));
+    list.appendChild(item);
+  });
+}
+
+function buildGoalSummaryHTML() {
+  const locationMap = [
+    ['Kemps Corner', WEEKLY_REQUIREMENTS_KC],
+    ['Supreme HQ, Bandra', WEEKLY_REQUIREMENTS_BANDRA],
+    ['Kenkere House', WEEKLY_REQUIREMENTS_KH],
+    ['C & C', WEEKLY_REQUIREMENTS_CNC],
+  ];
+  return locationMap.map(([label, reqs]) => {
+    const goalCards = [];
+    for (let week = 1; week <= 4; week++) {
+      const req = reqs[week];
+      if (!req) continue;
+      const goal = Object.entries(req).map(([abbr, n]) => `${n}×${abbr}`).join(' · ');
+      goalCards.push(`<div class="settings-goal-card"><div class="goal-label">Week ${week}</div><div class="goal-lines"><div>${goal}</div><div style="color: var(--ink-muted);">${label}</div></div></div>`);
+    }
+    return goalCards.join('');
+  }).join('');
+}
+
+function syncSettingsModal() {
+  const matCardio = document.getElementById('settings-mat-cardio');
+  const bonusComp = document.getElementById('settings-bonus-comp');
+  const classDiff = document.getElementById('settings-class-diff');
+  const tolerance = document.getElementById('settings-class-tolerance');
+  const toleranceWrap = document.getElementById('settings-class-tolerance-wrap');
+  if (matCardio) matCardio.checked = !!qualificationSettings.matCountsAsCardio;
+  if (bonusComp) bonusComp.checked = !!qualificationSettings.useBonusWeekCompensation;
+  if (classDiff) classDiff.checked = !!qualificationSettings.useClassDifferenceQualification;
+  if (tolerance) tolerance.value = qualificationSettings.classToleranceValue || 3;
+  if (toleranceWrap) toleranceWrap.style.display = qualificationSettings.useClassDifferenceQualification ? 'flex' : 'none';
+  const goalSummary = document.getElementById('settings-goal-summary');
+  if (goalSummary) goalSummary.innerHTML = buildGoalSummaryHTML();
+  renderFormatRulesSettings();
+}
+
+function bindSettingsModalEvents() {
+  const matCardio = document.getElementById('settings-mat-cardio');
+  const bonusComp = document.getElementById('settings-bonus-comp');
+  const classDiff = document.getElementById('settings-class-diff');
+  const tolerance = document.getElementById('settings-class-tolerance');
+  const toleranceWrap = document.getElementById('settings-class-tolerance-wrap');
+
+  if (matCardio) {
+    matCardio.addEventListener('change', () => {
+      qualificationSettings.matCountsAsCardio = matCardio.checked;
+      userFormatRules.Mat_interchangeable = matCardio.checked;
+      updateEquivGroupsFromRules();
+      saveFormatRules();
+      saveQualificationSettings();
+      syncQualificationToggle();
+      syncSettingsModal();
+      refreshBoard();
+      positionScorePillTooltips();
+    });
+  }
+
+  if (bonusComp) {
+    bonusComp.addEventListener('change', () => {
+      qualificationSettings.useBonusWeekCompensation = bonusComp.checked;
+      saveQualificationSettings();
+      refreshBoard();
+      positionScorePillTooltips();
+    });
+  }
+
+  if (classDiff) {
+    classDiff.addEventListener('change', () => {
+      qualificationSettings.useClassDifferenceQualification = classDiff.checked;
+      if (toleranceWrap) toleranceWrap.style.display = classDiff.checked ? 'flex' : 'none';
+      saveQualificationSettings();
+      syncSettingsModal();
+      refreshBoard();
+      positionScorePillTooltips();
+    });
+  }
+
+  if (tolerance) {
+    tolerance.addEventListener('change', () => {
+      qualificationSettings.classToleranceValue = parseInt(tolerance.value, 10) || 3;
+      saveQualificationSettings();
+      refreshBoard();
+      positionScorePillTooltips();
+    });
+  }
+}
+
+function getBonusWeekClasses(mi) {
+  const bonusDays = days.slice(28);
+  const bonusCounts = {};
+  bonusDays.forEach(day => {
+    const emoji = state[mi][day.key];
+    if (!emoji) return;
+    const abbr = getStickerAbbr(emoji);
+    if (!abbr) return;
+    bonusCounts[abbr] = (bonusCounts[abbr] || 0) + 1;
+  });
+  return bonusCounts;
+}
+
+function getTotalBonusClasses(mi) {
+  return Object.values(getBonusWeekClasses(mi)).reduce((sum, count) => sum + count, 0);
+}
+
+function computeBonusCompensationWeek(mi, weekNum) {
+  if (!qualificationSettings.useBonusWeekCompensation || weekNum < 1 || weekNum > 4) {
+    return { canCompensate: false, bonusCounts: {}, combinedCounts: {} };
+  }
+
+  const base = getWeekScore(mi, weekNum);
+  if (base.completed) {
+    return { canCompensate: false, bonusCounts: {}, combinedCounts: base.counts };
+  }
+
+  const bonusCounts = getBonusWeekClasses(mi);
+  const combinedCounts = { ...base.counts };
+  Object.entries(bonusCounts).forEach(([abbr, count]) => {
+    combinedCounts[abbr] = (combinedCounts[abbr] || 0) + count;
+  });
+
+  const compensationAnalysis = buildQualificationAnalysis(combinedCounts, base.requirements);
+  return {
+    canCompensate: !!compensationAnalysis.completed,
+    bonusCounts,
+    combinedCounts,
+    compensationAnalysis,
+  };
+}
+
+function getBonusStatsHTML(mi) {
+  const bonusCounts = getBonusWeekClasses(mi);
+  const totalBonus = getTotalBonusClasses(mi);
+  const compensatedWeeks = [];
+  for (let week = 1; week <= 4; week++) {
+    const base = getWeekScore(mi, week);
+    if (!base.completed) {
+      const check = computeBonusCompensationWeek(mi, week);
+      if (check.canCompensate) compensatedWeeks.push(week);
+    }
+  }
+
+  if (!totalBonus) {
+    return '<div style="font-size: 11px; color: var(--ink-muted); text-align: center; padding: 8px 4px;">—</div>';
+  }
+
+  const cardioBonus = Object.entries(bonusCounts).reduce((sum, [abbr, count]) => {
+    return sum + (getActualQualifiedDisplayKey(abbr) === 'CARDIO' ? count : 0);
+  }, 0);
+  const strengthBonus = Object.entries(bonusCounts).reduce((sum, [abbr, count]) => {
+    return sum + (getActualQualifiedDisplayKey(abbr) === 'STRENGTH' ? count : 0);
+  }, 0);
+
+  let html = '<div style="font-size: 10px; text-align: center; padding: 6px 4px; line-height: 1.35;">';
+  html += `<div style="font-weight: 800; margin-bottom: 3px;">${totalBonus} bonus</div>`;
+  if (cardioBonus > 0) html += `<div style="color: #e63946;">🫀 ${cardioBonus}</div>`;
+  if (strengthBonus > 0) html += `<div style="color: #6d6875;">🏋️ ${strengthBonus}</div>`;
+  if (compensatedWeeks.length) {
+    html += `<div style="margin-top: 4px; padding-top: 4px; border-top: 1px solid var(--ink-light); color: #16a34a; font-size: 9px; font-weight: 700;">✓ W${compensatedWeeks.join(', W')}</div>`;
+  }
+  html += '</div>';
+  return html;
+}
 
 function getEquivGroup(abbr) {
   return EQUIV_GROUPS.find(g => g.has(abbr)) || null;
@@ -1594,12 +2225,8 @@ function getQualifiedDisplaySortValue(displayKey) {
 
 function getRequirementEligibleActualAbbrs(reqAbbr) {
   if (reqAbbr === 'TC') return STICKERS.map(s => s.abbr);
-  if (STRENGTH_QUALIFICATION_FORMATS.includes(reqAbbr)) return [...STRENGTH_QUALIFICATION_FORMATS];
-  if (CARDIO_QUALIFICATION_FORMATS.includes(reqAbbr)) {
-    return qualificationSettings.matCountsAsCardio
-      ? [...CARDIO_QUALIFICATION_FORMATS, 'Mat']
-      : [...CARDIO_QUALIFICATION_FORMATS];
-  }
+  const group = getEquivGroup(reqAbbr);
+  if (group) return Array.from(group);
   return [reqAbbr];
 }
 
@@ -1708,7 +2335,7 @@ function getWeekScore(mi, weekNum) {
   if (!weekDays) return { completed: false, counts: {} };
 
   const loc = MEMBERS[mi] ? MEMBERS[mi].loc : 'KC';
-  const reqs = loc === 'Bandra' ? WEEKLY_REQUIREMENTS_BANDRA : loc === 'KH' ? WEEKLY_REQUIREMENTS_KH : loc === 'CNC' ? WEEKLY_REQUIREMENTS_CNC : WEEKLY_REQUIREMENTS_KC;
+  const reqs = (loc === 'Bandra') ? WEEKLY_REQUIREMENTS_BANDRA : WEEKLY_REQUIREMENTS_KC;
   const requirements = reqs[weekNum];
   if (!requirements) return { completed: false, counts: {} };
 
@@ -1743,8 +2370,13 @@ function getScore(mi) {
   // Original logic: count qualified weeks
   let score = 0;
   for (let week = 1; week <= 4; week++) {
-    const { completed } = getWeekScore(mi, week);
-    if (completed) score++;
+    const base = getWeekScore(mi, week);
+    if (base.completed) {
+      score++;
+    } else if (qualificationSettings.useBonusWeekCompensation) {
+      const compensation = computeBonusCompensationWeek(mi, week);
+      if (compensation.canCompensate) score++;
+    }
   }
   return score;
 }
@@ -1839,6 +2471,7 @@ function buildWeekQualificationTooltip(mi, weekNum) {
   if (!requirements) return '';
 
   const result = completed ? '✓ QUALIFIED' : '✗ NOT QUALIFIED';
+  const compensation = completed ? null : computeBonusCompensationWeek(mi, weekNum);
   
   const lines = [
     `WEEK ${weekNum}: ${result}`,
@@ -1848,6 +2481,8 @@ function buildWeekQualificationTooltip(mi, weekNum) {
     ...buildWeeklyRequirementBreakdown(requirements),
     '',
     ...buildQualifiedFormatBreakdown(qualificationAnalysis),
+    '',
+    !completed && compensation.canCompensate ? 'Bonus classes can compensate this week.' : 'Bonus compensation: unavailable',
     '',
     `Setting: Mat counts as Cardio is ${qualificationSettings.matCountsAsCardio ? 'ON' : 'OFF'}`
   ];
@@ -1875,1155 +2510,19 @@ function buildSlotTooltip(abbr, label, mi, weekNum, loc) {
   return `${label}\nW${weekNum} · ${perClass} → ${availableInGroup}/${requiredInGroup} combined${availableInGroup >= requiredInGroup ? ' ✓' : ''}`;
 }
 
-// ── STATE PERSISTENCE ──
-function saveStateToLocalStorage() {
-  try {
-    localStorage.setItem('sin30_beginner_state', JSON.stringify(state));
-  } catch (e) {
-    console.warn('Failed to save state to localStorage:', e);
-  }
+/* Styling for Used Bonus Classes */
+.used-bonus-class {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  border: 1px solid #f59e0b;
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-weight: 600;
+  color: #92400e;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-function restoreStateFromLocalStorage() {
-  try {
-    const saved = localStorage.getItem('sin30_beginner_state');
-    if (saved) {
-      const savedState = JSON.parse(saved);
-      MEMBERS.forEach((m, mi) => {
-        if (savedState[mi]) {
-          Object.assign(state[mi], savedState[mi]);
-        }
-      });
-      return true;
-    }
-  } catch (e) {
-    console.warn('Failed to restore state from localStorage:', e);
-  }
-  return false;
+.used-bonus-class:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
-
-function saveQualificationSettings() {
-  try {
-    localStorage.setItem(BOARD_SETTINGS_KEY, JSON.stringify(qualificationSettings));
-  } catch (e) {
-    console.warn('Failed to save qualification settings:', e);
-  }
-}
-
-function restoreQualificationSettings() {
-  try {
-    const saved = localStorage.getItem(BOARD_SETTINGS_KEY);
-    if (!saved) return;
-    const parsed = JSON.parse(saved);
-    qualificationSettings.matCountsAsCardio = !!parsed.matCountsAsCardio;
-    qualificationSettings.useClassDifferenceQualification = !!parsed.useClassDifferenceQualification;
-    qualificationSettings.classToleranceValue = parsed.classToleranceValue || 3;
-  } catch (e) {
-    console.warn('Failed to restore qualification settings:', e);
-  }
-}
-
-function syncQualificationToggle() {
-  if (qualificationToggleEl) {
-    qualificationToggleEl.checked = qualificationSettings.matCountsAsCardio;
-  }
-  if (classQualificationToggleEl) {
-    classQualificationToggleEl.checked = qualificationSettings.useClassDifferenceQualification;
-  }
-  const toleranceInput = document.getElementById('class-tolerance-input');
-  const toleranceControl = document.querySelector('.tolerance-control');
-  if (toleranceInput) {
-    toleranceInput.value = qualificationSettings.classToleranceValue || 3;
-  }
-  if (toleranceControl) {
-    toleranceControl.style.display = qualificationSettings.useClassDifferenceQualification ? 'block' : 'none';
-  }
-}
-
-// ── COLLAPSE/EXPAND HELPERS ──
-function toggleLocationGroup(btn) {
-  const tbody = document.getElementById('tbody');
-  if (!tbody) return;
-  const rows = Array.from(tbody.querySelectorAll('tr'));
-  const header = btn.closest('tr.location-group-header');
-  if (!header) return;
-  
-  // Find the index of this header
-  let headerIndex = rows.indexOf(header);
-  if (headerIndex === -1) return;
-  
-  // Toggle the button state
-  btn.classList.toggle('collapsed');
-  
-  // Toggle all data-row rows until we hit the next location-group-header
-  for (let i = headerIndex + 1; i < rows.length; i++) {
-    const row = rows[i];
-    if (row.classList.contains('location-group-header')) break;  // Stop at next location
-    if (row.classList.contains('data-row')) {
-      row.classList.toggle('hidden');
-    }
-  }
-}
-
-function getQualifiedMembersCount() {
-  // Fully qualified = completed all 4 weeks
-  return MEMBERS.filter(m => getScore(MEMBERS.indexOf(m)) >= 4).length;
-}
-
-function getLocationStats(locationAbbr) {
-  // Get members for this location
-  const membersAtLoc = MEMBERS.map((m, idx) => ({ m, idx })).filter(({ m }) => m.loc === locationAbbr);
-  const totalCount = membersAtLoc.length;
-  const qualifiedCount = membersAtLoc.filter(({ idx }) => getScore(idx) >= 4).length;
-  return { total: totalCount, qualified: qualifiedCount };
-}
-
-// ── BUILD / REFRESH TABLE ──
-function refreshBoard() {
-  // Update member count dynamically
-  const countEl = document.getElementById('member-count-display');
-  if (countEl) countEl.innerHTML = `${MEMBERS.length} <span>Members</span>`;
-
-  // Update qualified count
-  const qualifiedEl = document.getElementById('qualified-count-display');
-  const qualifiedCount = getQualifiedMembersCount();
-  if (qualifiedEl) qualifiedEl.textContent = `${qualifiedCount} Qualified`;
-
-  // Update grand total classes across all members
-  const totalClassesEl = document.getElementById('total-classes-display');
-  const grandTotal = MEMBERS.reduce((sum, _, mi) => sum + getTotalClasses(mi), 0);
-  if (totalClassesEl) totalClassesEl.innerHTML = `${grandTotal} <span>Total Classes</span>`;
-
-  // Group by location, sort by completed weeks desc, then total classes desc
-  const allWithScores = MEMBERS.map((m, i) => ({ ...m, mi: i, score: getScore(i), streak: getStreak(i), total: getTotalClasses(i) }));
-  const kcSorted     = allWithScores.filter(m => m.loc === 'KC').sort((a, b) => b.score - a.score || b.total - a.total || a.first.localeCompare(b.first));
-  const bandraSorted = allWithScores.filter(m => m.loc === 'Bandra').sort((a, b) => b.score - a.score || b.total - a.total || a.first.localeCompare(b.first));
-  const khSorted     = allWithScores.filter(m => m.loc === 'KH').sort((a, b) => b.score - a.score || b.total - a.total || a.first.localeCompare(b.first));
-  const cncSorted    = allWithScores.filter(m => m.loc === 'CNC').sort((a, b) => b.score - a.score || b.total - a.total || a.first.localeCompare(b.first));
-
-  const thead = document.getElementById('thead');
-  const tbody = document.getElementById('tbody');
-
-  // ── THEAD ──
-  thead.innerHTML = '';
-
-  // Week header row
-  const weekRow = document.createElement('tr');
-  weekRow.className = 'week-header-row';
-
-  // Empty cells for rank and name columns
-  const weekRankTh = document.createElement('th');
-  weekRankTh.className = 'rank-h';
-  weekRow.appendChild(weekRankTh);
-
-  const weekNameTh = document.createElement('th');
-  weekNameTh.className = 'name-h';
-  weekRow.appendChild(weekNameTh);
-
-  // Week headers spanning their days
-  weekChunks.slice(0, 4).forEach((chunk, wi) => {
-    const wColor = WEEK_COLORS[wi % WEEK_COLORS.length];
-    const wFirst = chunk[0];
-    const wLast = chunk[chunk.length - 1];
-    const wDateStr = `${wFirst.mon} ${wFirst.num} – ${wLast.mon} ${wLast.num}`;
-
-    const weekTh = document.createElement('th');
-    weekTh.className = 'week-h';
-    weekTh.colSpan = chunk.length;
-    // weekTh.style.setProperty('--wk-color', wColor);
-    let anyMemberCompletedWeek = false;
-    for (let mi = 0; mi < MEMBERS.length; mi++) {
-      const { completed } = getWeekScore(mi, wi + 1);
-      if (completed) { anyMemberCompletedWeek = true; break; }
-    }
-    if (anyMemberCompletedWeek) weekTh.classList.add('week-goals-met');
-    weekTh.innerHTML = `
-      <div class="week-group-header">
-        <div class="week-tag">Week ${wi + 1}</div>
-        <div class="week-dates">${wDateStr}</div>
-      </div>
-    `;
-    weekRow.appendChild(weekTh);
-  });
-
-  // Bonus days header (if there are more than 28 days)
-  if (days.length > 28) {
-    const bonusDays = days.slice(28);
-    const bonusFirst = bonusDays[0];
-    const bonusLast = bonusDays[bonusDays.length - 1];
-    const bonusDateStr = `${bonusFirst.mon} ${bonusFirst.num} – ${bonusLast.mon} ${bonusLast.num}`;
-
-    const bonusTh = document.createElement('th');
-    bonusTh.className = 'week-h bonus-week';
-    bonusTh.colSpan = bonusDays.length;
-    // bonusTh.style.setProperty('--wk-color', '#888');
-    bonusTh.innerHTML = `
-      <div class="week-group-header">
-        <div class="week-tag">Bonus</div>
-        <div class="week-dates">${bonusDateStr}</div>
-      </div>
-    `;
-    weekRow.appendChild(bonusTh);
-  }
-
-  // Empty cell for score column
-  const weekScoreTh = document.createElement('th');
-  weekScoreTh.className = 'score-h';
-  weekRow.appendChild(weekScoreTh);
-
-  thead.appendChild(weekRow);
-
-  // Day header row
-  const headRow = document.createElement('tr');
-
-  // Rank
-  const rankTh = document.createElement('th');
-  rankTh.className = 'rank-h';
-  headRow.appendChild(rankTh);
-
-  // Name
-  const nameTh = document.createElement('th');
-  nameTh.className = 'name-h';
-  nameTh.innerHTML = `<span class="col-label">Member</span>`;
-  headRow.appendChild(nameTh);
-
-  // Days
-  days.forEach((d, di) => {
-    const th = document.createElement('th');
-    th.className = 'day-h' + (d.isWeekend ? ' weekend' : '');
-    th.innerHTML = `<span class="day-num">${d.num}</span><span class="day-name">${d.dayName}</span>`;
-
-    // Add week separator border
-    const weekIdx = Math.floor(di / 7);
-    if (di > 0 && di % 7 === 0) {
-      th.style.borderLeft = '2px solid var(--border-strong)';
-    }
-
-    headRow.appendChild(th);
-  });
-
-  // Score
-  const scoreTh = document.createElement('th');
-  scoreTh.className = 'score-h';
-  scoreTh.innerHTML = `<span class="col-label">Weeks</span>`;
-  headRow.appendChild(scoreTh);
-
-  thead.appendChild(headRow);
-
-  // ── TBODY ──
-  tbody.innerHTML = '';
-
-  function renderGroupRows(groupList, groupLabel, loc) {
-    // Location separator row — one td per week column for alignment
-    const sepRow = document.createElement('tr');
-    sepRow.className = 'location-group-header';
-
-    // Label spans rank + name columns
-    const labelTd = document.createElement('td');
-    labelTd.colSpan = 2;
-    labelTd.className = 'location-header-cell location-label-cell';
-    
-    const btn = document.createElement('button');
-    btn.className = 'location-toggle-btn';
-    btn.type = 'button';
-    const stats = getLocationStats(loc);
-    const countBadge = ` <span style="font-size: 9px; opacity: 0.9; margin-left: 8px;">(${stats.qualified}/${stats.total} qualified)</span>`;
-    btn.innerHTML = `<span class="location-toggle-icon">▼</span><span>${groupLabel}${countBadge}</span>`;
-    btn.addEventListener('click', function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      toggleLocationGroup(btn);
-    });
-    
-    labelTd.appendChild(btn);
-    sepRow.appendChild(labelTd);
-
-    const locReqs = loc === 'Bandra' ? WEEKLY_REQUIREMENTS_BANDRA : loc === 'KH' ? WEEKLY_REQUIREMENTS_KH : loc === 'CNC' ? WEEKLY_REQUIREMENTS_CNC : WEEKLY_REQUIREMENTS_KC;
-
-    // One td per week chunk (W1–W4), aligned to the day columns
-    weekChunks.slice(0, 4).forEach((chunk, wi) => {
-      const goalTd = document.createElement('td');
-      goalTd.colSpan = chunk.length;
-      goalTd.className = 'location-header-cell location-goal-cell';
-      const wn = wi + 1;
-      const pills = Object.entries(locReqs[wn]).map(([cls, n]) => {
-        const info = STICKER_LABEL[cls] || { emoji: '', label: cls };
-        return `<span class="loc-req-pill"><em class="loc-req-count">${n}×</em><span class="loc-req-icon">${info.emoji}</span><span class="loc-req-name">${info.label}</span></span>`;
-      }).join('');
-      goalTd.innerHTML = `<div class="loc-goal-wrap"><span class="loc-span-arrow loc-arrow-l">‹</span><button class="loc-goal-badge" onclick="this.classList.toggle('open')"><span class="loc-badge-label">Goals</span><div class="loc-badge-detail">${pills}</div></button><span class="loc-span-arrow loc-arrow-r">›</span></div>`;
-      sepRow.appendChild(goalTd);
-    });
-
-    // Bonus days td (if applicable)
-    if (days.length > 28) {
-      const bonusTd = document.createElement('td');
-      bonusTd.colSpan = days.length - 28;
-      bonusTd.className = 'location-header-cell';
-      sepRow.appendChild(bonusTd);
-    }
-
-    // Score column td
-    const scoreTd = document.createElement('td');
-    scoreTd.className = 'location-header-cell';
-    sepRow.appendChild(scoreTd);
-
-    tbody.appendChild(sepRow);
-
-    groupList.forEach((m, rank) => {
-      const animDelay = rank * 0.04;
-      const row = document.createElement('tr');
-      row.className = 'data-row';
-      row.style.animationDelay = animDelay + 's';
-
-      // Rank cell
-      const rankTd = document.createElement('td');
-      rankTd.className = 'rank-td';
-      const rankClass = '';
-      const rankDisplay = rank + 1;
-      rankTd.innerHTML = `<div class="rank-inner ${rankClass}">${rankDisplay}</div>`;
-      row.appendChild(rankTd);
-
-      // Name cell
-      const nameTd = document.createElement('td');
-      nameTd.className = 'name-td';
-      const streakHtml = m.streak >= 3
-        ? `<span class="streak-flame show">🔥 ${m.streak}</span>`
-        : `<span class="streak-flame"></span>`;
-      const totalRequired = getTotalClassesRequired(m.mi);
-      nameTd.innerHTML = `
-        <div class="member-name">${m.first} ${m.last}</div>
-        <div class="member-sub">${streakHtml}<span class="member-total-classes">${m.total}/${totalRequired} classes</span></div>
-      `;
-      row.appendChild(nameTd);
-
-      // Day cells
-      days.forEach((d, di) => {
-        const td = document.createElement('td');
-
-        // Determine which week this day belongs to (1-4)
-        const weekNum = Math.floor(di / 7) + 1;
-        const isCompletedWeek = weekNum <= 4 && getWeekScore(m.mi, weekNum).completed;
-        const weekTooltipText = weekNum <= 4 ? buildWeekQualificationTooltip(m.mi, weekNum) : '';
-        // Week is "ended" if its last day is on or before today (midnight)
-        const today = new Date(); today.setHours(0,0,0,0);
-        const weekLastDay = weekNum <= 4 ? weekChunks[weekNum - 1][weekChunks[weekNum - 1].length - 1].fullDate : null;
-        const isWeekEnded = weekLastDay ? (weekLastDay <= today) : false;
-        const isNotQualifiedEnded = isWeekEnded && !isCompletedWeek && weekNum <= 4;
-
-        td.className = 'day-td' + (d.isWeekend ? ' weekend' : '') + (isCompletedWeek ? ' week-completed' : '') + (isNotQualifiedEnded ? ' week-not-qualified' : '');
-
-        // Inject badge on 4th day (center) of each completed or ended-but-not-qualified week
-        if (di % 7 === 3 && weekNum <= 4) {
-          td.style.zIndex = '10';
-          if (isCompletedWeek) {
-            const badge = document.createElement('div');
-            badge.className = 'week-qualified-badge';
-            badge.textContent = '✓ Qualified';
-            td.appendChild(badge);
-          } else if (isNotQualifiedEnded) {
-            const badge = document.createElement('div');
-            badge.className = 'week-not-qualified-badge';
-            badge.textContent = '✗ Not Qualified';
-            td.appendChild(badge);
-          }
-        }
-
-        if (weekTooltipText) {
-          td.addEventListener('mouseenter', () => showCellTooltip(weekTooltipText, td));
-          td.addEventListener('mouseleave', hideCellTooltip);
-        }
-
-        // Add week separator border
-        if (di > 0 && di % 7 === 0) {
-          td.style.borderLeft = '2px solid var(--border-strong)';
-        }
-
-        const stickerVal  = state[m.mi][d.key];
-        const stickerAbbr  = stickerVal ? getStickerAbbr(stickerVal) : null;
-        const stickerLabel = stickerVal ? (STICKERS.find(s => s.emoji === stickerVal)?.label || '') : '';
-        const slot = document.createElement('div');
-        slot.className = 'sticker-slot' + (stickerVal ? ' has-sticker' : '');
-        slot.textContent = stickerVal || '';
-        slot.dataset.mi = m.mi;
-        slot.dataset.dk = d.key;
-        if (stickerLabel) slot.dataset.label = stickerLabel;
-
-        slot.addEventListener('mouseenter', () => {
-          if (stickerAbbr && weekNum <= 4) {
-            showCellTooltip(buildSlotTooltip(stickerAbbr, stickerLabel, m.mi, weekNum, m.loc), slot);
-          } else if (stickerLabel) {
-            showCellTooltip(stickerLabel, slot);
-          }
-        });
-        slot.addEventListener('mouseleave', () => {
-          if (weekTooltipText) showCellTooltip(weekTooltipText, td);
-          else hideCellTooltip();
-        });
-
-        td.appendChild(slot);
-        row.appendChild(td);
-      });
-
-      // Score cell
-      const scoreTd = document.createElement('td');
-      scoreTd.className = 'score-td';
-      const sc = m.score;
-      const pillClass = sc === 0 ? '' : sc >= 4 ? ' maxed' : ' lit';
-
-      // Build comprehensive tooltip for score pill
-      let tooltipHTML = '<div class="score-tooltip-header">';
-      tooltipHTML += sc >= 4 ? '👑 FULLY QUALIFIED' : 'QUALIFICATION STATUS';
-      tooltipHTML += '</div><div class="score-tooltip-content">';
-      
-      // Week status section
-      tooltipHTML += '<div class="score-tooltip-section">';
-      tooltipHTML += '<div class="score-tooltip-section-header">📅 Weeks Qualified</div>';
-      for (let week = 1; week <= 4; week++) {
-        const { completed } = getWeekScore(m.mi, week);
-        const icon = completed ? '✓' : '✗';
-        const iconColor = completed ? '#6eff95' : '#ff8888';
-        tooltipHTML += `<div class="score-tooltip-item"><span style="color: ${iconColor}; font-weight: bold;">${icon}</span> Week ${week}: ${completed ? 'Qualified' : 'Not Qualified'}</div>`;
-      }
-      tooltipHTML += '</div>';
-      
-      // Total classes section
-      const totalClasses = getTotalClasses(m.mi);
-      const classesRequired = getTotalClassesRequired(m.mi);
-      tooltipHTML += '<div class="score-tooltip-section">';
-      tooltipHTML += '<div class="score-tooltip-section-header">📊 Classes</div>';
-      tooltipHTML += `<div class="score-tooltip-item">Done: ${totalClasses} / Required: ${classesRequired}</div>`;
-      tooltipHTML += '</div>';
-      
-      tooltipHTML += '</div>';
-
-      scoreTd.innerHTML = `
-        <div class="score-pill${pillClass}">
-          ${sc}/4
-          <div class="score-tooltip">${tooltipHTML}</div>
-        </div>
-      `;
-      row.appendChild(scoreTd);
-
-      tbody.appendChild(row);
-    });
-  }
-
-  renderGroupRows(kcSorted, '📍  Kemps Corner', 'KC');
-  renderGroupRows(bandraSorted, '📍  Supreme HQ, Bandra', 'Bandra');
-  renderGroupRows(khSorted, '📍  Kenkere House', 'KH');
-  renderGroupRows(cncSorted, '📍  C & C', 'CNC');
-}
-
-// ── GOOGLE SHEETS CONFIG ──
-// Configuration loaded from external config.live.js file
-const GSHEET_SPREADSHEET_ID = window.GOOGLE_SHEETS_CONFIG.SPREADSHEET_ID;
-const GSHEET_SHEET_NAME     = window.GOOGLE_SHEETS_CONFIG.SHEET_NAME;
-const OAUTH_CLIENT_ID       = window.GOOGLE_SHEETS_CONFIG.CLIENT_ID;
-const OAUTH_CLIENT_SECRET   = window.GOOGLE_SHEETS_CONFIG.CLIENT_SECRET;
-const OAUTH_REFRESH_TOKEN   = window.GOOGLE_SHEETS_CONFIG.REFRESH_TOKEN;
-
-// Challenge start date (inclusive)
-const CHALLENGE_START = new Date(2026, 1, 23); // Feb 23 2026
-
-// Map 'Cleaned Class' column value → sticker emoji
-function cleanedClassToEmoji(cleanedClass) {
-  const c = (cleanedClass || '').toLowerCase();
-  if (/barre 57|studio barre/.test(c))           return '\u{1F499}'; // 💙 B57
-  if (/powercycle|power cycle|cycle/.test(c))    return '\u{1F6B4}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}'; // 🚴🏻‍♀️ PC
-  if (/mat 57|mat57/.test(c))                    return '\u{1F9D8}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}'; // 🧘🏻‍♀️ Mat
-  if (/cardio barre/.test(c))                    return '\u{1FAC0}'; // 🫀 CB
-  if (/strength lab|studio lab/.test(c))         return '\u{1F3CB}\u{FE0F}'; // 🏋️ LAB
-  if (/back body blaze/.test(c))                 return '\u{1F519}'; // 🔙 BBB
-  if (/amped up/.test(c))                        return '\u{1F525}'; // 🔥 AMP
-  if (/\bfit\b/.test(c))                         return '\u{1F4AA}\u{1F3FB}'; // 💪🏻 FIT
-  if (/hiit/.test(c))                            return '\u{2764}\u{FE0F}\u{200D}\u{1F525}'; // ❤️‍🔥 HIIT
-  if (/recovery/.test(c))                        return '\u{2764}\u{FE0F}\u{200D}\u{1FA79}'; // ❤️‍🩹 REC
-  return null;
-}
-
-function normalizeName(s) {
-  return (s || '').trim().toLowerCase().replace(/\s+/g, ' ');
-}
-
-async function getAccessToken() {
-  // Check if credentials are properly configured
-  const cfg = window.GOOGLE_SHEETS_CONFIG;
-  if (!cfg.CLIENT_ID || cfg.CLIENT_ID === 'YOUR_CLIENT_ID_HERE' ||
-      !cfg.CLIENT_SECRET || cfg.CLIENT_SECRET === 'YOUR_CLIENT_SECRET_HERE' ||
-      !cfg.REFRESH_TOKEN || cfg.REFRESH_TOKEN === 'YOUR_REFRESH_TOKEN_HERE') {
-    throw new Error('Google Sheets integration not configured. Please update GOOGLE_SHEETS_CONFIG with your credentials.');
-  }
-
-  const resp = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      client_id:     cfg.CLIENT_ID,
-      client_secret: cfg.CLIENT_SECRET,
-      refresh_token: cfg.REFRESH_TOKEN,
-      grant_type:    'refresh_token',
-    })
-  });
-  if (!resp.ok) {
-    const err = await resp.json().catch(() => ({}));
-    throw new Error('Token refresh failed: ' + (err.error_description || resp.status));
-  }
-  const data = await resp.json();
-  return data.access_token;
-}
-
-async function fetchSheetRows(accessToken) {
-  const cfg   = window.GOOGLE_SHEETS_CONFIG;
-  const range = encodeURIComponent(cfg.SHEET_NAME + '!A:Z');
-  const url   = `https://sheets.googleapis.com/v4/spreadsheets/${cfg.SPREADSHEET_ID}/values/${range}`;
-  const resp  = await fetch(url, { headers: { Authorization: 'Bearer ' + accessToken } });
-  if (!resp.ok) {
-    const err = await resp.json().catch(() => ({}));
-    throw new Error('Sheets fetch failed: ' + ((err.error && err.error.message) || resp.status));
-  }
-  const data = await resp.json();
-  return data.values || [];
-}
-
-async function fetchAndSeedCheckins() {
-  const statusEl = document.getElementById('data-status');
-  const btn      = document.getElementById('refresh-btn');
-  if (statusEl) statusEl.textContent = '';
-  if (btn)      btn.disabled = true;
-  const loader = document.getElementById('board-loader');
-  if (loader) loader.classList.remove('hidden');
-
-  try {
-    const accessToken = await getAccessToken();
-    const rows        = await fetchSheetRows(accessToken);
-
-    if (rows.length < 2) {
-      if (statusEl) statusEl.textContent = 'No data found in sheet.';
-      return;
-    }
-
-    // Parse header row
-    const headers    = rows[0].map(h => h.trim());
-    const col        = name => headers.indexOf(name);
-    const iFirst     = col('First Name');
-    const iLast      = col('Last Name');
-    const iEmail     = col('Email');
-    const iCheckedIn = col('Checked In');
-    const iDate      = col('Date (IST)');
-    const iClass     = col('Cleaned Class');
-
-    // Clear existing state for all members
-    MEMBERS.forEach((_, mi) => {
-      Object.keys(state[mi]).forEach(k => delete state[mi][k]);
-    });
-
-    let matched = 0;
-
-    rows.slice(1).forEach(row => {
-      // Must be checked in
-      if ((row[iCheckedIn] || '').trim().toUpperCase() !== 'TRUE') return;
-
-      // Must be on or after challenge start
-      const dateStr = (row[iDate] || '').trim();        // e.g. "2026-02-23"
-      const rowDate = new Date(dateStr + 'T00:00:00');
-      if (isNaN(rowDate.getTime()) || rowDate < CHALLENGE_START) return;
-
-      // Map class name to emoji
-      const emoji = cleanedClassToEmoji((row[iClass] || '').trim());
-      if (!emoji) return;
-
-      // Match member by email, with first+last name fallback
-      const rowEmail = (row[iEmail] || '').trim().toLowerCase();
-      let mi = MEMBERS.findIndex(m => m.email && m.email.toLowerCase() === rowEmail);
-      if (mi === -1) {
-        const rowFirst = (row[iFirst] || '').trim().toLowerCase();
-        const rowLast  = (row[iLast]  || '').trim().toLowerCase();
-        if (rowFirst && rowLast) {
-          mi = MEMBERS.findIndex(m =>
-            m.first.toLowerCase() === rowFirst &&
-            m.last.toLowerCase()  === rowLast
-          );
-        }
-      }
-      if (mi === -1) return;
-
-      // Build day key: `year-monthIndex-date`  (same format as days[] key)
-      const dk = `${rowDate.getFullYear()}-${rowDate.getMonth()}-${rowDate.getDate()}`;
-      if (!days.find(d => d.key === dk)) return;
-
-      // First class of the day wins; subsequent classes on same day are ignored
-      if (!state[mi][dk]) {
-        state[mi][dk] = emoji;
-        matched++;
-      }
-    });
-
-    refreshBoard();
-
-    const now     = new Date();
-    const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
-    if (statusEl) statusEl.textContent = '';
-  } catch (err) {
-    console.error(err);
-    if (statusEl) {
-      if (err.message.includes('not configured') || err.message.includes('not found')) {
-        statusEl.textContent = '⚠ Google Sheets not configured · Please set up credentials';
-      } else {
-        statusEl.textContent = '✗ ' + err.message;
-      }
-    }
-  } finally {
-    if (btn) btn.disabled = false;
-    const loader = document.getElementById('board-loader');
-    if (loader) loader.classList.add('hidden');
-  }
-}
-// ── EXPORT FUNCTIONS ──
-function getParticipantStatsEnhanced() {
-  const stats = [];
-  MEMBERS.forEach((m, mi) => {
-    const score = getScore(mi);
-    const total = getTotalClasses(mi);
-    const required = getTotalClassesRequired(mi);
-    const isFullyQualified = score >= 4;
-    const qualificationMethod = qualificationSettings.useClassDifferenceQualification ? 'Within 3 Classes' : 'Week-Based';
-    
-    // Count classes by type
-    const classTypeCounters = {};
-    STICKERS.forEach(sticker => {
-      classTypeCounters[sticker.emoji + ' ' + sticker.label] = 0;
-    });
-    
-    for (let dayKey in state[mi]) {
-      if (state[mi][dayKey] && state[mi][dayKey].length > 0) {
-        state[mi][dayKey].forEach(stickerIdx => {
-          if (stickerIdx < STICKERS.length) {
-            const stickerKey = STICKERS[stickerIdx].emoji + ' ' + STICKERS[stickerIdx].label;
-            classTypeCounters[stickerKey] = (classTypeCounters[stickerKey] || 0) + 1;
-          }
-        });
-      }
-    }
-    
-    const weekDetails = [];
-    for (let week = 1; week <= 4; week++) {
-      const { completed } = getWeekScore(mi, week);
-      weekDetails.push({
-        week,
-        qualified: completed
-      });
-    }
-    
-    stats.push({
-      name: `${m.first} ${m.last}`,
-      email: m.email,
-      location: m.loc,
-      classesCompleted: total,
-      classesRequired: required,
-      weeksQualified: score,
-      fullyQualified: isFullyQualified,
-      status: isFullyQualified ? 'QUALIFIED' : 'NOT QUALIFIED',
-      qualificationMethod,
-      classTypeCounters,
-      weekDetails
-    });
-  });
-  return stats;
-}
-
-function getParticipantStats() {
-  const stats = [];
-  MEMBERS.forEach((m, mi) => {
-    const score = getScore(mi);
-    const total = getTotalClasses(mi);
-    const required = getTotalClassesRequired(mi);
-    const isFullyQualified = score >= 4;
-    
-    const weekDetails = [];
-    for (let week = 1; week <= 4; week++) {
-      const { completed } = getWeekScore(mi, week);
-      weekDetails.push({
-        week,
-        qualified: completed
-      });
-    }
-    
-    stats.push({
-      name: `${m.first} ${m.last}`,
-      email: m.email,
-      location: m.loc,
-      classesCompleted: total,
-      classesRequired: required,
-      weeksQualified: score,
-      fullyQualified: isFullyQualified,
-      status: isFullyQualified ? 'QUALIFIED' : 'NOT QUALIFIED',
-      weekDetails
-    });
-  });
-  return stats;
-}
-
-function exportToCSV() {
-  const stats = getParticipantStats();
-  
-  // Calculate location summaries
-  const locationSummaries = [];
-  const byLoc = {};
-  
-  MEMBERS.forEach((m, idx) => {
-    if (!byLoc[m.loc]) byLoc[m.loc] = [];
-    byLoc[m.loc].push({ name: m.first + ' ' + m.last, idx });
-  });
-  
-  Object.entries(byLoc).forEach(([locCode, members]) => {
-    const qualified = members.filter(m => getScore(m.idx) >= 4).length;
-    const locName = locCode === 'KC' ? 'Kemps Corner' : 'Bandra';
-    locationSummaries.push([`${locName} Summary`, `${qualified}/${members.length}`, 'qualified']);
-  });
-  
-  // Header row
-  const headers = ['Name', 'Email', 'Location', 'Classes Completed', 'Classes Required', 'Weeks Qualified', 'Total Status', 'Week 1', 'Week 2', 'Week 3', 'Week 4'];
-  const rows = [...locationSummaries.map(s => s), [''], headers];
-  
-  // Data rows
-  stats.forEach(participant => {
-    const weekStatuses = participant.weekDetails.map(w => w.qualified ? 'QUALIFIED' : 'NOT QUALIFIED').join(',');
-    rows.push([
-      participant.name,
-      participant.email,
-      participant.location,
-      participant.classesCompleted,
-      participant.classesRequired,
-      participant.weeksQualified,
-      participant.status,
-      ...participant.weekDetails.map(w => w.qualified ? '✓' : '✗')
-    ]);
-  });
-  
-  // Convert to CSV format
-  const csv = rows.map(row => 
-    row.map(cell => {
-      // Escape quotes and wrap in quotes if contains comma or quote
-      const str = String(cell);
-      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-        return `"${str.replace(/"/g, '""')}`;
-      }
-      return str;
-    }).join(',')
-  ).join('\n');
-  
-  // Download
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  const url = URL.createObjectURL(blob);
-  link.setAttribute('href', url);
-  link.setAttribute('download', `stronger-in-30-participants-${new Date().toISOString().split('T')[0]}.csv`);
-  link.style.visibility = 'hidden';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
-
-function exportToPDF() {
-  const stats = getParticipantStats();
-  
-  // Calculate location summaries
-  const byLoc = {};
-  MEMBERS.forEach((m, idx) => {
-    if (!byLoc[m.loc]) byLoc[m.loc] = [];
-    byLoc[m.loc].push({ name: m.first + ' ' + m.last, idx });
-  });
-  
-  let locSummaryHTML = '<div class="summary"><h2>Qualification by Location</h2><div class="summary-row" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">';
-  Object.entries(byLoc).forEach(([locCode, members]) => {
-    const qualified = members.filter(m => getScore(m.idx) >= 4).length;
-    const locName = locCode === 'KC' ? 'Kemps Corner' : 'Bandra';
-    locSummaryHTML += `<div class="summary-item"><div class="summary-label">${locName}</div><div class="summary-value">${qualified}/${members.length}</div></div>`;
-  });
-  locSummaryHTML += '</div></div>';
-  
-  // Create a simple HTML table for printing
-  let html = `
-    <html>
-    <head>
-      <title>Stronger in 30 - Participant Stats</title>
-      <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 15px; color: #333; }
-        h1 { text-align: center; color: #2c3e50; font-size: 18px; margin: 0 0 5px 0; }
-        .meta { text-align: center; color: #7f8c8d; margin-bottom: 15px; font-size: 10px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { background-color: #34495e; color: white; padding: 8px; text-align: left; font-weight: 600; font-size: 10px; border: 1px solid #bdc3c7; }
-        td { padding: 8px; border: 1px solid #ecf0f1; font-size: 10px; }
-        tr:nth-child(even) { background-color: #f8f9fa; }
-        .status-qualified::before { content: '✓ '; color: #27ae60; font-weight: bold; }
-        .status-not-qualified::before { content: '✗ '; color: #e74c3c; font-weight: bold; }
-        .summary { margin-top: 20px; padding: 12px; background-color: #ecf0f1; border-left: 3px solid #34495e; }
-        h2 { margin: 0 0 8px 0; color: #2c3e50; font-size: 12px; }
-        .summary-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
-        .summary-item { }
-        .summary-label { font-size: 9px; color: #7f8c8d; font-weight: 500; }
-        .summary-value { font-size: 14px; font-weight: 600; color: #2c3e50; }
-      </style>
-    </head>
-    <body>
-      <h1>Stronger in 30 — Participant Qualification Stats</h1>
-      <div class="meta">Beginner Board | Generated ${new Date().toLocaleDateString()}</div>
-      
-      ${locSummaryHTML}
-      
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Location</th>
-            <th style="text-align: center;">Classes Done</th>
-            <th style="text-align: center;">Required</th>
-            <th style="text-align: center;">Weeks Qualified</th>
-            <th style="text-align: center;">W1</th>
-            <th style="text-align: center;">W2</th>
-            <th style="text-align: center;">W3</th>
-            <th style="text-align: center;">W4</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-  `;
-  
-  const qualifiedCount = stats.filter(s => s.fullyQualified).length;
-  const notQualifiedCount = stats.length - qualifiedCount;
-  
-  stats.forEach(participant => {
-    const statusClass = participant.fullyQualified ? 'status-qualified' : 'status-not-qualified';
-    const weekCells = participant.weekDetails.map(w => 
-      `<td style="text-align: center;">${w.qualified ? '✓' : '✗'}</td>`
-    ).join('');
-    
-    html += `
-      <tr>
-        <td>${participant.name}</td>
-        <td>${participant.location}</td>
-        <td style="text-align: center;">${participant.classesCompleted}</td>
-        <td style="text-align: center;">${participant.classesRequired}</td>
-        <td style="text-align: center; font-weight: 600;">${participant.weeksQualified}/4</td>
-        ${weekCells}
-        <td class="${statusClass}">${participant.status}</td>
-      </tr>
-    `;
-  });
-  
-  html += `
-        </tbody>
-      </table>
-      
-      <div class="summary">
-        <h2>Overall Summary</h2>
-        <div class="summary-row">
-          <div class="summary-item">
-            <div class="summary-label">Total Participants</div>
-            <div class="summary-value">${stats.length}</div>
-          </div>
-          <div class="summary-item">
-            <div class="summary-label">Fully Qualified</div>
-            <div class="summary-value">${qualifiedCount}</div>
-          </div>
-          <div class="summary-item">
-            <div class="summary-label">Not Qualified</div>
-            <div class="summary-value">${notQualifiedCount}</div>
-          </div>
-        </div>
-      </div>
-    </body>
-    </html>
-  `;
-  
-  // Open print dialog
-  const printWindow = window.open('', '', 'height=800,width=1000');
-  printWindow.document.write(html);
-  printWindow.document.close();
-  printWindow.focus();
-  
-  // Auto-print if desired, or user can manually print/save as PDF
-  setTimeout(() => {
-    printWindow.print();
-  }, 250);
-}
-
-function showExportOptions() {
-  const menu = `
-    <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 10px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); padding: 20px; z-index: 2000; min-width: 280px; font-family: 'Syne', sans-serif;">
-      <div style="margin-bottom: 20px; font-size: 14px; font-weight: 600; color: #2c3e50;">Export Format</div>
-      <button onclick="exportToCSV(); closeExportMenu();" style="width: 100%; padding: 10px; margin-bottom: 8px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 12px;">📄 CSV</button>
-      <button onclick="exportToPDF(); closeExportMenu();" style="width: 100%; padding: 10px; margin-bottom: 8px; background: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 12px;">📋 PDF</button>
-      <button onclick="exportToPNG(); closeExportMenu();" style="width: 100%; padding: 10px; margin-bottom: 8px; background: #9b59b6; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 12px;">🖼️ PNG</button>
-      <button onclick="copyTableToClipboard(); closeExportMenu();" style="width: 100%; padding: 10px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 12px;">📋 Copy to Clipboard</button>
-      <button onclick="closeExportMenu();" style="width: 100%; padding: 10px; margin-top: 12px; background: #95a5a6; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 12px;">Cancel</button>
-    </div>
-    <div id="export-menu-backdrop" onclick="closeExportMenu();" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); z-index: 1999;"></div>
-  `;
-  document.body.insertAdjacentHTML('beforeend', menu);
-}
-
-function closeExportMenu() {
-  const menu = document.querySelector('[style*="position: fixed"][style*="transform: translate"]');
-  const backdrop = document.getElementById('export-menu-backdrop');
-  if (menu) menu.remove();
-  if (backdrop) backdrop.remove();
-}
-
-function exportToPNG() {
-  const table = document.getElementById('main-table');
-  if (!table) return;
-  
-  html2canvas(table, { 
-    scale: 2, 
-    useCORS: true,
-    logging: false,
-    backgroundColor: '#ffffff'
-  }).then(canvas => {
-    const link = document.createElement('a');
-    link.href = canvas.toDataURL('image/png');
-    link.download = `stronger-in-30-board-${new Date().toISOString().split('T')[0]}.png`;
-    link.click();
-  }).catch(err => {
-    alert('PNG export requires html2canvas library. Using PDF instead.');
-    exportToPDF();
-  });
-}
-
-function copyTableToClipboard() {
-  const stats = getParticipantStats();
-  let text = 'STRONGER IN 30 — PARTICIPANT STATS\n';
-  text += `Generated: ${new Date().toLocaleDateString()}\n\n`;
-  
-  // Add stats by location
-  const byLoc = {};
-  MEMBERS.forEach((m, idx) => {
-    if (!byLoc[m.loc]) byLoc[m.loc] = [];
-    byLoc[m.loc].push(idx);
-  });
-  
-  Object.entries(byLoc).forEach(([locCode, indices]) => {
-    const locName = locCode === 'KC' ? 'Kemps Corner' : 'Bandra';
-    const qualified = indices.filter(idx => getScore(idx) >= 4).length;
-    text += `${locName}: ${qualified}/${indices.length} qualified\n`;
-  });
-  
-  text += '\n';
-  text += ['Name', 'Email', 'Location', 'Classes', 'Weeks Qualified', 'Status'].join('\t') + '\n';
-  
-  stats.forEach(s => {
-    text += [s.name, s.email, s.location, `${s.classesCompleted}/${s.classesRequired}`, `${s.weeksQualified}/4`, s.status].join('\t') + '\n';
-  });
-  
-  navigator.clipboard.writeText(text).then(() => {
-    alert('Stats copied to clipboard!');
-  }).catch(() => {
-    alert('Failed to copy. Please try again.');
-  });
-}
-
-function exportToComprehensiveCSV() {
-  const stats = getParticipantStatsEnhanced();
-  
-  let csv = 'Name,Email,Location,Level,Classes Done,Classes Required,Weeks Qualified,Qualification Method,Status';
-  Object.keys(stats[0].classTypeCounters).forEach(ct => {
-    csv += ',' + ct;
-  });
-  csv += '\n';
-  
-  stats.forEach(p => {
-    csv += `"${p.name}","${p.email}","${p.location}","Beginner",${p.classesCompleted},${p.classesRequired},${p.weeksQualified},${p.qualificationMethod},"${p.status}"`;
-    
-    Object.values(p.classTypeCounters).forEach(count => {
-      csv += ',' + count;
-    });
-    csv += '\n';
-  });
-  
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'all-levels-export-' + new Date().getTime() + '.csv';
-  a.click();
-  window.URL.revokeObjectURL(url);
-}
-
-function exportToComprehensivePDF() {
-  const stats = getParticipantStatsEnhanced();
-  
-  // Group by location
-  const byLocation = {};
-  stats.forEach(s => {
-    if (!byLocation[s.location]) byLocation[s.location] = [];
-    byLocation[s.location].push(s);
-  });
-  
-  const allClassTypes = Array.from(new Set(stats.flatMap(s => Object.keys(s.classTypeCounters))));
-  const qualifiedCount = stats.filter(s => s.fullyQualified).length;
-  const totalCount = stats.length;
-  
-  let html = '<html><head><title>Stronger in 30 - Comprehensive Report</title><style>';
-  html += 'body{font-family:"Segoe UI",Tahoma,Geneva,Verdana,sans-serif;margin:20px;background:#f5f5f5}';
-  html += '.header{text-align:center;margin-bottom:30px;border-bottom:3px solid #7c3aed;padding-bottom:15px}';
-  html += 'h1{color:#1a1a1a;margin:10px 0;font-size:28px}';
-  html += 'h2{color:#7c3aed;border-bottom:2px solid #7c3aed;padding-bottom:10px}';
-  html += '.level-section{background:#fff;margin:20px 0;padding:20px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1)}';
-  html += '.location-title{font-size:16px;font-weight:bold;color:#333;margin-top:15px;margin-bottom:10px;background:#f9f9f9;padding:8px;border-left:4px solid #7c3aed}';
-  html += 'table{width:100%;border-collapse:collapse;margin-bottom:20px}';
-  html += 'th{background-color:#7c3aed;color:white;padding:12px;text-align:left;font-weight:bold;border:1px solid #999;font-size:12px}';
-  html += 'td{padding:10px;border:1px solid #ddd;font-size:12px}';
-  html += 'tr:nth-child(even){background-color:#fafafa}';
-  html += '.qualified{background-color:#d4edda;font-weight:bold}';
-  html += '.not-qualified{background-color:#f8d7da;font-weight:bold}';
-  html += '.center{text-align:center}';
-  html += '.summary{background:#fff;padding:20px;margin-top:30px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1)}';
-  html += '.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-top:15px}';
-  html += '.summary-card{padding:15px;background:#f9f9f9;border-radius:5px;border-left:4px solid #7c3aed}';
-  html += '.summary-label{font-size:12px;color:#666;font-weight:bold}';
-  html += '.summary-value{font-size:24px;font-weight:bold;color:#7c3aed;margin-top:5px}';
-  html += '.meta{text-align:center;color:#999;font-size:11px;margin:15px 0}';
-  html += '</style></head><body>';
-  html += '<div class="header"><h1>Stronger in 30 - Comprehensive Report</h1>';
-  html += '<div class="meta">Beginner Level • Generated on ' + new Date().toLocaleString() + '</div></div>';
-  
-  Object.entries(byLocation).sort().forEach(([location, members]) => {
-    html += '<div class="level-section"><div class="location-title">📍 ' + location + '</div>';
-    html += '<table><thead><tr><th>Name</th><th class="center">Done</th><th class="center">Req.</th><th class="center">Weeks</th><th class="center">Method</th>';
-    
-    allClassTypes.forEach(ct => {
-      html += '<th class="center">' + ct.substring(0, 10) + '</th>';
-    });
-    
-    html += '<th class="center">Status</th></tr></thead><tbody>';
-    
-    members.forEach(p => {
-      html += '<tr><td><strong>' + p.name + '</strong></td>';
-      html += '<td class="center">' + p.classesCompleted + '</td>';
-      html += '<td class="center">' + p.classesRequired + '</td>';
-      html += '<td class="center">' + p.weeksQualified + '/4</td>';
-      html += '<td class="center" style="font-size:11px;">' + p.qualificationMethod + '</td>';
-      
-      allClassTypes.forEach(ct => {
-        html += '<td class="center">' + (p.classTypeCounters[ct] || 0) + '</td>';
-      });
-      
-      const statusClass = p.fullyQualified ? 'qualified' : 'not-qualified';
-      html += '<td class="center ' + statusClass + '">' + p.status + '</td></tr>';
-    });
-    
-    html += '</tbody></table></div>';
-  });
-  
-  html += '<div class="summary"><h2>Summary</h2><div class="summary-grid">';
-  html += '<div class="summary-card"><div class="summary-label">Total Participants</div><div class="summary-value">' + totalCount + '</div></div>';
-  html += '<div class="summary-card"><div class="summary-label">Fully Qualified</div><div class="summary-value" style="color:#28a745;">' + qualifiedCount + '</div></div>';
-  html += '<div class="summary-card"><div class="summary-label">Not Qualified</div><div class="summary-value" style="color:#dc3545;">' + (totalCount - qualifiedCount) + '</div></div>';
-  html += '<div class="summary-card"><div class="summary-label">Qualification Rate</div><div class="summary-value">' + ((qualifiedCount / totalCount) * 100).toFixed(1) + '%</div></div>';
-  html += '</div></div></body></html>';
-  
-  const printWindow = window.open('', '', 'height=900,width=1200');
-  printWindow.document.write(html);
-  printWindow.document.close();
-  printWindow.focus();
-  setTimeout(() => printWindow.print(), 250);
-}
-
-function showComprehensiveExportOptions() {
-  const choice = confirm('Select export format:\nOK = CSV | Cancel = PDF');
-  if (choice) {
-    exportToComprehensiveCSV();
-  } else {
-    exportToComprehensivePDF();
-  }
-}
-
-function positionScorePillTooltips() {
-  document.querySelectorAll('.score-pill').forEach(pill => {
-    const tooltip = pill.querySelector('.score-tooltip');
-    if (!tooltip) return;
-    
-    pill.addEventListener('mouseenter', () => {
-      tooltip.style.display = 'block';
-      setTimeout(() => {
-        const pillRect = pill.getBoundingClientRect();
-        const tooltipRect = tooltip.getBoundingClientRect();
-        const viewportWidth = window.innerWidth;
-        const gap = 12;
-        
-        // Default position: above, centered
-        let top = pillRect.top - tooltipRect.height - gap;
-        let left = pillRect.left + (pillRect.width - tooltipRect.width) / 2;
-        
-        // Check if tooltip overflows right
-        if (left + tooltipRect.width + 10 > viewportWidth) {
-          left = viewportWidth - tooltipRect.width - 10;
-        }
-        
-        // Check if tooltip overflows left
-        if (left < 10) {
-          left = 10;
-        }
-        
-        // Check if tooltip overflows top
-        if (top < 10) {
-          top = pillRect.bottom + gap;
-        }
-        
-        tooltip.style.top = top + 'px';
-        tooltip.style.left = left + 'px';
-      }, 0);
-    });
-    
-    pill.addEventListener('mouseleave', () => {
-      tooltip.style.display = 'none';
-    });
-  });
-}
-
-// ── INIT ──
-restoreQualificationSettings();
-syncQualificationToggle();
-if (qualificationToggleEl) {
-  qualificationToggleEl.addEventListener('change', () => {
-    qualificationSettings.matCountsAsCardio = qualificationToggleEl.checked;
-    saveQualificationSettings();
-    refreshBoard();
-    positionScorePillTooltips();
-  });
-}
-if (classQualificationToggleEl) {
-  classQualificationToggleEl.addEventListener('change', () => {
-    qualificationSettings.useClassDifferenceQualification = classQualificationToggleEl.checked;
-    const toleranceCtrl = document.querySelector('.tolerance-control');
-    if (toleranceCtrl) {
-      toleranceCtrl.style.display = classQualificationToggleEl.checked ? 'block' : 'none';
-    }
-    saveQualificationSettings();
-    refreshBoard();
-    positionScorePillTooltips();
-  });
-}
-const toleranceInput = document.getElementById('class-tolerance-input');
-if (toleranceInput) {
-  toleranceInput.addEventListener('change', () => {
-    qualificationSettings.classToleranceValue = parseInt(toleranceInput.value) || 3;
-    saveQualificationSettings();
-    refreshBoard();
-    positionScorePillTooltips();
-  });
-}
-if (restoreStateFromLocalStorage()) {
-  renderLegend();
-  refreshBoard();
-  positionScorePillTooltips();
-}
-const loader = document.getElementById('board-loader');
-if (loader) loader.classList.add('hidden');
-renderLegend();
-refreshBoard();
-positionScorePillTooltips();
-fetchAndSeedCheckins();
-</script>
-</body>
-</html>

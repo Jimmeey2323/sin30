@@ -1309,6 +1309,7 @@ tr.data-row.hidden { display: none; }
     </div>
     <div id="data-status" class="data-status"></div>
     <button onclick="fetchAndSeedCheckins()" id="refresh-btn" class="refresh-btn">↻ Refresh</button>
+    <button onclick="openFormatSettingsModal()" id="settings-btn" class="refresh-btn" style="margin-left: 8px;">⚙ Format Rules</button>
     <div class="qualification-toggle">
       <label class="toggle-pill" for="mat-as-cardio-toggle">
         <input type="checkbox" id="mat-as-cardio-toggle">
@@ -2208,22 +2209,22 @@ function refreshBoard() {
       
       // Create stats display
       const statsHtml = `
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 4px; height: 100%;">
-          <div style="background: rgba(255,255,255,0.8); border-radius: 4px; padding: 4px; text-align: center; border: 1px solid rgba(0,0,0,0.05);">
-            <div style="font-size: 7px; color: #888; font-weight: 700; letter-spacing: 0.3px;">MEMBERS</div>
-            <div style="font-size: 12px; font-weight: 900; color: #1a1a1a; line-height: 1.2;">${totalMembers}</div>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; padding: 2px; height: 100%;">
+          <div style="background: rgba(255,255,255,0.8); border-radius: 3px; padding: 2px; text-align: center; border: 1px solid rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: center; align-items: center;">
+            <div style="font-size: 9px; color: #1a1a1a; font-weight: 900;">👥</div>
+            <div style="font-size: 10px; font-weight: 800; color: #1a1a1a;">${totalMembers}</div>
           </div>
-          <div style="background: rgba(76, 175, 80, 0.2); border-radius: 4px; padding: 4px; text-align: center; border: 1px solid rgba(46, 125, 50, 0.2);">
-            <div style="font-size: 7px; color: #2e7d32; font-weight: 700; letter-spacing: 0.3px;">QUALIFIED</div>
-            <div style="font-size: 12px; font-weight: 900; color: #1b5e20; line-height: 1.2;">${qualifiedMembers}/${totalMembers}</div>
+          <div style="background: rgba(76, 175, 80, 0.2); border-radius: 3px; padding: 2px; text-align: center; border: 1px solid rgba(46, 125, 50, 0.2); display: flex; flex-direction: column; justify-content: center; align-items: center;">
+            <div style="font-size: 9px; color: #1b5e20; font-weight: 900;">✓</div>
+            <div style="font-size: 10px; font-weight: 800; color: #1b5e20;">${qualifiedMembers}/${totalMembers}</div>
           </div>
-          <div style="background: rgba(33, 150, 243, 0.2); border-radius: 4px; padding: 4px; text-align: center; border: 1px solid rgba(21, 101, 192, 0.2);">
-            <div style="font-size: 7px; color: #1565c0; font-weight: 700; letter-spacing: 0.3px;">AVG CLASSES</div>
-            <div style="font-size: 12px; font-weight: 900; color: #0d47a1; line-height: 1.2;">${avgClasses}</div>
+          <div style="background: rgba(33, 150, 243, 0.2); border-radius: 3px; padding: 2px; text-align: center; border: 1px solid rgba(21, 101, 192, 0.2); display: flex; flex-direction: column; justify-content: center; align-items: center;">
+            <div style="font-size: 9px; color: #0d47a1; font-weight: 900;">📊</div>
+            <div style="font-size: 10px; font-weight: 800; color: #0d47a1;">${avgClasses}</div>
           </div>
-          <div style="background: rgba(233, 30, 99, 0.2); border-radius: 4px; padding: 4px; text-align: center; border: 1px solid rgba(136, 14, 79, 0.2);">
-            <div style="font-size: 7px; color: #880e4f; font-weight: 700; letter-spacing: 0.3px;">AVG WEEKS</div>
-            <div style="font-size: 12px; font-weight: 900; color: #c2185b; line-height: 1.2;">${avgWeeks}/4</div>
+          <div style="background: rgba(233, 30, 99, 0.2); border-radius: 3px; padding: 2px; text-align: center; border: 1px solid rgba(136, 14, 79, 0.2); display: flex; flex-direction: column; justify-content: center; align-items: center;">
+            <div style="font-size: 9px; color: #c2185b; font-weight: 900;">📅</div>
+            <div style="font-size: 10px; font-weight: 800; color: #c2185b;">${avgWeeks}/4</div>
           </div>
         </div>
       `;
@@ -3127,7 +3128,179 @@ function publishStatsToParent() {
 
 // Make stats available to parent window
 window.getBeginnerStats = publishStatsToParent;
+
+// ── FORMAT INTERCHANGEABILITY SETTINGS ──
+let userFormatRules = {};
+
+function initializeFormatRules() {
+  const saved = localStorage.getItem('sin30_format_rules_beginner');
+  if (saved) {
+    userFormatRules = JSON.parse(saved);
+  } else {
+    userFormatRules = {
+      'CB_HIIT': true,
+      'CB_AMP': true,
+      'CB_CBP': true,
+      'CB_TC': true,
+      'FIT_LAB': true,
+      'FIT_BBB': true,
+      'LAB_BBB': true,
+      'PC_interchangeable': false,
+      'B57_interchangeable': false,
+      'Mat_interchangeable': false,
+      'REC_interchangeable': false
+    };
+    saveFormatRules();
+  }
+}
+
+function saveFormatRules() {
+  localStorage.setItem('sin30_format_rules_beginner', JSON.stringify(userFormatRules));
+}
+
+function updateEquivGroupsFromRules() {
+  const cardioFormats = new Set(['CB', 'HIIT', 'AMP', 'CBP', 'TC']);
+  const strengthFormats = new Set(['FIT', 'LAB', 'BBB']);
+  
+  // Clear and rebuild based on user rules
+  const activeCardio = ['CB'];
+  const activeStrength = ['FIT'];
+  
+  if (userFormatRules['CB_HIIT']) activeCardio.push('HIIT');
+  if (userFormatRules['CB_AMP']) activeCardio.push('AMP');
+  if (userFormatRules['CB_CBP']) activeCardio.push('CBP');
+  if (userFormatRules['CB_TC']) activeCardio.push('TC');
+  
+  if (userFormatRules['FIT_LAB']) activeStrength.push('LAB');
+  if (userFormatRules['FIT_BBB']) activeStrength.push('BBB');
+  
+  // Rebuild EQUIV_GROUPS
+  EQUIV_GROUPS.length = 0;
+  if (activeStrength.length > 0) EQUIV_GROUPS.push(new Set(activeStrength));
+  if (activeCardio.length > 0) EQUIV_GROUPS.push(new Set(activeCardio));
+  
+  // Handle specific formats if user makes them interchangeable
+  if (userFormatRules['PC_interchangeable']) {
+    EQUIV_GROUPS.push(new Set(['PC', 'CB', 'HIIT', 'AMP', 'CBP', 'TC']));
+  }
+  if (userFormatRules['B57_interchangeable']) {
+    EQUIV_GROUPS.push(new Set(['B57', 'CB', 'HIIT', 'AMP', 'CBP', 'TC']));
+  }
+  if (userFormatRules['Mat_interchangeable']) {
+    EQUIV_GROUPS.push(new Set(['Mat', 'CB', 'HIIT', 'AMP', 'CBP', 'TC']));
+  }
+  if (userFormatRules['REC_interchangeable']) {
+    EQUIV_GROUPS.push(new Set(['REC', 'FIT', 'LAB', 'BBB']));
+  }
+}
+
+function openFormatSettingsModal() {
+  const modal = document.getElementById('format-settings-modal');
+  if (modal) {
+    modal.style.display = 'flex';
+    updateFormatCheckboxes();
+  }
+}
+
+function closeFormatSettingsModal() {
+  const modal = document.getElementById('format-settings-modal');
+  if (modal) {
+    modal.style.display = 'none';
+  }
+}
+
+function updateFormatCheckboxes() {
+  const checkboxes = document.querySelectorAll('#format-settings-modal input[type="checkbox"]');
+  checkboxes.forEach(cb => {
+    const ruleKey = cb.getAttribute('data-rule');
+    if (ruleKey && userFormatRules.hasOwnProperty(ruleKey)) {
+      cb.checked = userFormatRules[ruleKey];
+    }
+  });
+}
+
+function toggleFormatRule(ruleKey) {
+  if (userFormatRules.hasOwnProperty(ruleKey)) {
+    userFormatRules[ruleKey] = !userFormatRules[ruleKey];
+    saveFormatRules();
+    updateEquivGroupsFromRules();
+    refreshBoard();
+  }
+}
+
+// Initialize on page load
+initializeFormatRules();
+updateEquivGroupsFromRules();
 </script>
+
+<div id="format-settings-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
+  <div style="background: white; border-radius: 12px; padding: 32px; max-width: 600px; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+      <h2 style="font-size: 20px; font-weight: 600; color: #1a1a1a;">Format Interchangeability Rules</h2>
+      <button onclick="closeFormatSettingsModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #888;">✕</button>
+    </div>
+    
+    <div style="margin-bottom: 24px;">
+      <h3 style="font-size: 14px; font-weight: 600; color: #333; margin-bottom: 12px;">Cardio Formats (Interchangeable)</h3>
+      <label style="display: flex; align-items: center; margin-bottom: 8px; cursor: pointer;">
+        <input type="checkbox" data-rule="CB_HIIT" onchange="toggleFormatRule('CB_HIIT')" style="margin-right: 8px; cursor: pointer;">
+        <span>Cardio Barre ↔ HIIT</span>
+      </label>
+      <label style="display: flex; align-items: center; margin-bottom: 8px; cursor: pointer;">
+        <input type="checkbox" data-rule="CB_AMP" onchange="toggleFormatRule('CB_AMP')" style="margin-right: 8px; cursor: pointer;">
+        <span>Cardio Barre ↔ Amped Up</span>
+      </label>
+      <label style="display: flex; align-items: center; margin-bottom: 8px; cursor: pointer;">
+        <input type="checkbox" data-rule="CB_CBP" onchange="toggleFormatRule('CB_CBP')" style="margin-right: 8px; cursor: pointer;">
+        <span>Cardio Barre ↔ Cardio Barre Plus</span>
+      </label>
+      <label style="display: flex; align-items: center; margin-bottom: 8px; cursor: pointer;">
+        <input type="checkbox" data-rule="CB_TC" onchange="toggleFormatRule('CB_TC')" style="margin-right: 8px; cursor: pointer;">
+        <span>Cardio Barre ↔ Trainer's Choice</span>
+      </label>
+    </div>
+    
+    <div style="margin-bottom: 24px;">
+      <h3 style="font-size: 14px; font-weight: 600; color: #333; margin-bottom: 12px;">Strength Formats (Interchangeable)</h3>
+      <label style="display: flex; align-items: center; margin-bottom: 8px; cursor: pointer;">
+        <input type="checkbox" data-rule="FIT_LAB" onchange="toggleFormatRule('FIT_LAB')" style="margin-right: 8px; cursor: pointer;">
+        <span>FIT ↔ Strength Lab</span>
+      </label>
+      <label style="display: flex; align-items: center; margin-bottom: 8px; cursor: pointer;">
+        <input type="checkbox" data-rule="FIT_BBB" onchange="toggleFormatRule('FIT_BBB')" style="margin-right: 8px; cursor: pointer;">
+        <span>FIT ↔ Back Body Blaze</span>
+      </label>
+      <label style="display: flex; align-items: center; margin-bottom: 8px; cursor: pointer;">
+        <input type="checkbox" data-rule="LAB_BBB" onchange="toggleFormatRule('LAB_BBB')" style="margin-right: 8px; cursor: pointer;">
+        <span>Strength Lab ↔ Back Body Blaze</span>
+      </label>
+    </div>
+    
+    <div style="margin-bottom: 24px;">
+      <h3 style="font-size: 14px; font-weight: 600; color: #333; margin-bottom: 12px;">Specific Formats (Normally Not Interchangeable)</h3>
+      <label style="display: flex; align-items: center; margin-bottom: 8px; cursor: pointer;">
+        <input type="checkbox" data-rule="PC_interchangeable" onchange="toggleFormatRule('PC_interchangeable')" style="margin-right: 8px; cursor: pointer;">
+        <span>Make PowerCycle interchangeable with Cardio</span>
+      </label>
+      <label style="display: flex; align-items: center; margin-bottom: 8px; cursor: pointer;">
+        <input type="checkbox" data-rule="B57_interchangeable" onchange="toggleFormatRule('B57_interchangeable')" style="margin-right: 8px; cursor: pointer;">
+        <span>Make Barre 57 interchangeable with Cardio</span>
+      </label>
+      <label style="display: flex; align-items: center; margin-bottom: 8px; cursor: pointer;">
+        <input type="checkbox" data-rule="Mat_interchangeable" onchange="toggleFormatRule('Mat_interchangeable')" style="margin-right: 8px; cursor: pointer;">
+        <span>Make Mat 57 interchangeable with Cardio</span>
+      </label>
+      <label style="display: flex; align-items: center; margin-bottom: 8px; cursor: pointer;">
+        <input type="checkbox" data-rule="REC_interchangeable" onchange="toggleFormatRule('REC_interchangeable')" style="margin-right: 8px; cursor: pointer;">
+        <span>Make Recovery interchangeable with Strength</span>
+      </label>
+    </div>
+    
+    <div style="text-align: right;">
+      <button onclick="closeFormatSettingsModal()" style="background: #b91c1c; color: white; border: none; padding: 10px 24px; border-radius: 6px; cursor: pointer; font-weight: 600;">Done</button>
+    </div>
+  </div>
+</div>
 
 <script src="export-utils.js"></script>
 </body>

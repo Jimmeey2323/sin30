@@ -2000,7 +2000,19 @@ const WEEK_COLORS = ['#2d5a27','#1a4d6e','#a05c2d','#6b3fa0','#c0392b'];
 
 // ── STATE ──
 // state[memberIdx][dayKey] = stickerEmoji or null
-const state = MEMBERS.map(() => ({}));
+let state = MEMBERS.map(() => ({}));
+
+// Function to ensure state array is properly sized to match MEMBERS
+function ensureStateSize() {
+  // Resize state array to match MEMBERS if needed
+  while (state.length < MEMBERS.length) {
+    state.push({});
+  }
+  // Remove excess state entries if MEMBERS shrank
+  if (state.length > MEMBERS.length) {
+    state = state.slice(0, MEMBERS.length);
+  }
+}
 
 // ── CELL TOOLTIP ──
 const cellTooltip = document.getElementById('cell-tooltip');
@@ -3469,8 +3481,13 @@ async function fetchAndSeedCheckins() {
     const iDate      = col('Date (IST)');
     const iClass     = col('Cleaned Class');
 
+    // Ensure state array is properly sized before clearing
+    ensureStateSize();
+    
     MEMBERS.forEach((_, mi) => {
-      Object.keys(state[mi]).forEach(k => delete state[mi][k]);
+      if (state[mi]) {
+        Object.keys(state[mi]).forEach(k => delete state[mi][k]);
+      }
     });
 
     let matched = 0;
@@ -3496,6 +3513,11 @@ async function fetchAndSeedCheckins() {
         }
       }
       if (mi === -1) return;
+      // Validate state[mi] exists before accessing
+      if (!state[mi]) {
+        console.warn(`State for member index ${mi} doesn't exist, skipping...`);
+        return;
+      }
       const dk = `${rowDate.getFullYear()}-${rowDate.getMonth()}-${rowDate.getDate()}`;
       if (!days.find(d => d.key === dk)) return;
       if (!state[mi][dk]) { state[mi][dk] = emoji; matched++; }

@@ -2110,6 +2110,7 @@ const qualificationSettings = {
   useBonusWeekCompensation: true,
 };
 // Toggle removed from dashboard — managed via Settings modal
+const qualificationToggleEl = document.getElementById('mat-as-cardio-toggle');
 const classQualificationToggleEl = document.getElementById('class-diff-qualification-toggle');
 const CARDIO_QUALIFICATION_FORMATS = ['CB', 'CBP', 'HIIT', 'PC', 'BBB', 'AMP'];
 const STRENGTH_QUALIFICATION_FORMATS = ['LAB', 'FIT'];
@@ -3476,8 +3477,13 @@ async function fetchAndSeedCheckins() {
     const iDate      = col('Date (IST)');
     const iClass     = col('Cleaned Class');
 
+    // Ensure state array is properly sized before clearing
+    ensureStateSize();
+    
     MEMBERS.forEach((_, mi) => {
-      Object.keys(state[mi]).forEach(k => delete state[mi][k]);
+      if (state[mi]) {
+        Object.keys(state[mi]).forEach(k => delete state[mi][k]);
+      }
     });
 
     let matched = 0;
@@ -3503,6 +3509,11 @@ async function fetchAndSeedCheckins() {
         }
       }
       if (mi === -1) return;
+      // Validate state[mi] exists before accessing
+      if (!state[mi]) {
+        console.warn(`State for member index ${mi} doesn't exist, skipping...`);
+        return;
+      }
       const dk = `${rowDate.getFullYear()}-${rowDate.getMonth()}-${rowDate.getDate()}`;
       if (!days.find(d => d.key === dk)) return;
       if (!state[mi][dk]) { state[mi][dk] = emoji; matched++; }
@@ -4035,10 +4046,23 @@ function positionScorePillTooltips() {
 
 // Define markWeekAsQualified at the top to ensure global accessibility
 function markWeekAsQualified(mi, weekNum, combinedCounts) {
-  // Validate state and weeks array
-  if (!state[mi]) {
-    console.error(`State is missing for member index: ${mi}`);
+  // Validate member index
+  if (mi < 0 || mi >= MEMBERS.length) {
+    console.warn(`Member index ${mi} is out of bounds for MEMBERS array (length: ${MEMBERS.length})`);
     return;
+  }
+  
+  // Validate and auto-initialize state[mi] if missing
+  if (!state[mi]) {
+    console.warn(`State missing for member index: ${mi}, auto-initializing...`);
+    state[mi] = {
+      weeks: [
+        { qualified: false, counts: {} },
+        { qualified: false, counts: {} },
+        { qualified: false, counts: {} },
+        { qualified: false, counts: {} }
+      ]
+    };
   }
 
   // Fallback: ensure weeks array exists
@@ -4053,13 +4077,13 @@ function markWeekAsQualified(mi, weekNum, combinedCounts) {
 
   const weekIndex = weekNum - 1;
   if (weekIndex < 0 || weekIndex >= state[mi].weeks.length) {
-    console.error(`Invalid week number: ${weekNum} for member index: ${mi}`);
+    console.warn(`Invalid week number: ${weekNum} for member index: ${mi}`);
     return;
   }
 
   const weekData = state[mi].weeks[weekIndex];
   if (!weekData) {
-    console.error(`Week data is undefined for week number: ${weekNum} and member index: ${mi}`);
+    console.warn(`Week data is undefined for week number: ${weekNum} and member index: ${mi}`);
     return;
   }
 

@@ -2843,8 +2843,34 @@ for (let i = 0; i < days.length; i += 7) {
 
 // ── STATE ──
 // state[memberIdx][dayKey] = stickerEmoji or null
-// Initialize state with weeks array for each member
-const state = MEMBERS.map(() => ({ weeks: [] }));
+// Initialize state with weeks array for each member - pre-populate with 4 weeks
+let state = MEMBERS.map(() => ({
+  weeks: [
+    { qualified: false, counts: {} },
+    { qualified: false, counts: {} },
+    { qualified: false, counts: {} },
+    { qualified: false, counts: {} }
+  ]
+}));
+
+// Function to ensure state array is properly sized to match MEMBERS
+function ensureStateSize() {
+  // Resize state array to match MEMBERS if needed
+  while (state.length < MEMBERS.length) {
+    state.push({
+      weeks: [
+        { qualified: false, counts: {} },
+        { qualified: false, counts: {} },
+        { qualified: false, counts: {} },
+        { qualified: false, counts: {} }
+      ]
+    });
+  }
+  // Remove excess state entries if MEMBERS shrank
+  if (state.length > MEMBERS.length) {
+    state = state.slice(0, MEMBERS.length);
+  }
+}
 
 // ── CELL TOOLTIP ──
 const cellTooltip = document.getElementById('cell-tooltip');
@@ -3736,6 +3762,15 @@ function restoreStateFromLocalStorage() {
       MEMBERS.forEach((m, mi) => {
         if (savedState[mi]) {
           Object.assign(state[mi], savedState[mi]);
+          // Ensure weeks array is properly initialized after merge
+          if (!Array.isArray(state[mi].weeks) || state[mi].weeks.length === 0) {
+            state[mi].weeks = [
+              { qualified: false, counts: {} },
+              { qualified: false, counts: {} },
+              { qualified: false, counts: {} },
+              { qualified: false, counts: {} }
+            ];
+          }
         }
       });
       return true;
@@ -3786,21 +3821,49 @@ function syncQualificationToggle() {
 
 // Define markWeekAsQualified at the top to ensure global accessibility
 function markWeekAsQualified(mi, weekNum, combinedCounts) {
-  // Validate state and weeks array
-  if (!state[mi] || !Array.isArray(state[mi].weeks)) {
-    console.error(`Invalid state or weeks array for member index: ${mi}`, state[mi]); // Added detailed log
+  // Validate member index
+  if (mi < 0 || mi >= MEMBERS.length) {
+    console.warn(`Member index ${mi} is out of bounds for MEMBERS array (length: ${MEMBERS.length})`);
     return;
+  }
+  
+  // Validate and auto-initialize state[mi] if missing
+  if (!state[mi]) {
+    console.warn(`State missing for member index: ${mi}, auto-initializing...`);
+    state[mi] = {
+      weeks: [
+        { qualified: false, counts: {} },
+        { qualified: false, counts: {} },
+        { qualified: false, counts: {} },
+        { qualified: false, counts: {} }
+      ]
+    };
+  }
+  
+  if (!Array.isArray(state[mi].weeks)) {
+    console.warn(`Weeks array is missing or invalid for member index: ${mi}, reinitializing...`);
+    state[mi].weeks = [
+      { qualified: false, counts: {} },
+      { qualified: false, counts: {} },
+      { qualified: false, counts: {} },
+      { qualified: false, counts: {} }
+    ];
+  }
+
+  // Ensure weeks array has the required weeks
+  while (state[mi].weeks.length < 4) {
+    state[mi].weeks.push({ qualified: false, counts: {} });
   }
 
   const weekIndex = weekNum - 1;
   if (weekIndex < 0 || weekIndex >= state[mi].weeks.length) {
-    console.error(`Invalid week number: ${weekNum} for member index: ${mi}`);
+    console.warn(`Invalid week number: ${weekNum} for member index: ${mi}`);
     return;
   }
 
   const weekData = state[mi].weeks[weekIndex];
   if (!weekData) {
-    console.error(`Week data is undefined for week number: ${weekNum} and member index: ${mi}`);
+    console.warn(`Week data is undefined for week number: ${weekNum} and member index: ${mi}`);
     return;
   }
 
@@ -4261,8 +4324,13 @@ async function fetchAndSeedCheckins() {
     const iDate      = col('Date (IST)');
     const iClass     = col('Cleaned Class');
 
+    // Ensure state array is properly sized before clearing
+    ensureStateSize();
+    
     MEMBERS.forEach((_, mi) => {
-      Object.keys(state[mi]).forEach(k => delete state[mi][k]);
+      if (state[mi]) {
+        Object.keys(state[mi]).forEach(k => delete state[mi][k]);
+      }
     });
 
     let matched = 0;
@@ -4287,6 +4355,11 @@ async function fetchAndSeedCheckins() {
         }
       }
       if (mi === -1) return;
+      // Validate state[mi] exists before accessing
+      if (!state[mi]) {
+        console.warn(`State for member index ${mi} doesn't exist, skipping...`);
+        return;
+      }
       const dk = `${rowDate.getFullYear()}-${rowDate.getMonth()}-${rowDate.getDate()}`;
       if (!days.find(d => d.key === dk)) return;
       if (!state[mi][dk]) { state[mi][dk] = emoji; matched++; }

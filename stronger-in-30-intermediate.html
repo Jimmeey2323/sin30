@@ -2954,6 +2954,11 @@ function restoreStateFromLocalStorage() {
       MEMBERS.forEach((m, mi) => {
         if (savedState[mi]) {
           Object.assign(state[mi], savedState[mi]);
+          // Ensure weeks array is valid after restoration
+          if (!Array.isArray(state[mi].weeks)) {
+            console.warn(`Weeks array is invalid for member ${mi}, reinitializing...`);
+            state[mi].weeks = [];
+          }
         }
       });
       return true;
@@ -4036,9 +4041,14 @@ function markWeekAsQualified(mi, weekNum, combinedCounts) {
     return;
   }
 
+  // Fallback: ensure weeks array exists
   if (!Array.isArray(state[mi].weeks)) {
-    console.error(`Weeks array is missing or invalid for member index: ${mi}`);
-    return;
+    console.warn(`Weeks array is missing or invalid for member index: ${mi}, reinitializing...`);
+    state[mi].weeks = [];
+    // Initialize with empty week objects
+    for (let i = 0; i < 4; i++) {
+      state[mi].weeks.push({ qualified: false, counts: {} });
+    }
   }
 
   const weekIndex = weekNum - 1;

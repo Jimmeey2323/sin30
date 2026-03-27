@@ -3845,6 +3845,40 @@ function toggleLocationGroup(btn) {
   }
 }
 
+function expandAllGroups() {
+  const tbody = document.getElementById('tbody');
+  if (!tbody) return;
+  const buttons = Array.from(tbody.querySelectorAll('.location-toggle-btn'));
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  
+  // Remove collapsed state from all buttons
+  buttons.forEach(btn => btn.classList.remove('collapsed'));
+  
+  // Remove hidden state from all data rows
+  rows.forEach(row => {
+    if (row.classList.contains('data-row')) {
+      row.classList.remove('hidden');
+    }
+  });
+}
+
+function collapseAllGroups() {
+  const tbody = document.getElementById('tbody');
+  if (!tbody) return;
+  const buttons = Array.from(tbody.querySelectorAll('.location-toggle-btn'));
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  
+  // Add collapsed state to all buttons
+  buttons.forEach(btn => btn.classList.add('collapsed'));
+  
+  // Add hidden state to all data rows
+  rows.forEach(row => {
+    if (row.classList.contains('data-row')) {
+      row.classList.add('hidden');
+    }
+  });
+}
+
 function getQualifiedMembersCount() {
   return MEMBERS.filter(m => getScore(MEMBERS.indexOf(m)) >= 4).length;
 }
